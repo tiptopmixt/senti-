@@ -1,3 +1,6 @@
+.env.local
+
+# Nessun segreto deve mai finire in un commit.
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
@@ -32,6 +35,8 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# ...ma i file di esempio (senza segreti) DEVONO stare in commit:
+!.env*.example
 
 # vercel
 .vercel

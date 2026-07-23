@@ -1,0 +1,14 @@
+{
+  "app": {
+    "name": "Senti",
+    "tagline": "Una mappa di percorsi e sentieri arricchiti dalla memoria delle persone."
+  },
+  "home": {
+    "foundationNote": "Fondazione del progetto in corso."
+  },
+  "language": {
+    "it": "Italiano",
+    "en": "Inglese",
+    "switch": "Cambia lingua"
+  }
+}

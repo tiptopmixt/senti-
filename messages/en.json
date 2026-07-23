@@ -1,0 +1,14 @@
+{
+  "app": {
+    "name": "Senti",
+    "tagline": "A map of paths and trails enriched by people's memories."
+  },
+  "home": {
+    "foundationNote": "Project foundation in progress."
+  },
+  "language": {
+    "it": "Italian",
+    "en": "English",
+    "switch": "Change language"
+  }
+}
