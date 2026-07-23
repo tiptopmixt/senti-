@@ -1,0 +1,3 @@
+-- seed.sql — dati dimostrativi (SOLO sviluppo, MAI in produzione).
+-- Verrà popolato allo Step 4 (utenti demo, POI reali, memorie, campagna, sentieri).
+-- Placeholder per ora: nessun dato.
