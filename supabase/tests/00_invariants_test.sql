@@ -85,12 +85,16 @@ select is(
   'points_ledger: Marco non vede le righe di Anna'
 );
 
--- 8) Anna vede solo il proprio ledger.
+-- 8) Anna vede solo il proprio ledger, e ha una riga per ogni contributo
+--    approvato (invariante "punti all'approvazione"). Conta relativa, non un
+--    numero fisso: resiste ai cambi di seed.
 set local "request.jwt.claims" = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
 select is(
   (select count(*)::int from public.points_ledger),
-  13,
-  'points_ledger: Anna vede le proprie 13 righe'
+  (select count(*)::int from public.contributions
+     where author_id = '11111111-1111-1111-1111-111111111111'
+       and status = 'approvato'),
+  'points_ledger: Anna vede una riga per ogni suo contributo approvato'
 );
 
 -- 9) Il client non può scrivere sul ledger (nessun grant di insert).

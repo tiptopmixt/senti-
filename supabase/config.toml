@@ -400,6 +400,10 @@ verify_jwt = true
 [functions.narrative]
 verify_jwt = true
 
+# `curate` aiuta la curatrice: richiede una sessione (curatrice).
+[functions.curate]
+verify_jwt = true
+
 [analytics]
 enabled = true
 port = 54327

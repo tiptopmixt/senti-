@@ -128,5 +128,32 @@
     "qr": "Mostra QR code",
     "qrIstruzione": "Inquadra il codice per aprire Senti",
     "indietro": "Indietro"
+  },
+  "demo": {
+    "scegli": "Modalità test: scegli chi sei",
+    "sei": "Sei {chi}",
+    "titolo": "Entra come utente demo"
+  },
+  "cura": {
+    "titolo": "Memorie da moderare",
+    "caricamento": "Un momento…",
+    "nonCuratrice": "Questa pagina è riservata alle curatrici. In modalità test, scegli \"Curatrice\" dal selettore in basso.",
+    "vuota": "Nessuna memoria in attesa. Tutto moderato.",
+    "conteggio": "{n, plural, one {# memoria in attesa} other {# memorie in attesa}}",
+    "senzaLuogo": "Senza luogo",
+    "senzaConsenso": "Senza consenso",
+    "evento": "evento {anno}",
+    "tipo": {
+      "audio": "Audio",
+      "testo": "Testo",
+      "foto": "Foto"
+    },
+    "ascolta": "Ascolta",
+    "chiediAiuto": "Chiedi aiuto all'assistente",
+    "aiutoInCorso": "L'assistente sta guardando…",
+    "aiutoVuoto": "Nessun suggerimento.",
+    "aiutoErrore": "Assistente non disponibile: {errore}",
+    "approva": "Approva",
+    "rifiuta": "Rifiuta"
   }
 }

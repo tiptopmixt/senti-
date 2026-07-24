@@ -1,0 +1,153 @@
+.contenitore {
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem 6rem;
+}
+
+.titolo {
+  font-size: clamp(1.6rem, 6vw, 2.1rem);
+  margin: 0 0 0.25rem;
+}
+
+.sottotitolo {
+  margin: 0 0 1.25rem;
+  opacity: 0.8;
+}
+
+.stato,
+.errore {
+  margin: 1rem 0;
+}
+
+.errore {
+  color: #7a2f22;
+}
+
+.lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.riga {
+  padding: 1rem;
+  border: 2px solid rgba(47, 36, 21, 0.25);
+  border-radius: 0.85rem;
+}
+
+.metaRiga {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.4rem;
+}
+
+.luogo {
+  font-weight: 700;
+}
+
+.tipo {
+  font-size: 0.75rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 1rem;
+  background: rgba(47, 36, 21, 0.1);
+}
+
+/* Consenso mancante: la curatrice deve vederlo subito. */
+.allarme {
+  font-size: 0.75rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 1rem;
+  background: #7a2f22;
+  color: #f0e5cc;
+}
+
+.testimone {
+  margin: 0 0 0.4rem;
+  font-size: 0.9rem;
+  opacity: 0.85;
+}
+
+.testo {
+  margin: 0.3rem 0 0.6rem;
+  line-height: 1.55;
+}
+
+.player {
+  width: 100%;
+  margin: 0.4rem 0;
+}
+
+.ascolta {
+  margin: 0.3rem 0;
+  min-height: 2.5rem;
+  padding: 0 1rem;
+  font: inherit;
+  border-radius: 0.5rem;
+  border: 2px solid #7a2f22;
+  background: transparent;
+  color: #7a2f22;
+  cursor: pointer;
+}
+
+/* Suggerimenti IA: chiaramente "di supporto", non una decisione. */
+.aiuto {
+  margin: 0.6rem 0;
+  padding: 0.85rem;
+  border-radius: 0.6rem;
+  background: rgba(47, 36, 21, 0.06);
+  border-left: 3px solid #c98a3a;
+  font: inherit;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
+.azioni {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-top: 0.75rem;
+}
+
+.aiutoBtn,
+.rifiuta,
+.approva {
+  min-height: 3rem;
+  padding: 0 1.1rem;
+  font: inherit;
+  font-size: 1rem;
+  border-radius: 0.6rem;
+  cursor: pointer;
+  border: 2px solid #2f2415;
+}
+
+.aiutoBtn {
+  background: transparent;
+  color: inherit;
+  margin-right: auto; /* spinge approva/rifiuta a destra */
+  border-color: #c98a3a;
+}
+
+.rifiuta {
+  background: transparent;
+  color: #7a2f22;
+  border-color: #7a2f22;
+}
+
+.approva {
+  background: #2f5a2f;
+  color: #f0f5ef;
+  border-color: #2f5a2f;
+}
+
+.aiutoBtn:disabled,
+.rifiuta:disabled,
+.approva:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

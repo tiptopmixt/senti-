@@ -10,7 +10,7 @@ import { getSupabaseClient } from "@/lib/supabase/client";
  */
 const voceSchema = z.object({
   tipo: z.enum(["campagna", "memoria"]),
-  id: z.string().uuid(),
+  id: z.guid(),
   titolo: z.string().nullable(),
   sottotitolo: z.string().nullable(),
   anno: z.number().int().nullable(),

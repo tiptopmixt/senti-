@@ -128,5 +128,32 @@
     "qr": "Show QR code",
     "qrIstruzione": "Scan the code to open Senti",
     "indietro": "Back"
+  },
+  "demo": {
+    "scegli": "Test mode: choose who you are",
+    "sei": "You are {chi}",
+    "titolo": "Enter as a demo user"
+  },
+  "cura": {
+    "titolo": "Memories to moderate",
+    "caricamento": "One moment…",
+    "nonCuratrice": "This page is for curators. In test mode, choose \"Curatrice\" from the selector at the bottom.",
+    "vuota": "No memories waiting. All moderated.",
+    "conteggio": "{n, plural, one {# memory waiting} other {# memories waiting}}",
+    "senzaLuogo": "No place",
+    "senzaConsenso": "No consent",
+    "evento": "event {anno}",
+    "tipo": {
+      "audio": "Audio",
+      "testo": "Text",
+      "foto": "Photo"
+    },
+    "ascolta": "Listen",
+    "chiediAiuto": "Ask the assistant",
+    "aiutoInCorso": "The assistant is looking…",
+    "aiutoVuoto": "No suggestions.",
+    "aiutoErrore": "Assistant unavailable: {errore}",
+    "approva": "Approve",
+    "rifiuta": "Reject"
   }
 }

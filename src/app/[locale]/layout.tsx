@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
 import { routing } from "@/i18n/routing";
+import { SelettoreDemo } from "@/components/SelettoreDemo";
 import "../globals.css";
 
 export const metadata: Metadata = {
@@ -41,7 +42,10 @@ export default async function LocaleLayout({
   return (
     <html lang={locale}>
       <body>
-        <NextIntlClientProvider>{children}</NextIntlClientProvider>
+        <NextIntlClientProvider>
+          {children}
+          <SelettoreDemo />
+        </NextIntlClientProvider>
       </body>
     </html>
   );

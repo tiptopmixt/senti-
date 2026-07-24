@@ -12,7 +12,7 @@ export const localeSchema = z.enum(["it", "en"]);
 export type Locale = z.infer<typeof localeSchema>;
 
 // Primitive riutilizzabili.
-export const uuidSchema = z.string().uuid();
+export const uuidSchema = z.guid();
 
 // Enum allineati alle migrazioni.
 export const contributionKindSchema = z.enum(["foto", "audio", "testo"]);

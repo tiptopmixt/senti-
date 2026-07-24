@@ -12,20 +12,24 @@
 
 -- --- Utenti demo -------------------------------------------------------------
 -- Il trigger handle_new_user crea automaticamente profilo e alias anonimo.
+-- I campi token vanno impostati a stringa vuota, non NULL: GoTrue li legge come
+-- string non-nullable e con NULL fallisce l'accesso ("Database error querying
+-- schema"). È il classico intoppo del seed degli utenti auth.
 insert into auth.users (
   instance_id, id, aud, role, email, encrypted_password,
   email_confirmed_at, created_at, updated_at,
-  raw_app_meta_data, raw_user_meta_data
+  raw_app_meta_data, raw_user_meta_data,
+  confirmation_token, email_change, email_change_token_new, recovery_token
 ) values
   ('00000000-0000-0000-0000-000000000000', '11111111-1111-1111-1111-111111111111',
    'authenticated', 'authenticated', 'anna@demo.local', crypt('demo123456', gen_salt('bf')),
-   now(), now(), now(), '{"provider":"email","providers":["email"]}', '{}'),
+   now(), now(), now(), '{"provider":"email","providers":["email"]}', '{}', '', '', '', ''),
   ('00000000-0000-0000-0000-000000000000', '22222222-2222-2222-2222-222222222222',
    'authenticated', 'authenticated', 'marco@demo.local', crypt('demo123456', gen_salt('bf')),
-   now(), now(), now(), '{"provider":"email","providers":["email"]}', '{}'),
+   now(), now(), now(), '{"provider":"email","providers":["email"]}', '{}', '', '', '', ''),
   ('00000000-0000-0000-0000-000000000000', '33333333-3333-3333-3333-333333333333',
    'authenticated', 'authenticated', 'curatrice@demo.local', crypt('demo123456', gen_salt('bf')),
-   now(), now(), now(), '{"provider":"email","providers":["email"]}', '{}');
+   now(), now(), now(), '{"provider":"email","providers":["email"]}', '{}', '', '', '', '');
 
 insert into auth.identities (provider_id, user_id, identity_data, provider, last_sign_in_at, created_at, updated_at)
 values
