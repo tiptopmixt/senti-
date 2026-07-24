@@ -31,6 +31,36 @@ Lingua di interfaccia, contenuti e commenti: **italiano**.
    linea continua/tratteggiata/punteggiata. Gli import (Wikidata/OSM) nascono
    `ipotetico` e diventano `attestato` solo quando un curatore allega una fonte.
 
+## L'audio è la memoria
+
+- **L'audio originale non viene MAI sostituito dal testo.** La registrazione del
+  testimone è la memoria: voce, dialetto, pause, esitazioni. Nessuna
+  trascrizione è più fedele dell'originale. Il player audio è l'elemento
+  principale della memoria, non un allegato.
+- **Nessuna IA genera audio.** L'audio esiste solo perché una persona ha parlato.
+- **Ogni testo dichiara la propria origine.** Il campo `text_source` dice se il
+  testo è stato scritto dal raccoglitore o prodotto da una macchina. L'interfaccia
+  lo mostra sempre: mai spacciare un testo per le parole del testimone.
+- **Trascrizione automatica: predisposta ma spenta.** La Edge Function
+  `transcribe` esiste e rispetta il consenso, ma non è attiva. Si accende solo
+  se e quando servirà. (Motivo tecnico: Whisper storpia dialetto veneto/cimbro
+  e toponimi locali; chi raccoglie la memoria scrive meglio.)
+
+## I tre ruoli dell'IA
+
+L'IA in Senti fa esattamente tre cose, tutte **testuali**:
+
+1. **Guida per l'utente** — assistente in chat che spiega come si usa l'app
+   (registrare, consenso, aggiungere un luogo). Non è una chat social fra
+   utenti: quella resta fuori.
+2. **Aiuto alla curatrice** — riassume le memorie in attesa, segnala possibili
+   duplicati e date discordanti, propone collegamenti. **La decisione resta
+   sempre umana**: l'IA suggerisce, non approva.
+3. **Narrazione dei luoghi** — unisce le memorie di un luogo citando i
+   testimoni, senza appianare i conflitti e senza aggiungere contesto storico.
+
+Fuori da questi tre ruoli l'IA non interviene.
+
 ## Sicurezza e segreti
 
 - `OPENAI_API_KEY` e `SUPABASE_SERVICE_ROLE_KEY` esistono **solo** come secret delle
