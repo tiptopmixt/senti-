@@ -30,5 +30,6 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules"]
+  "//": "supabase/ contiene le Edge Functions: sono Deno, con specificatori npm:/jsr: che il TypeScript di Next non sa risolvere. Le verifica il CLI di Supabase, non questa build.",
+  "exclude": ["node_modules", "supabase"]
 }

@@ -1,0 +1,200 @@
+/* Mobile-first: bersagli grandi, raggiungibili col pollice, niente elementi
+   piccoli o vicini fra loro. Chi raccoglie una memoria spesso ha il telefono in
+   una mano sola e l'attenzione sul testimone, non sullo schermo. */
+
+.contenitore {
+  max-width: 34rem;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem 5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.titolo {
+  font-size: clamp(1.6rem, 6vw, 2.1rem);
+  line-height: 1.2;
+  margin: 0;
+}
+
+.testo {
+  margin: 0;
+  line-height: 1.55;
+  opacity: 0.85;
+}
+
+.aiuto {
+  font-size: 0.88rem;
+  line-height: 1.5;
+  opacity: 0.7;
+  margin: 0.35rem 0 0;
+}
+
+.blocco {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+/* --- Registrazione --- */
+.onda {
+  color: currentColor;
+  border: 2px solid currentColor;
+  border-radius: 0.75rem;
+  padding: 0.5rem;
+  opacity: 0.85;
+}
+
+.timer {
+  font-variant-numeric: tabular-nums;
+  font-size: 2.4rem;
+  text-align: center;
+  margin: 0;
+  letter-spacing: 0.02em;
+}
+
+/* Il bottone di registrazione è il più importante della schermata: grande,
+   isolato, impossibile da sbagliare. */
+.registra,
+.registraAttivo {
+  width: 100%;
+  min-height: 4.5rem;
+  font-size: 1.3rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 1rem;
+  cursor: pointer;
+  color: #f6f1e4;
+  background: #7a2f22;
+}
+
+.registraAttivo {
+  background: #2f2415;
+  animation: pulsa 1.6s ease-in-out infinite;
+}
+
+@keyframes pulsa {
+  50% { opacity: 0.75; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .registraAttivo { animation: none; }
+}
+
+.player {
+  width: 100%;
+}
+
+/* --- Azioni --- */
+.azioni {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.primario,
+.secondario {
+  flex: 1 1 10rem;
+  min-height: 3.25rem;
+  font-size: 1.05rem;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  border: 2px solid #2f2415;
+}
+
+.primario {
+  background: #2f2415;
+  color: #f6f1e4;
+}
+
+.primario:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.secondario {
+  background: transparent;
+  color: inherit;
+}
+
+/* --- Campi --- */
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.campo > span {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.campo input,
+.campo textarea {
+  font: inherit;
+  padding: 0.85rem;
+  min-height: 3rem;
+  border: 2px solid currentColor;
+  border-radius: 0.6rem;
+  background: transparent;
+  color: inherit;
+}
+
+.campo textarea {
+  resize: vertical;
+}
+
+/* --- Consenso: è un cancello, deve pesare visivamente --- */
+.consenso {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  padding: 1rem;
+  border: 2px solid currentColor;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  line-height: 1.5;
+}
+
+.consenso input {
+  width: 1.5rem;
+  height: 1.5rem;
+  margin-top: 0.1rem;
+  flex-shrink: 0;
+}
+
+/* Il patto sul registro: va letto, non nascosto in fondo a una pagina legale. */
+.registroPubblico {
+  font-size: 0.9rem;
+  line-height: 1.6;
+  padding: 0.9rem 1rem;
+  border-left: 3px solid currentColor;
+  opacity: 0.85;
+  margin: 0;
+}
+
+/* --- Stati --- */
+.avviso,
+.avvisoOffline,
+.errore {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  border-radius: 0.6rem;
+  font-size: 0.95rem;
+  border: 2px solid currentColor;
+}
+
+.avvisoOffline {
+  opacity: 0.9;
+}
+
+.errore {
+  color: #7a2f22;
+}
+
+.esitoIcona {
+  font-size: 3rem;
+  margin: 0;
+  text-align: center;
+}

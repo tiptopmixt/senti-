@@ -1,4 +1,5 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 import styles from "./page.module.css";
 
 export default async function Home({
@@ -14,7 +15,9 @@ export default async function Home({
     <main className={styles.main}>
       <h1 className={styles.title}>{t("app.name")}</h1>
       <p className={styles.subtitle}>{t("app.tagline")}</p>
-      <p className={styles.note}>{t("home.foundationNote")}</p>
+      <Link className={styles.cta} href="/racconta">
+        {t("home.vaiARaccontare")}
+      </Link>
     </main>
   );
 }

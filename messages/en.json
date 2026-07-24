@@ -4,11 +4,52 @@
     "tagline": "A map of paths and trails enriched by people's memories."
   },
   "home": {
-    "foundationNote": "Project foundation in progress."
+    "foundationNote": "Project foundation in progress.",
+    "vaiARaccontare": "Record a memory"
   },
   "language": {
     "it": "Italian",
     "en": "English",
     "switch": "Change language"
+  },
+  "cattura": {
+    "titolo": "Tell a memory",
+    "sottotitolo": "Press the button and let the person remember out loud. Details come afterwards: don't interrupt the story.",
+    "registro": "Everything you publish is recorded under your name, even when you choose to stay anonymous: others see Anonymous voice, the ledger knows it is you. Today the ledger is worth recognition. If the platform ever generates revenue, the ledger is the basis on which it gets shared. We promise no figures: we promise the count is transparent and that nobody can erase it.",
+    "azioni": {
+      "registra": "Record",
+      "ferma": "Stop",
+      "rifai": "Record again",
+      "continua": "Continue",
+      "indietro": "Back",
+      "salva": "Save the memory",
+      "salvataggio": "Saving…",
+      "altraMemoria": "Record another memory"
+    },
+    "riascolto": {
+      "durata": "Recording of {durata}. Listen back before continuing."
+    },
+    "campi": {
+      "nomeTestimone": "Who is speaking",
+      "annoNascita": "Year of birth",
+      "nota": "A line or two to find it again",
+      "notaEsempio": "e.g. rebuilding the bridge in 1948",
+      "notaAiuto": "These are your words, not the witness's: they only help you find the memory again. The voice stays the original."
+    },
+    "consenso": {
+      "etichetta": "The person speaking has consented to publishing this memory.",
+      "spiegazione": "Without consent the memory stays private: nobody sees it, and it is never transcribed.",
+      "obbligatorio": "The speaker's consent is required before saving."
+    },
+    "coda": {
+      "inInvio": "{n, plural, one {# memory being sent…} other {# memories being sent…}}",
+      "attesaRete": "{n, plural, one {# memory waiting for network} other {# memories waiting for network}}"
+    },
+    "salvata": {
+      "titolo": "Memory saved",
+      "inviata": "It has been sent.",
+      "inCorso": "Sending…",
+      "offline": "It is safe on your phone. It will send itself as soon as the network is back."
+    }
   }
 }

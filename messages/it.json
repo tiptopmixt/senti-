@@ -4,11 +4,52 @@
     "tagline": "Una mappa di percorsi e sentieri arricchiti dalla memoria delle persone."
   },
   "home": {
-    "foundationNote": "Fondazione del progetto in corso."
+    "foundationNote": "Fondazione del progetto in corso.",
+    "vaiARaccontare": "Registra una memoria"
   },
   "language": {
     "it": "Italiano",
     "en": "Inglese",
     "switch": "Cambia lingua"
+  },
+  "cattura": {
+    "titolo": "Racconta una memoria",
+    "sottotitolo": "Premi il pulsante e lascia parlare chi ricorda. I dati li aggiungi dopo: non interrompere il racconto.",
+    "registro": "Ogni cosa che pubblichi viene registrata a tuo nome, anche quando scegli l'anonimato: gli altri vedono Voce anonima, il registro sa che sei tu. Oggi il registro vale riconoscimento. Se la piattaforma genererà ricavi, il registro è la base con cui vengono divisi. Non promettiamo cifre: promettiamo che il conteggio è trasparente e che nessuno può cancellarlo.",
+    "azioni": {
+      "registra": "Registra",
+      "ferma": "Ferma",
+      "rifai": "Rifai",
+      "continua": "Continua",
+      "indietro": "Indietro",
+      "salva": "Salva la memoria",
+      "salvataggio": "Salvataggio…",
+      "altraMemoria": "Registra un'altra memoria"
+    },
+    "riascolto": {
+      "durata": "Registrazione di {durata}. Riascoltala prima di continuare."
+    },
+    "campi": {
+      "nomeTestimone": "Chi racconta",
+      "annoNascita": "Anno di nascita",
+      "nota": "Due righe per ritrovarla",
+      "notaEsempio": "Es. la ricostruzione del ponte nel 1948",
+      "notaAiuto": "Queste sono parole tue, non del testimone: servono solo a ritrovare la memoria. La voce resta l'originale."
+    },
+    "consenso": {
+      "etichetta": "Chi racconta ha dato il consenso a pubblicare questa memoria.",
+      "spiegazione": "Senza consenso la memoria resta privata: nessuno la vede, e non viene mai trascritta.",
+      "obbligatorio": "Serve il consenso di chi racconta per poter salvare."
+    },
+    "coda": {
+      "inInvio": "{n, plural, one {# memoria in invio…} other {# memorie in invio…}}",
+      "attesaRete": "{n, plural, one {# memoria in attesa di rete} other {# memorie in attesa di rete}}"
+    },
+    "salvata": {
+      "titolo": "Memoria salvata",
+      "inviata": "È stata inviata.",
+      "inCorso": "Invio in corso…",
+      "offline": "È al sicuro sul telefono. Partirà da sola appena torna la rete."
+    }
   }
 }
