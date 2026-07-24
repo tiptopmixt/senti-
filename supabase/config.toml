@@ -387,6 +387,19 @@ deno_version = 2
 # [edge_runtime.secrets]
 # secret_key = "env(SECRET_VALUE)"
 
+# --- Edge Functions di Senti -------------------------------------------------
+# `share` produce le pagine pubbliche condivisibili con meta tag Open Graph:
+# WhatsApp e i crawler devono poterla leggere SENZA token.
+[functions.share]
+verify_jwt = false
+
+# `transcribe` e `narrative` agiscono per conto di un utente: richiedono sessione.
+[functions.transcribe]
+verify_jwt = true
+
+[functions.narrative]
+verify_jwt = true
+
 [analytics]
 enabled = true
 port = 54327

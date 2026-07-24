@@ -187,3 +187,24 @@ insert into public.route_segments (route_id, seq, geom, certainty, sources)
 select id, 1, geom, 'ipotetico'::public.certainty, '[]'::jsonb
 from public.routes
 where id in ('c0000000-0000-0000-0000-000000000002', 'c0000000-0000-0000-0000-000000000003');
+
+-- --- Glossario toponimi del territorio pilota --------------------------------
+-- Passato a Whisper come suggerimento: migliora molto il riconoscimento dei
+-- nomi di luogo locali (che altrimenti vengono storpiati).
+insert into public.toponym_glossary (area_name, area, terms, lang, is_default) values
+  ('Valbrenta e Altopiano',
+   st_geogfromtext('POLYGON((11.40 45.68, 11.95 45.68, 11.95 46.02, 11.40 46.02, 11.40 45.68))'),
+   array[
+     'Bassano del Grappa', 'Ponte degli Alpini', 'Ponte Vecchio', 'Brenta',
+     'Canale del Brenta', 'Valbrenta', 'Valstagna', 'Oliero', 'Solagna',
+     'Campolongo sul Brenta', 'Pove del Grappa', 'Romano d''Ezzelino',
+     'Cismon del Grappa', 'Primolano', 'Enego', 'Monte Grappa', 'Cima Grappa',
+     'Col Moschin', 'Asiago', 'Altopiano dei Sette Comuni', 'Gallio', 'Foza',
+     'Roana', 'Rotzo', 'Conco', 'Lusiana', 'Marostica', 'Nove', 'Cartigliano',
+     'Val Frenzela', 'Cala del Sasso', 'Sacrario', 'Sasso Stefani'
+   ],
+   'it', false),
+  ('Default',
+   null,
+   array['Bassano del Grappa', 'Brenta', 'Monte Grappa', 'Asiago', 'Valbrenta'],
+   'it', true);
