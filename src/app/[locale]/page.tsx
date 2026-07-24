@@ -15,7 +15,10 @@ export default async function Home({
     <main className={styles.main}>
       <h1 className={styles.title}>{t("app.name")}</h1>
       <p className={styles.subtitle}>{t("app.tagline")}</p>
-      <Link className={styles.cta} href="/racconta">
+      <Link className={styles.cta} href="/mappa">
+        {t("home.vaiAllaMappa")}
+      </Link>
+      <Link className={styles.ctaSecondaria} href="/racconta">
         {t("home.vaiARaccontare")}
       </Link>
     </main>

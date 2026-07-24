@@ -5,7 +5,8 @@
   },
   "home": {
     "foundationNote": "Project foundation in progress.",
-    "vaiARaccontare": "Record a memory"
+    "vaiARaccontare": "Record a memory",
+    "vaiAllaMappa": "Open the map"
   },
   "language": {
     "it": "Italian",
@@ -57,6 +58,39 @@
       "inviata": "It has been sent.",
       "inCorso": "Sending…",
       "offline": "It is safe on your phone. It will send itself as soon as the network is back."
+    }
+  },
+  "mappa": {
+    "titolo": "The map",
+    "sonoQui": "I'm here",
+    "suggerimentoToccoLungo": "Press and hold on the map to mark another point",
+    "luogoCreato": "Place created.",
+    "filtri": {
+      "raccontati": "Places with memories",
+      "daRaccontare": "Places to tell"
+    },
+    "certezza": {
+      "attestato": "Attested",
+      "probabile": "Probable",
+      "ipotetico": "Hypothetical"
+    },
+    "vicini": {
+      "titolo": "Did you mean one of these?",
+      "spiegazione": "There is already a place marked nearby. If it is the same one, go back and use it: two entries for the same spot split its memories in two."
+    },
+    "nuovoLuogo": {
+      "titolo": "New place",
+      "nome": "What is it called",
+      "esempio": "e.g. Ponte degli Alpini"
+    },
+    "azioni": {
+      "creaLuogo": "Create the place",
+      "annulla": "Cancel",
+      "salvataggio": "Saving…"
+    },
+    "errori": {
+      "gpsNonDisponibile": "This device does not provide a location.",
+      "gpsNegato": "I cannot read your location. Check permissions."
     }
   }
 }

@@ -25,6 +25,18 @@
   opacity: 0.55;
 }
 
+.ctaSecondaria {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3.5rem;
+  margin-top: 0.75rem;
+  padding: 0 1.5rem;
+  font-size: 1.05rem;
+  border-radius: 0.75rem;
+  border: 2px solid currentColor;
+}
+
 /* Bersaglio grande: è l'azione principale dell'app. */
 .cta {
   display: inline-flex;

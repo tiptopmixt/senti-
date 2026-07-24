@@ -5,7 +5,8 @@
   },
   "home": {
     "foundationNote": "Fondazione del progetto in corso.",
-    "vaiARaccontare": "Registra una memoria"
+    "vaiARaccontare": "Registra una memoria",
+    "vaiAllaMappa": "Apri la mappa"
   },
   "language": {
     "it": "Italiano",
@@ -57,6 +58,39 @@
       "inviata": "È stata inviata.",
       "inCorso": "Invio in corso…",
       "offline": "È al sicuro sul telefono. Partirà da sola appena torna la rete."
+    }
+  },
+  "mappa": {
+    "titolo": "La mappa",
+    "sonoQui": "Sono qui",
+    "suggerimentoToccoLungo": "Tieni premuto sulla mappa per segnare un altro punto",
+    "luogoCreato": "Luogo creato.",
+    "filtri": {
+      "raccontati": "Luoghi raccontati",
+      "daRaccontare": "Luoghi da raccontare"
+    },
+    "certezza": {
+      "attestato": "Attestato",
+      "probabile": "Probabile",
+      "ipotetico": "Ipotetico"
+    },
+    "vicini": {
+      "titolo": "Intendevi uno di questi?",
+      "spiegazione": "Qui vicino c'è già un luogo segnato. Se è lo stesso, torna indietro e usa quello: due schede per lo stesso posto dividono le memorie in due."
+    },
+    "nuovoLuogo": {
+      "titolo": "Nuovo luogo",
+      "nome": "Come si chiama",
+      "esempio": "Es. Ponte degli Alpini"
+    },
+    "azioni": {
+      "creaLuogo": "Crea il luogo",
+      "annulla": "Annulla",
+      "salvataggio": "Salvataggio…"
+    },
+    "errori": {
+      "gpsNonDisponibile": "Questo dispositivo non fornisce la posizione.",
+      "gpsNegato": "Non riesco a leggere la posizione. Controlla i permessi."
     }
   }
 }
