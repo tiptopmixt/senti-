@@ -78,6 +78,21 @@ export async function creaMemoriaAudio(
 }
 
 /**
+ * URL firmato e temporaneo per riascoltare l'audio di una memoria.
+ *
+ * Il bucket è privato: si passa da un URL firmato, non da un link pubblico. La
+ * policy dello Storage concede comunque la lettura solo agli audio di memorie
+ * approvate e con consenso, quindi un percorso "rubato" non produce nulla.
+ */
+export async function urlAudioFirmato(mediaPath: string): Promise<string | null> {
+  const { data, error } = await getSupabaseClient()
+    .storage.from(BUCKET)
+    .createSignedUrl(mediaPath, 3600); // un'ora
+  if (error || !data) return null;
+  return data.signedUrl;
+}
+
+/**
  * Memorie pubbliche di un luogo. Passa SOLO dalla vista `v_contributions_public`:
  * è il meccanismo che garantisce che `author_id` non esca mai.
  */

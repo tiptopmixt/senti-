@@ -18,6 +18,7 @@ import {
   type LuogoVicino,
 } from "@/lib/queries/mappa";
 import { ensureSession } from "@/lib/supabase/auth";
+import { ColonnaTempo } from "./ColonnaTempo";
 import styles from "./Mappa.module.css";
 
 // Bassano del Grappa: il centro del territorio pilota.
@@ -46,6 +47,7 @@ export function Mappa() {
   const [mostraRaccontati, setMostraRaccontati] = useState(true);
   const [mostraDaRaccontare, setMostraDaRaccontare] = useState(true);
   const [puntoNuovo, setPuntoNuovo] = useState<PuntoNuovo | null>(null);
+  const [puntoTempo, setPuntoTempo] = useState<{ lon: number; lat: number; nome?: string } | null>(null);
   const [nomeNuovo, setNomeNuovo] = useState("");
   const [messaggio, setMessaggio] = useState<string | null>(null);
   const [salvataggio, setSalvataggio] = useState(false);
@@ -123,6 +125,25 @@ export function Mappa() {
       mappa.on("touchend", annullaTimer);
       // Su desktop il tasto destro fa la stessa cosa.
       mappa.on("contextmenu", (e) => void proponiLuogo(e.lngLat.lng, e.lngLat.lat));
+
+      // Tocco su un luogo raccontato: apre la sua colonna del tempo.
+      // Un tocco breve su un marker != tocco lungo sulla mappa (crea un luogo).
+      mappa.on("click", (e) => {
+        const trovati = mappa.queryRenderedFeatures(e.point, {
+          layers: ["luoghi-raccontati"],
+        });
+        const f = trovati[0];
+        if (f && f.geometry.type === "Point") {
+          const [lon, lat] = f.geometry.coordinates;
+          setPuntoTempo({ lon, lat, nome: f.properties?.name as string | undefined });
+        }
+      });
+      mappa.on("mouseenter", "luoghi-raccontati", () => {
+        mappa.getCanvas().style.cursor = "pointer";
+      });
+      mappa.on("mouseleave", "luoghi-raccontati", () => {
+        mappa.getCanvas().style.cursor = "";
+      });
     })();
 
     return () => {
@@ -233,6 +254,16 @@ export function Mappa() {
       <p className={styles.suggerimento}>{t("suggerimentoToccoLungo")}</p>
 
       {messaggio && <p className={styles.messaggio}>{messaggio}</p>}
+
+      {/* --- Cosa è successo qui --- */}
+      {puntoTempo && (
+        <ColonnaTempo
+          lon={puntoTempo.lon}
+          lat={puntoTempo.lat}
+          nomeLuogo={puntoTempo.nome}
+          onChiudi={() => setPuntoTempo(null)}
+        />
+      )}
 
       {/* --- Pannello nuovo luogo --- */}
       {puntoNuovo && (

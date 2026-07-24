@@ -208,3 +208,18 @@ insert into public.toponym_glossary (area_name, area, terms, lang, is_default) v
    null,
    array['Bassano del Grappa', 'Brenta', 'Monte Grappa', 'Asiago', 'Valbrenta'],
    'it', true);
+
+-- --- Importanza degli eventi e anno delle memorie ----------------------------
+-- I segmenti attestati della campagna sono i momenti salienti: si vedono da
+-- più lontano nella colonna del tempo.
+update public.route_segments
+   set importance = 3
+ where certainty = 'attestato'
+   and route_id = 'c0000000-0000-0000-0000-000000000001';
+
+-- Anno dell'episodio ricordato (dichiarato dai narratori): colloca le memorie
+-- sulla linea del tempo accanto agli eventi delle campagne.
+update public.contributions set event_year = 1948
+ where id in ('b0000000-0000-0000-0000-000000000001', 'b0000000-0000-0000-0000-000000000002');
+update public.contributions set event_year = 1916
+ where id in ('b0000000-0000-0000-0000-000000000003', 'b0000000-0000-0000-0000-000000000004');

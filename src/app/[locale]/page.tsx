@@ -1,5 +1,6 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { Condividi } from "@/components/Condividi";
 import styles from "./page.module.css";
 
 export default async function Home({
@@ -13,6 +14,9 @@ export default async function Home({
 
   return (
     <main className={styles.main}>
+      <div className={styles.barra}>
+        <Condividi titolo={t("app.name")} />
+      </div>
       <h1 className={styles.title}>{t("app.name")}</h1>
       <p className={styles.subtitle}>{t("app.tagline")}</p>
       <Link className={styles.cta} href="/mappa">

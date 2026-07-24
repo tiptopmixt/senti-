@@ -9,6 +9,13 @@
   margin: 0 auto;
 }
 
+/* Barra con l'icona condividi: in alto a destra, discreta. */
+.barra {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+}
+
 .title {
   font-size: 2.5rem;
   letter-spacing: -0.02em;

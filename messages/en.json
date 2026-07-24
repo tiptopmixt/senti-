@@ -92,5 +92,41 @@
       "gpsNonDisponibile": "This device does not provide a location.",
       "gpsNegato": "I cannot read your location. Check permissions."
     }
+  },
+  "qui": {
+    "occhiello": "What happened here",
+    "questoLuogo": "This place",
+    "chiudi": "Close",
+    "caricamento": "One moment…",
+    "ascolta": "Listen",
+    "senzaData": "Undated",
+    "livello": {
+      "campagna": "Campaign",
+      "memoria": "Memory"
+    },
+    "certezza": {
+      "attestato": "attested",
+      "probabile": "probable",
+      "ipotetico": "hypothetical"
+    },
+    "origine": {
+      "automatica": "Automatically transcribed text, may contain errors.",
+      "raccoglitore": "Note by whoever collected the memory — not the witness's words."
+    },
+    "vuoto": {
+      "titolo": "Nothing here yet.",
+      "testo": "No memories and no events within range of this point. You can be the first voice to tell it.",
+      "invito": "Tell this place"
+    }
+  },
+  "condividi": {
+    "apri": "Share",
+    "chiudi": "Close",
+    "whatsapp": "Send on WhatsApp",
+    "copiaLink": "Copy the link",
+    "copiato": "Copied!",
+    "qr": "Show QR code",
+    "qrIstruzione": "Scan the code to open Senti",
+    "indietro": "Back"
   }
 }

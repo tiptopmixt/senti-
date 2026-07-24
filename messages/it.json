@@ -92,5 +92,41 @@
       "gpsNonDisponibile": "Questo dispositivo non fornisce la posizione.",
       "gpsNegato": "Non riesco a leggere la posizione. Controlla i permessi."
     }
+  },
+  "qui": {
+    "occhiello": "Cosa è successo qui",
+    "questoLuogo": "Questo luogo",
+    "chiudi": "Chiudi",
+    "caricamento": "Un momento…",
+    "ascolta": "Ascolta",
+    "senzaData": "Senza data",
+    "livello": {
+      "campagna": "Campagna",
+      "memoria": "Memoria"
+    },
+    "certezza": {
+      "attestato": "attestato",
+      "probabile": "probabile",
+      "ipotetico": "ipotetico"
+    },
+    "origine": {
+      "automatica": "Testo trascritto automaticamente, può contenere errori.",
+      "raccoglitore": "Appunto di chi ha raccolto la memoria — non le parole del testimone."
+    },
+    "vuoto": {
+      "titolo": "Qui non c'è ancora niente.",
+      "testo": "Nessuna memoria e nessun evento nel raggio di questo punto. Puoi essere la prima voce a raccontarlo.",
+      "invito": "Racconta questo luogo"
+    }
+  },
+  "condividi": {
+    "apri": "Condividi",
+    "chiudi": "Chiudi",
+    "whatsapp": "Invia su WhatsApp",
+    "copiaLink": "Copia il link",
+    "copiato": "Copiato!",
+    "qr": "Mostra QR code",
+    "qrIstruzione": "Inquadra il codice per aprire Senti",
+    "indietro": "Indietro"
   }
 }

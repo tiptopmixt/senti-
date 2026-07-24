@@ -1,0 +1,221 @@
+/* Pannello che sale dal basso: si legge con una mano, il pollice arriva a tutto. */
+.pannello {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 5;
+  max-height: 85dvh;
+  overflow-y: auto;
+  padding: 1.1rem 1.25rem 2rem;
+  border-radius: 1.25rem 1.25rem 0 0;
+  background: #f0e5cc;
+  color: #2f2415;
+  box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.25);
+}
+
+.intestazione {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.occhiello {
+  margin: 0;
+  font-size: 0.75rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+
+.titolo {
+  margin: 0.1rem 0 0;
+  font-size: 1.4rem;
+}
+
+.chiudi {
+  flex-shrink: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: none;
+  border-radius: 50%;
+  background: rgba(47, 36, 21, 0.1);
+  font-size: 1.1rem;
+  cursor: pointer;
+  color: inherit;
+}
+
+.attesa,
+.errore {
+  margin: 1rem 0;
+}
+
+.errore {
+  color: #7a2f22;
+}
+
+/* --- La colonna --- */
+.colonna {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  position: relative;
+}
+
+/* La linea verticale che unisce gli eventi nel tempo. */
+.colonna::before {
+  content: "";
+  position: absolute;
+  left: 0.45rem;
+  top: 0.5rem;
+  bottom: 0.5rem;
+  width: 2px;
+  background: rgba(47, 36, 21, 0.2);
+}
+
+.rigaCampagna,
+.rigaMemoria {
+  position: relative;
+  padding: 0 0 1.5rem 1.75rem;
+}
+
+.puntoLinea {
+  position: absolute;
+  left: 0;
+  top: 0.35rem;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  box-sizing: border-box;
+}
+
+/* Campagna: punto pieno, storia con fonti. Memoria: punto vuoto, la voce. */
+.rigaCampagna .puntoLinea {
+  background: #5c3a1e;
+  border: 2px solid #f0e5cc;
+}
+
+.rigaMemoria .puntoLinea {
+  background: #f0e5cc;
+  border: 2px solid #7a2f22;
+}
+
+.riga1 {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.2rem;
+}
+
+.anno {
+  font-weight: 700;
+  font-size: 1.05rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Marca del livello + certezza, per le campagne. */
+.marca,
+.marcaMemoria {
+  font-size: 0.72rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 1rem;
+  letter-spacing: 0.03em;
+}
+
+.marca {
+  color: #f0e5cc;
+}
+
+.marca_attestato {
+  background: #5c3a1e;
+}
+
+.marca_probabile {
+  background: #8a6034;
+}
+
+.marca_ipotetico {
+  background: #a98a63;
+}
+
+.marcaMemoria {
+  background: transparent;
+  border: 1px solid #7a2f22;
+  color: #7a2f22;
+}
+
+.titoloVoce {
+  margin: 0.15rem 0;
+  font-weight: 600;
+}
+
+.sottotitolo {
+  margin: 0 0 0.35rem;
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.testoVoce {
+  margin: 0.35rem 0;
+  line-height: 1.55;
+}
+
+.origineTesto {
+  margin: 0.3rem 0 0;
+  font-size: 0.78rem;
+  font-style: italic;
+  opacity: 0.7;
+}
+
+/* --- Player audio --- */
+.player {
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.ascolta {
+  margin-top: 0.5rem;
+  min-height: 2.75rem;
+  padding: 0 1.1rem;
+  font: inherit;
+  font-size: 1rem;
+  border-radius: 0.6rem;
+  border: 2px solid #7a2f22;
+  background: transparent;
+  color: #7a2f22;
+  cursor: pointer;
+}
+
+/* --- Stato vuoto --- */
+.vuoto {
+  padding: 1rem 0 0.5rem;
+  text-align: center;
+}
+
+.vuotoTitolo {
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem;
+}
+
+.vuotoTesto {
+  margin: 0 0 1.25rem;
+  line-height: 1.55;
+  opacity: 0.85;
+}
+
+.invito {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3.25rem;
+  padding: 0 1.5rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  border-radius: 0.75rem;
+  background: #7a2f22;
+  color: #f6f1e4;
+}
