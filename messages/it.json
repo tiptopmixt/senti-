@@ -45,6 +45,13 @@
       "inInvio": "{n, plural, one {# memoria in invio…} other {# memorie in invio…}}",
       "attesaRete": "{n, plural, one {# memoria in attesa di rete} other {# memorie in attesa di rete}}"
     },
+    "limiti": {
+      "durataMassima": "Massimo {minuti} minuti: racconta un episodio alla volta.",
+      "restano": "Restano {tempo}",
+      "rimanentiMese": "{n, plural, =0 {nessuna memoria questo mese} one {# memoria questo mese} other {# memorie questo mese}}",
+      "fermataAutomatica": "La registrazione si è fermata da sola ai {minuti} minuti. Quello che hai registrato è al sicuro: se il racconto continua, salvala e registrane un'altra.",
+      "quotaEsaurita": "Hai esaurito le memorie di questo mese. Riprendi il mese prossimo."
+    },
     "salvata": {
       "titolo": "Memoria salvata",
       "inviata": "È stata inviata.",

@@ -30,8 +30,9 @@ function formatoSupportato(): string {
  * viene creata in parallelo. Chiedere di registrarsi prima di lasciar parlare
  * un testimone di novant'anni significa perdere la memoria.
  */
-export function useRegistratore() {
+export function useRegistratore(durataMassimaMs?: number) {
   const [stato, setStato] = useState<StatoRegistrazione>("inattivo");
+  const [fermataDalLimite, setFermataDalLimite] = useState(false);
   const [durataMs, setDurataMs] = useState(0);
   const [registrazione, setRegistrazione] = useState<Registrazione | null>(null);
   const [errore, setErrore] = useState<string | null>(null);
@@ -66,6 +67,7 @@ export function useRegistratore() {
     setErrore(null);
     setRegistrazione(null);
     setDurataMs(0);
+    setFermataDalLimite(false);
 
     const mimeType = formatoSupportato();
     if (!mimeType) {
@@ -127,9 +129,20 @@ export function useRegistratore() {
     setStato("registrazione");
 
     timerRef.current = setInterval(() => {
-      setDurataMs(Date.now() - avvioRef.current);
+      const trascorso = Date.now() - avvioRef.current;
+      setDurataMs(trascorso);
+
+      // Si ferma DA SOLA al limite. Respingere l'audio dopo che il testimone
+      // ha finito di parlare significherebbe perdere la testimonianza: una
+      // persona di novant'anni non ripete due volte lo stesso racconto.
+      if (durataMassimaMs && trascorso >= durataMassimaMs) {
+        setFermataDalLimite(true);
+        if (recorderRef.current?.state === "recording") {
+          recorderRef.current.stop();
+        }
+      }
     }, 200);
-  }, [pulisci]);
+  }, [pulisci, durataMassimaMs]);
 
   const ferma = useCallback(() => {
     if (recorderRef.current?.state === "recording") {
@@ -146,10 +159,21 @@ export function useRegistratore() {
     pezziRef.current = [];
     setRegistrazione(null);
     setDurataMs(0);
+    setFermataDalLimite(false);
     setStato("inattivo");
   }, [pulisci]);
 
-  return { stato, durataMs, registrazione, errore, analyserRef, avvia, ferma, annulla };
+  return {
+    stato,
+    durataMs,
+    registrazione,
+    errore,
+    fermataDalLimite,
+    analyserRef,
+    avvia,
+    ferma,
+    annulla,
+  };
 }
 
 /** Durata in mm:ss, per la lettura a colpo d'occhio. */

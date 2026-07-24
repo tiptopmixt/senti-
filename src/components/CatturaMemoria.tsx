@@ -7,6 +7,12 @@ import { formattaDurata, useRegistratore } from "@/lib/audio/useRegistratore";
 import { salvaMemoria } from "@/lib/offline/db";
 import { avviaCoda, elaboraCoda, type StatoCoda } from "@/lib/offline/queue";
 import { ensureSession } from "@/lib/supabase/auth";
+import {
+  contributiRimanenti,
+  leggiLimiti,
+  LIMITI_PREDEFINITI,
+  type Limiti,
+} from "@/lib/queries/settings";
 import styles from "./CatturaMemoria.module.css";
 
 type Fase = "registra" | "riascolta" | "dati";
@@ -18,21 +24,27 @@ type Fase = "registra" | "riascolta" | "dati";
  * una testimonianza non può fermare un anziano che ha iniziato a parlare per
  * riempire un modulo.
  *
- * La registrazione finisce su IndexedDB appena esiste; l'invio al server è un
- * problema separato, che la coda risolve quando c'è rete.
+ * I limiti (durata, lunghezza, quantità) arrivano dal database e vengono
+ * mostrati PRIMA: la registrazione si ferma da sola al tetto, così nessuna
+ * testimonianza viene persa per un rifiuto tardivo.
  */
 export function CatturaMemoria() {
   const t = useTranslations("cattura");
+
+  const [limiti, setLimiti] = useState<Limiti>(LIMITI_PREDEFINITI);
+  const [rimanenti, setRimanenti] = useState<number | null>(null);
+
   const {
     stato,
     durataMs,
     registrazione,
     errore,
+    fermataDalLimite,
     analyserRef,
     avvia,
     ferma,
     annulla,
-  } = useRegistratore();
+  } = useRegistratore(limiti.audioDurataMassimaMs);
 
   const [fase, setFase] = useState<Fase>("registra");
   const [nomeNarratore, setNomeNarratore] = useState("");
@@ -45,9 +57,15 @@ export function CatturaMemoria() {
 
   // La sessione anonima parte in sottofondo: nessuna schermata di accesso.
   useEffect(() => {
-    void ensureSession().catch(() => {
-      /* senza rete la sessione arriva dopo: la registrazione locale funziona comunque */
-    });
+    void (async () => {
+      try {
+        await ensureSession();
+        setLimiti(await leggiLimiti());
+        setRimanenti(await contributiRimanenti());
+      } catch {
+        // Senza rete si registra lo stesso: valgono i limiti predefiniti.
+      }
+    })();
     return avviaCoda(setCoda);
   }, []);
 
@@ -64,6 +82,9 @@ export function CatturaMemoria() {
       if (urlRiascolto) URL.revokeObjectURL(urlRiascolto);
     };
   }, [urlRiascolto]);
+
+  const restanoMs = Math.max(0, limiti.audioDurataMassimaMs - durataMs);
+  const quotaEsaurita = rimanenti !== null && rimanenti <= 0;
 
   async function salva() {
     if (!registrazione || !consenso) return;
@@ -87,6 +108,7 @@ export function CatturaMemoria() {
       });
       setSalvata(true);
       void elaboraCoda();
+      setRimanenti((r) => (r === null ? null : Math.max(0, r - 1)));
     } finally {
       setSalvataggio(false);
     }
@@ -137,21 +159,38 @@ export function CatturaMemoria() {
 
       {errore && <p className={styles.errore}>{errore}</p>}
 
+      {quotaEsaurita && <p className={styles.errore}>{t("limiti.quotaEsaurita")}</p>}
+
       {/* --- Registrazione --- */}
       {fase === "registra" && (
         <div className={styles.blocco}>
           <div className={styles.onda}>
             <FormaOnda analyserRef={analyserRef} attiva={stato === "registrazione"} />
           </div>
+
           <p className={styles.timer} aria-live="polite">
             {formattaDurata(durataMs)}
           </p>
+
+          <p className={styles.aiuto}>
+            {stato === "registrazione"
+              ? t("limiti.restano", { tempo: formattaDurata(restanoMs) })
+              : t("limiti.durataMassima", {
+                  minuti: Math.round(limiti.audioDurataMassimaMs / 60000),
+                })}
+            {rimanenti !== null && ` · ${t("limiti.rimanentiMese", { n: rimanenti })}`}
+          </p>
+
           {stato === "registrazione" ? (
             <button className={styles.registraAttivo} onClick={ferma}>
               {t("azioni.ferma")}
             </button>
           ) : (
-            <button className={styles.registra} onClick={() => void avvia()}>
+            <button
+              className={styles.registra}
+              onClick={() => void avvia()}
+              disabled={quotaEsaurita}
+            >
               {t("azioni.registra")}
             </button>
           )}
@@ -161,6 +200,13 @@ export function CatturaMemoria() {
       {/* --- Riascolto --- */}
       {fase === "riascolta" && registrazione && urlRiascolto && (
         <div className={styles.blocco}>
+          {fermataDalLimite && (
+            <p className={styles.avviso}>
+              {t("limiti.fermataAutomatica", {
+                minuti: Math.round(limiti.audioDurataMassimaMs / 60000),
+              })}
+            </p>
+          )}
           <p className={styles.testo}>
             {t("riascolto.durata", { durata: formattaDurata(registrazione.durataMs) })}
           </p>
@@ -207,10 +253,16 @@ export function CatturaMemoria() {
             <textarea
               rows={3}
               value={nota}
+              maxLength={limiti.testoLunghezzaMassima}
               onChange={(e) => setNota(e.target.value)}
               placeholder={t("campi.notaEsempio")}
             />
-            <small className={styles.aiuto}>{t("campi.notaAiuto")}</small>
+            <small className={styles.aiuto}>
+              {t("campi.notaAiuto")}{" "}
+              <span className={styles.contatore}>
+                {nota.length}/{limiti.testoLunghezzaMassima}
+              </span>
+            </small>
           </label>
 
           <label className={styles.consenso}>

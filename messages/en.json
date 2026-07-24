@@ -45,6 +45,13 @@
       "inInvio": "{n, plural, one {# memory being sent…} other {# memories being sent…}}",
       "attesaRete": "{n, plural, one {# memory waiting for network} other {# memories waiting for network}}"
     },
+    "limiti": {
+      "durataMassima": "Up to {minuti} minutes: tell one episode at a time.",
+      "restano": "{tempo} left",
+      "rimanentiMese": "{n, plural, =0 {no memories left this month} one {# memory left this month} other {# memories left this month}}",
+      "fermataAutomatica": "Recording stopped by itself at {minuti} minutes. What you recorded is safe: if the story continues, save this one and record another.",
+      "quotaEsaurita": "You have used up this month's memories. Come back next month."
+    },
     "salvata": {
       "titolo": "Memory saved",
       "inviata": "It has been sent.",
