@@ -77,6 +77,11 @@ Fuori da questi tre ruoli l'IA non interviene.
   Whisper, narrazione unificata, pagine pubbliche condivisibili con meta tag Open Graph.
 - Due progetti Supabase distinti: **sviluppo** e **produzione**. Il **seed gira solo
   su sviluppo**.
+- **Eccezione consapevole al "solo due servizi"**: le tessere vettoriali della mappa
+  arrivano da **OpenFreeMap** (gratuito, senza chiave). È un terzo servizio esterno,
+  accettato deliberatamente. Configurabile via `NEXT_PUBLIC_MAP_TILES_URL`: se un
+  domani si vuole tornare a due soli servizi, la strada è un estratto **PMTiles** del
+  territorio pilota servito da Supabase Storage. Non è un bug: è una scelta.
 
 ## Esperienza utente (obiettivi primari)
 
