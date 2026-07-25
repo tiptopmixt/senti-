@@ -47,7 +47,7 @@ export function Mappa() {
   const [mostraRaccontati, setMostraRaccontati] = useState(true);
   const [mostraDaRaccontare, setMostraDaRaccontare] = useState(true);
   const [puntoNuovo, setPuntoNuovo] = useState<PuntoNuovo | null>(null);
-  const [puntoTempo, setPuntoTempo] = useState<{ lon: number; lat: number; nome?: string } | null>(null);
+  const [puntoTempo, setPuntoTempo] = useState<{ lon: number; lat: number; nome?: string; poiId?: string } | null>(null);
   const [nomeNuovo, setNomeNuovo] = useState("");
   const [messaggio, setMessaggio] = useState<string | null>(null);
   const [salvataggio, setSalvataggio] = useState(false);
@@ -135,7 +135,12 @@ export function Mappa() {
         const f = trovati[0];
         if (f && f.geometry.type === "Point") {
           const [lon, lat] = f.geometry.coordinates;
-          setPuntoTempo({ lon, lat, nome: f.properties?.name as string | undefined });
+          setPuntoTempo({
+            lon,
+            lat,
+            nome: f.properties?.name as string | undefined,
+            poiId: f.properties?.id as string | undefined,
+          });
         }
       });
       mappa.on("mouseenter", "luoghi-raccontati", () => {
@@ -261,6 +266,7 @@ export function Mappa() {
           lon={puntoTempo.lon}
           lat={puntoTempo.lat}
           nomeLuogo={puntoTempo.nome}
+          poiId={puntoTempo.poiId}
           onChiudi={() => setPuntoTempo(null)}
         />
       )}

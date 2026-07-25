@@ -25,6 +25,9 @@ export default async function Home({
       <Link className={styles.ctaSecondaria} href="/racconta">
         {t("home.vaiARaccontare")}
       </Link>
+      <Link className={styles.link} href="/io">
+        {t("home.vaiAllIo")}
+      </Link>
     </main>
   );
 }

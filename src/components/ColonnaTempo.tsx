@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { cosaESuccessoQui, type VoceTempo } from "@/lib/queries/timeline";
 import { urlAudioFirmato } from "@/lib/queries/contributions";
+import { registraVisita } from "@/lib/queries/dashboard";
 import styles from "./ColonnaTempo.module.css";
 
 interface Props {
@@ -12,6 +13,8 @@ interface Props {
   lat: number;
   /** Nome del luogo toccato, se noto (per l'intestazione). */
   nomeLuogo?: string;
+  /** Id del luogo, se si apre da un POI: serve a registrare la visita. */
+  poiId?: string;
   onChiudi?: () => void;
 }
 
@@ -25,7 +28,7 @@ interface Props {
  * Se non c'è nulla nel raggio, lo si dice con onestà e si invita a essere la
  * prima voce di quel luogo.
  */
-export function ColonnaTempo({ lon, lat, nomeLuogo, onChiudi }: Props) {
+export function ColonnaTempo({ lon, lat, nomeLuogo, poiId, onChiudi }: Props) {
   const t = useTranslations("qui");
   const [voci, setVoci] = useState<VoceTempo[] | null>(null);
   const [errore, setErrore] = useState<string | null>(null);
@@ -37,10 +40,12 @@ export function ColonnaTempo({ lon, lat, nomeLuogo, onChiudi }: Props) {
     cosaESuccessoQui(lon, lat)
       .then((v) => vivo && setVoci(v))
       .catch((e) => vivo && setErrore(e instanceof Error ? e.message : String(e)));
+    // Registra la visita al luogo (fire-and-forget, dedup lato server).
+    if (poiId) void registraVisita(poiId);
     return () => {
       vivo = false;
     };
-  }, [lon, lat]);
+  }, [lon, lat, poiId]);
 
   return (
     <section className={styles.pannello} role="dialog" aria-modal="true">

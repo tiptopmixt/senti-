@@ -1,0 +1,195 @@
+-- =============================================================================
+-- 0013_dashboard.sql — Il registro reso visibile (dashboard /io)
+--
+-- Il registro è la promessa dell'app: trasparente e incancellabile. Qui lo si
+-- mostra al titolare, con SOLO aggregati — mai l'identità di chi ha votato o
+-- visitato.
+--
+-- Le visite si contano con deduplica per giorno e un hash di sessione. NESSUN
+-- IP viene mai toccato. Il salt si rinnova ogni notte: così le visite di uno
+-- stesso utente non sono correlabili da un giorno all'altro.
+-- =============================================================================
+
+-- --- Salt giornaliero --------------------------------------------------------
+create table public.view_salts (
+  giorno date primary key default current_date,
+  salt   text not null
+);
+alter table public.view_salts enable row level security;  -- nessun accesso dal client
+
+-- Restituisce il salt di oggi, creandolo se non esiste. Un nuovo giorno = un
+-- nuovo salt casuale: è la "rotazione notturna" senza bisogno di uno scheduler.
+create or replace function public.salt_del_giorno()
+returns text
+language plpgsql
+security definer
+set search_path = public, extensions
+as $$
+declare
+  s text;
+begin
+  select salt into s from public.view_salts where giorno = current_date;
+  if s is null then
+    s := encode(gen_random_bytes(16), 'hex');
+    insert into public.view_salts (giorno, salt)
+    values (current_date, s)
+    on conflict (giorno) do nothing;
+    select salt into s from public.view_salts where giorno = current_date;
+  end if;
+  return s;
+end;
+$$;
+
+-- --- Registro delle visite ---------------------------------------------------
+create table public.poi_views (
+  id           uuid primary key default gen_random_uuid(),
+  poi_id       uuid not null references public.pois (id) on delete cascade,
+  giorno       date not null default current_date,
+  session_hash text not null,
+  created_at   timestamptz not null default now(),
+  -- Deduplica: una sola visita per (luogo, giorno, sessione).
+  constraint poi_views_dedup unique (poi_id, giorno, session_hash)
+);
+create index poi_views_poi_idx on public.poi_views (poi_id);
+alter table public.poi_views enable row level security;  -- nessun accesso diretto dal client
+
+-- Registra una visita. L'hash NON è reversibile all'utente senza il salt del
+-- giorno, e il salt cambia ogni notte: dedup sì, tracciamento no.
+create or replace function public.registra_visita(p_poi_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public, extensions
+as $$
+declare
+  h text;
+begin
+  if auth.uid() is null then
+    return;  -- senza sessione non si registra nulla
+  end if;
+  h := encode(digest(auth.uid()::text || '|' || public.salt_del_giorno(), 'sha256'), 'hex');
+  insert into public.poi_views (poi_id, session_hash)
+  values (p_poi_id, h)
+  on conflict (poi_id, giorno, session_hash) do nothing;
+end;
+$$;
+
+-- Conteggi delle visite per luogo (materializzata, per non ricontare ogni volta).
+create materialized view public.mv_poi_view_counts as
+select poi_id, count(*)::int as visite
+from public.poi_views
+group by poi_id;
+create unique index mv_poi_view_counts_idx on public.mv_poi_view_counts (poi_id);
+
+-- =============================================================================
+-- RPC: la dashboard personale
+--
+-- SECURITY DEFINER: aggrega dati di tabelle con RLS, ma restituisce SOLO numeri
+-- del titolare — mai chi ha votato o visitato. Accetta lon/lat opzionali per lo
+-- stato vuoto (il luogo da raccontare più vicino).
+-- =============================================================================
+create or replace function public.my_dashboard(
+  p_lon double precision default null,
+  p_lat double precision default null
+)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = public, extensions
+as $$
+declare
+  uid          uuid := auth.uid();
+  n_contributi int;
+  n_pois       int;
+  n_reazioni   int;
+  n_visite     int;
+  n_citazioni  int;
+  n_unica_voce int;
+  punti        int;
+  punti_totali int;
+  vicino       jsonb;
+begin
+  if uid is null then
+    return jsonb_build_object('anonimo', true);
+  end if;
+
+  -- Contributi approvati dell'utente.
+  select count(*) into n_contributi
+    from public.contributions
+   where author_id = uid and status = 'approvato';
+
+  -- Luoghi creati dall'utente.
+  select count(*) into n_pois from public.pois where author_id = uid;
+
+  -- Reazioni ricevute sui propri contributi (aggregato, mai chi ha votato).
+  select count(*) into n_reazioni
+    from public.post_votes v
+    join public.contributions c on c.id = v.contribution_id
+   where c.author_id = uid;
+
+  -- Visite ai propri luoghi (aggregato, mai chi ha visitato). Letto dalla
+  -- tabella base: pochi POI per utente, conteggio vivo senza dover rinfrescare
+  -- la materializzata (che serve ai conteggi globali, non a questa dashboard).
+  select count(*) into n_visite
+    from public.poi_views pv
+    join public.pois p on p.id = pv.poi_id
+   where p.author_id = uid;
+
+  -- Citazioni: quante volte una memoria dell'utente è citata in una narrazione.
+  select count(*) into n_citazioni
+    from public.poi_narratives n,
+         jsonb_array_elements(n.sources) s
+    join public.contributions c
+      on c.id = (s->>'contribution_id')::uuid
+   where c.author_id = uid;
+
+  -- Luoghi di cui l'utente è l'UNICA voce (tutti i contributi approvati sono suoi).
+  select count(*) into n_unica_voce
+    from (
+      select c.poi_id
+        from public.contributions c
+       where c.status = 'approvato' and c.poi_id is not null
+       group by c.poi_id
+      having bool_and(c.author_id = uid)   -- tutte le voci del luogo sono sue
+    ) x;
+
+  -- Punti e quota sul registro totale.
+  select coalesce(sum(delta), 0) into punti from public.points_ledger where user_id = uid;
+  select coalesce(sum(delta), 0) into punti_totali from public.points_ledger;
+
+  -- Stato vuoto: per chi non ha ancora contribuito, il luogo da raccontare più
+  -- vicino (se sono note le coordinate), non una schermata di zeri.
+  if n_contributi = 0 then
+    select to_jsonb(t) into vicino from (
+      select pl.name, pl.id,
+             st_y(pl.geog::geometry) as lat, st_x(pl.geog::geometry) as lon
+        from public.v_places_to_tell pl
+       where pl.memory_count = 0
+       order by case
+                  when p_lon is null or p_lat is null then 0
+                  else st_distance(pl.geog, st_setsrid(st_point(p_lon, p_lat), 4326)::geography)
+                end asc
+       limit 1
+    ) t;
+  end if;
+
+  return jsonb_build_object(
+    'anonimo', false,
+    'citazioni', n_citazioni,
+    'luoghi_unica_voce', n_unica_voce,
+    'punti', punti,
+    'quota_percento', case when punti_totali > 0
+                           then round(100.0 * punti / punti_totali, 1)
+                           else 0 end,
+    'pois', n_pois,
+    'contributi', n_contributi,
+    'reazioni', n_reazioni,
+    'visite', n_visite,
+    'luogo_da_raccontare_vicino', vicino
+  );
+end;
+$$;
+
+grant execute on function public.registra_visita(uuid) to authenticated;
+grant execute on function public.my_dashboard(double precision, double precision) to authenticated;

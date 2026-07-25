@@ -6,7 +6,8 @@
   "home": {
     "foundationNote": "Fondazione del progetto in corso.",
     "vaiARaccontare": "Registra una memoria",
-    "vaiAllaMappa": "Apri la mappa"
+    "vaiAllaMappa": "Apri la mappa",
+    "vaiAllIo": "Il mio registro"
   },
   "language": {
     "it": "Italiano",
@@ -155,5 +156,29 @@
     "aiutoErrore": "Assistente non disponibile: {errore}",
     "approva": "Approva",
     "rifiuta": "Rifiuta"
+  },
+  "io": {
+    "titolo": "Il tuo registro",
+    "caricamento": "Un momento…",
+    "citazioni": "Citazioni",
+    "citazioniNota": "quante volte le tue memorie sono citate nelle narrazioni",
+    "unicaVoce": "Unica voce",
+    "unicaVoceNota": "luoghi di cui sei l'unico testimone",
+    "punti": "punti",
+    "quota": "Il {pct}% del registro totale",
+    "registroNota": "Il registro vale riconoscimento. Se la piattaforma genererà ricavi, è la base con cui vengono divisi. Il conteggio è trasparente e nessuno può cancellarlo.",
+    "conteggi": {
+      "pois": "Luoghi",
+      "contributi": "Memorie",
+      "reazioni": "Reazioni",
+      "visite": "Visite"
+    },
+    "privacyNota": "Solo numeri: non sai chi ha votato o visitato, e nessuno lo sa di te.",
+    "vuoto": {
+      "intro": "Non hai ancora raccontato nulla. Ma non sei una schermata di zeri.",
+      "vicino": "è vicino a te e non ha ancora nessuna memoria. Potresti essere la sua prima voce.",
+      "generico": "C'è un luogo, là fuori, che aspetta ancora la sua prima voce.",
+      "invito": "Racconta una memoria"
+    }
   }
 }

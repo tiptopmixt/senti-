@@ -6,7 +6,8 @@
   "home": {
     "foundationNote": "Project foundation in progress.",
     "vaiARaccontare": "Record a memory",
-    "vaiAllaMappa": "Open the map"
+    "vaiAllaMappa": "Open the map",
+    "vaiAllIo": "My ledger"
   },
   "language": {
     "it": "Italian",
@@ -155,5 +156,29 @@
     "aiutoErrore": "Assistant unavailable: {errore}",
     "approva": "Approve",
     "rifiuta": "Reject"
+  },
+  "io": {
+    "titolo": "Your ledger",
+    "caricamento": "One moment…",
+    "citazioni": "Citations",
+    "citazioniNota": "how many times your memories are cited in the narratives",
+    "unicaVoce": "Sole voice",
+    "unicaVoceNota": "places where you are the only witness",
+    "punti": "points",
+    "quota": "{pct}% of the whole ledger",
+    "registroNota": "The ledger is worth recognition. If the platform ever generates revenue, it is the basis on which it gets shared. The count is transparent and nobody can erase it.",
+    "conteggi": {
+      "pois": "Places",
+      "contributi": "Memories",
+      "reazioni": "Reactions",
+      "visite": "Visits"
+    },
+    "privacyNota": "Only numbers: you don't know who voted or visited, and nobody knows about you.",
+    "vuoto": {
+      "intro": "You haven't told anything yet. But you are not a screen of zeros.",
+      "vicino": "is near you and has no memories yet. You could be its first voice.",
+      "generico": "There is a place, out there, still waiting for its first voice.",
+      "invito": "Tell a memory"
+    }
   }
 }

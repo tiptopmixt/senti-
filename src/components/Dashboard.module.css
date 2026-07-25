@@ -1,0 +1,164 @@
+.contenitore {
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem 6rem;
+}
+
+.titolo {
+  font-size: clamp(1.6rem, 6vw, 2.1rem);
+  margin: 0 0 1.25rem;
+}
+
+.attesa,
+.errore {
+  margin: 1.5rem 0;
+}
+
+.errore {
+  color: #7a2f22;
+}
+
+/* --- In cima: il riconoscimento, con più peso visivo --- */
+.inCima {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.85rem;
+  margin-bottom: 1.25rem;
+}
+
+.rilievo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 1.1rem;
+  border-radius: 0.85rem;
+  background: #2f2415;
+  color: #f0e5cc;
+}
+
+.rilievoNum {
+  font-size: 2.4rem;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.rilievoEtichetta {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-top: 0.3rem;
+}
+
+.rilievoNota {
+  font-size: 0.78rem;
+  opacity: 0.75;
+  line-height: 1.4;
+}
+
+/* --- Registro: punti e quota --- */
+.registro {
+  padding: 1.25rem;
+  border: 2px solid rgba(47, 36, 21, 0.25);
+  border-radius: 0.85rem;
+  margin-bottom: 1.25rem;
+  text-align: center;
+}
+
+.punti {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.puntiNum {
+  font-size: 3rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.puntiEtichetta {
+  font-size: 1.1rem;
+  opacity: 0.8;
+}
+
+.quota {
+  margin: 0.5rem 0 0;
+  font-size: 1.05rem;
+}
+
+.registroNota {
+  margin: 0.6rem 0 0;
+  font-size: 0.82rem;
+  opacity: 0.7;
+  line-height: 1.5;
+}
+
+/* --- In fondo: conteggi --- */
+.conteggi {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+}
+
+.conteggio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.85rem 0.4rem;
+  border-radius: 0.6rem;
+  background: rgba(47, 36, 21, 0.06);
+}
+
+.conteggioNum {
+  font-size: 1.5rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.conteggioEtichetta {
+  font-size: 0.72rem;
+  text-align: center;
+  opacity: 0.75;
+}
+
+.privacyNota {
+  margin: 0.85rem 0 0;
+  font-size: 0.78rem;
+  font-style: italic;
+  opacity: 0.65;
+  text-align: center;
+}
+
+/* --- Stato vuoto --- */
+.vuoto {
+  text-align: center;
+  padding: 1.5rem 0.5rem;
+}
+
+.vuotoTesto {
+  margin: 0.5rem 0;
+  line-height: 1.6;
+  opacity: 0.85;
+}
+
+.vuotoLuogo {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin: 1rem 0 0.25rem;
+}
+
+.invito {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3.25rem;
+  margin-top: 1.5rem;
+  padding: 0 1.75rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  border-radius: 0.75rem;
+  background: #7a2f22;
+  color: #f6f1e4;
+}
