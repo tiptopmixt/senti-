@@ -205,7 +205,8 @@
       "comeFunziona": "Senti è una mappa di memorie. Ogni persona racconta la propria storia legata a un luogo, e insieme le storie danno voce al territorio.",
       "anonimo": "Puoi scegliere di restare anonimo: gli altri non vedranno il tuo nome, ma il sistema sì. Serve a riconoscere i tuoi contributi e a tenerne traccia nel registro.",
       "regola": "Racconta la tua storia e ne sei responsabile. Per pubblicare quella di un'altra persona devi avere il suo permesso.",
-      "hoCapito": "Ho capito, continua"
+      "hoCapito": "Ho capito, continua",
+      "prova": "Senti è in prova ed è realizzata con l'aiuto dell'intelligenza artificiale: può contenere errori o comportarsi in modo imprevisto. Usala tenendone conto."
     },
     "patto": {
       "titolo": "Termini e privacy",
@@ -226,7 +227,8 @@
     "privacy": "Privacy",
     "termini": "Termini",
     "cookie": "Cookie",
-    "impostazioni": "Impostazioni"
+    "impostazioni": "Impostazioni",
+    "prova": "Versione di prova, realizzata con l'aiuto dell'IA: può contenere errori."
   },
   "impostazioni": {
     "titolo": "Impostazioni",

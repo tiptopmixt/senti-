@@ -63,6 +63,7 @@ export function Onboarding() {
             <p className={styles.testo}>{t("intro.comeFunziona")}</p>
             <p className={styles.testo}>{t("intro.anonimo")}</p>
             <p className={styles.regola}>{t("intro.regola")}</p>
+            <p className={styles.prova}>{t("intro.prova")}</p>
             <button className={styles.primario} onClick={() => setPasso("patto")}>
               {t("intro.hoCapito")}
             </button>

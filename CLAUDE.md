@@ -61,6 +61,30 @@ L'IA in Senti fa esattamente tre cose, tutte **testuali**:
 
 Fuori da questi tre ruoli l'IA non interviene.
 
+## Consensi, responsabilità, dati minimi
+
+- **Due livelli di consenso.** Le cose che non cambiano (termini, privacy, cookie)
+  si chiedono **una volta**, legate a `user_id` + data + **versione**: se un testo
+  cambia versione, chi aveva accettato la precedente va reinformato. Le
+  dichiarazioni sul singolo contenuto (voce propria / permesso di terzi /
+  veridicità) si chiedono a **ogni pubblicazione** e si **salvano davvero**
+  (`contribution_declarations`, append-only): la propria storia in un tocco,
+  l'avviso pesante solo quando riguarda un'altra persona.
+- **Responsabilità dell'utente.** Ogni utente risponde in prima persona della
+  verità e liceità di ciò che pubblica; la piattaforma non garantisce l'esattezza
+  storica. Segnalazioni con auto-revisione oltre soglia.
+- **Contesto storico separato.** Se l'IA aggiunge contesto a un fatto storico, è
+  un riquadro visibilmente distinto con fonte citata: non dice mai se il racconto
+  è vero, non commenta la testimonianza, e senza fonte affidabile non scrive nulla.
+- **Avviso di prova sempre visibile.** L'app è in prova ed è fatta con l'aiuto
+  dell'IA: può contenere errori. L'avviso è nell'intro e nel footer di ogni pagina.
+- **Dati minimi, nessun dato sensibile.** L'impostazione di base è **anonima**:
+  nessuna email, nessuna password, nessun nome — zero dati sensibili. L'upgrade
+  futuro a un account serve solo al recupero cross-dispositivo e chiede **solo
+  un'email** (reset password via email) o l'accesso con Google/Facebook, **senza
+  mai estrarre dati sensibili** dagli account collegati. I punti maturati da
+  anonimo si conservano (`linkIdentity`).
+
 ## Sicurezza e segreti
 
 - `OPENAI_API_KEY` e `SUPABASE_SERVICE_ROLE_KEY` esistono **solo** come secret delle

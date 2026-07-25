@@ -205,7 +205,8 @@
       "comeFunziona": "Senti is a map of memories. Each person tells their own story tied to a place, and together the stories give voice to the land.",
       "anonimo": "You can choose to stay anonymous: others won't see your name, but the system will. It's how your contributions are recognised and kept in the ledger.",
       "regola": "Tell your own story and you are responsible for it. To publish someone else's, you must have their permission.",
-      "hoCapito": "Got it, continue"
+      "hoCapito": "Got it, continue",
+      "prova": "Senti is in trial and is built with the help of artificial intelligence: it may contain errors or behave unexpectedly. Use it keeping that in mind."
     },
     "patto": {
       "titolo": "Terms and privacy",
@@ -226,7 +227,8 @@
     "privacy": "Privacy",
     "termini": "Terms",
     "cookie": "Cookies",
-    "impostazioni": "Settings"
+    "impostazioni": "Settings",
+    "prova": "Trial version, built with the help of AI: it may contain errors."
   },
   "impostazioni": {
     "titolo": "Settings",

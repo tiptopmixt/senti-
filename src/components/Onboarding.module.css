@@ -54,6 +54,16 @@
   line-height: 1.5;
 }
 
+/* Avviso "in prova / fatta con IA": onesto, visibile ma non allarmante. */
+.prova {
+  margin: 0;
+  padding: 0.7rem 0.85rem;
+  border-radius: 0.6rem;
+  background: rgba(201, 138, 58, 0.14);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
 .link {
   margin: 0;
   font-size: 0.95rem;

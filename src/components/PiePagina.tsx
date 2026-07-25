@@ -12,10 +12,13 @@ export function PiePagina() {
   const t = useTranslations("piepagina");
   return (
     <footer className={styles.pie}>
-      <Link href="/privacy">{t("privacy")}</Link>
-      <Link href="/termini">{t("termini")}</Link>
-      <Link href="/cookie">{t("cookie")}</Link>
-      <Link href="/impostazioni">{t("impostazioni")}</Link>
+      <p className={styles.prova}>{t("prova")}</p>
+      <nav className={styles.link}>
+        <Link href="/privacy">{t("privacy")}</Link>
+        <Link href="/termini">{t("termini")}</Link>
+        <Link href="/cookie">{t("cookie")}</Link>
+        <Link href="/impostazioni">{t("impostazioni")}</Link>
+      </nav>
     </footer>
   );
 }
