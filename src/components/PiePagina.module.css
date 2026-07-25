@@ -1,0 +1,14 @@
+.pie {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  justify-content: center;
+  padding: 1.5rem 1rem 6.5rem; /* spazio per la barra demo in fondo */
+  font-size: 0.82rem;
+  opacity: 0.7;
+}
+
+.pie a {
+  text-decoration: underline;
+  color: inherit;
+}

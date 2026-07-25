@@ -1,0 +1,20 @@
+.contenitore {
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 1.75rem 1.25rem 5rem;
+}
+.titolo { font-size: clamp(1.6rem, 6vw, 2.1rem); margin: 0 0 1.5rem; }
+.sezione {
+  padding: 1.25rem;
+  border: 2px solid rgba(47, 36, 21, 0.25);
+  border-radius: 0.85rem;
+}
+.sottotitolo { margin: 0 0 0.5rem; font-size: 1.2rem; }
+.testo { margin: 0 0 1rem; line-height: 1.6; opacity: 0.85; }
+.riga {
+  display: flex; align-items: flex-start; gap: 0.75rem;
+  padding: 0.85rem; border: 2px solid currentColor; border-radius: 0.6rem;
+  cursor: pointer; line-height: 1.5;
+}
+.riga input { width: 1.4rem; height: 1.4rem; margin-top: 0.1rem; flex-shrink: 0; }
+.salvato { margin: 0.75rem 0 0; color: #2f5a2f; font-weight: 600; }

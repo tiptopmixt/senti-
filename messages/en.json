@@ -180,5 +180,43 @@
       "generico": "There is a place, out there, still waiting for its first voice.",
       "invito": "Tell a memory"
     }
+  },
+  "onboarding": {
+    "intro": {
+      "titolo": "Welcome to Senti",
+      "comeFunziona": "Senti is a map of memories. Each person tells their own story tied to a place, and together the stories give voice to the land.",
+      "anonimo": "You can choose to stay anonymous: others won't see your name, but the system will. It's how your contributions are recognised and kept in the ledger.",
+      "regola": "Tell your own story and you are responsible for it. To publish someone else's, you must have their permission.",
+      "hoCapito": "Got it, continue"
+    },
+    "patto": {
+      "titolo": "Terms and privacy",
+      "testo": "Before you start, take a look at the Terms of use and the Privacy notice. The Terms are accepted once; the Privacy notice explains how we handle your data.",
+      "leggiTermini": "Read the Terms",
+      "leggiPrivacy": "Read the Privacy notice",
+      "accetto": "I accept the Terms and have read the Privacy notice"
+    },
+    "cookie": {
+      "titolo": "Cookies",
+      "testo": "We use technical cookies, needed to run the app and always on. Only if you want, we also use statistics cookies to understand how the app is used. You can change your mind anytime in settings.",
+      "dettagli": "Cookie details",
+      "accetta": "Accept all",
+      "rifiuta": "Reject non-essential"
+    }
+  },
+  "piepagina": {
+    "privacy": "Privacy",
+    "termini": "Terms",
+    "cookie": "Cookies",
+    "impostazioni": "Settings"
+  },
+  "impostazioni": {
+    "titolo": "Settings",
+    "salvato": "Choice saved.",
+    "cookie": {
+      "titolo": "Cookies",
+      "tecnici": "Technical cookies are always on: they run the app and cannot be turned off.",
+      "statistiche": "Enable statistics cookies (to understand how the app is used)"
+    }
   }
 }

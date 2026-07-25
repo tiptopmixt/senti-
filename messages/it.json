@@ -180,5 +180,43 @@
       "generico": "C'è un luogo, là fuori, che aspetta ancora la sua prima voce.",
       "invito": "Racconta una memoria"
     }
+  },
+  "onboarding": {
+    "intro": {
+      "titolo": "Benvenuto in Senti",
+      "comeFunziona": "Senti è una mappa di memorie. Ogni persona racconta la propria storia legata a un luogo, e insieme le storie danno voce al territorio.",
+      "anonimo": "Puoi scegliere di restare anonimo: gli altri non vedranno il tuo nome, ma il sistema sì. Serve a riconoscere i tuoi contributi e a tenerne traccia nel registro.",
+      "regola": "Racconta la tua storia e ne sei responsabile. Per pubblicare quella di un'altra persona devi avere il suo permesso.",
+      "hoCapito": "Ho capito, continua"
+    },
+    "patto": {
+      "titolo": "Termini e privacy",
+      "testo": "Prima di iniziare, dai un'occhiata ai Termini d'uso e all'informativa sulla Privacy. I Termini si accettano una volta; la Privacy spiega come trattiamo i tuoi dati.",
+      "leggiTermini": "Leggi i Termini",
+      "leggiPrivacy": "Leggi la Privacy",
+      "accetto": "Accetto i Termini e ho letto la Privacy"
+    },
+    "cookie": {
+      "titolo": "Cookie",
+      "testo": "Usiamo cookie tecnici, necessari al funzionamento e sempre attivi. Solo se lo vuoi, usiamo anche cookie di statistica per capire come viene usata l'app. Puoi cambiare idea quando vuoi dalle impostazioni.",
+      "dettagli": "Dettagli sui cookie",
+      "accetta": "Accetta tutti",
+      "rifiuta": "Rifiuta non essenziali"
+    }
+  },
+  "piepagina": {
+    "privacy": "Privacy",
+    "termini": "Termini",
+    "cookie": "Cookie",
+    "impostazioni": "Impostazioni"
+  },
+  "impostazioni": {
+    "titolo": "Impostazioni",
+    "salvato": "Scelta salvata.",
+    "cookie": {
+      "titolo": "Cookie",
+      "tecnici": "I cookie tecnici sono sempre attivi: servono a far funzionare l'app e non si possono disattivare.",
+      "statistiche": "Attiva i cookie di statistica (per capire come viene usata l'app)"
+    }
   }
 }

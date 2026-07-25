@@ -4,6 +4,8 @@ import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
 import { routing } from "@/i18n/routing";
 import { SelettoreDemo } from "@/components/SelettoreDemo";
+import { Onboarding } from "@/components/Onboarding";
+import { PiePagina } from "@/components/PiePagina";
 import "../globals.css";
 
 export const metadata: Metadata = {
@@ -44,6 +46,8 @@ export default async function LocaleLayout({
       <body>
         <NextIntlClientProvider>
           {children}
+          <PiePagina />
+          <Onboarding />
           <SelettoreDemo />
         </NextIntlClientProvider>
       </body>
