@@ -50,7 +50,12 @@ export function CatturaMemoria() {
   const [nomeNarratore, setNomeNarratore] = useState("");
   const [annoNascita, setAnnoNascita] = useState("");
   const [nota, setNota] = useState("");
-  const [consenso, setConsenso] = useState(false);
+  // Dichiarazione per-contenuto. provenienza guida i due percorsi.
+  const [provenienza, setProvenienza] = useState<"mio" | "altro" | null>(null);
+  const [confermaMia, setConfermaMia] = useState(false);   // percorso "è mio", un tocco
+  const [permesso, setPermesso] = useState(false);         // "altro": ho il permesso
+  const [consensoVoce, setConsensoVoce] = useState(false); // "altro": consenso alla voce
+  const [veridicitaAltro, setVeridicitaAltro] = useState(false);
   const [salvataggio, setSalvataggio] = useState(false);
   const [salvata, setSalvata] = useState(false);
   const [coda, setCoda] = useState<StatoCoda | null>(null);
@@ -86,10 +91,19 @@ export function CatturaMemoria() {
   const restanoMs = Math.max(0, limiti.audioDurataMassimaMs - durataMs);
   const quotaEsaurita = rimanenti !== null && rimanenti <= 0;
 
+  // La dichiarazione è completa? Un tocco se è mia; le tre conferme se è altrui.
+  const dichiarazioneOk =
+    provenienza === "mio"
+      ? confermaMia
+      : provenienza === "altro"
+        ? permesso && consensoVoce && veridicitaAltro
+        : false;
+
   async function salva() {
-    if (!registrazione || !consenso) return;
+    if (!registrazione || !dichiarazioneOk) return;
     setSalvataggio(true);
     try {
+      const mia = provenienza === "mio";
       const anno = annoNascita.trim() === "" ? null : Number(annoNascita);
       await salvaMemoria({
         id: crypto.randomUUID(),
@@ -97,11 +111,16 @@ export function CatturaMemoria() {
         mimeType: registrazione.mimeType,
         durataMs: registrazione.durataMs,
         creataIl: Date.now(),
-        narratoreNome: nomeNarratore.trim() || null,
-        narratoreAnnoNascita: Number.isFinite(anno) ? anno : null,
-        consenso,
+        // Se è la mia storia, il narratore sono io: niente nome del testimone.
+        narratoreNome: mia ? null : nomeNarratore.trim() || null,
+        narratoreAnnoNascita: mia ? null : (Number.isFinite(anno) ? anno : null),
+        // Consenso alla voce: implicito se è mia, esplicito se è di un altro.
+        consenso: mia ? true : consensoVoce,
         nota: nota.trim() || null,
         poiId: null,
+        vocePropria: mia,
+        permessoTerzi: mia ? false : permesso,
+        veridicita: mia ? true : veridicitaAltro,
         stato: "in_attesa",
         tentativi: 0,
         ultimoErrore: null,
@@ -120,7 +139,11 @@ export function CatturaMemoria() {
     setNomeNarratore("");
     setAnnoNascita("");
     setNota("");
-    setConsenso(false);
+    setProvenienza(null);
+    setConfermaMia(false);
+    setPermesso(false);
+    setConsensoVoce(false);
+    setVeridicitaAltro(false);
     setSalvata(false);
   }
 
@@ -223,59 +246,112 @@ export function CatturaMemoria() {
         </div>
       )}
 
-      {/* --- Dati del testimone e consenso --- */}
+      {/* --- Dichiarazione: una domanda sola, poi il percorso leggero o pesante --- */}
       {fase === "dati" && (
         <div className={styles.blocco}>
-          <label className={styles.campo}>
-            <span>{t("campi.nomeTestimone")}</span>
-            <input
-              type="text"
-              value={nomeNarratore}
-              onChange={(e) => setNomeNarratore(e.target.value)}
-              autoComplete="off"
-            />
-          </label>
+          {/* La domanda unica. */}
+          <p className={styles.domanda}>{t("dichiarazione.domanda")}</p>
+          <div className={styles.scelteProvenienza}>
+            <button
+              className={provenienza === "mio" ? styles.sceltaAttiva : styles.scelta}
+              onClick={() => setProvenienza("mio")}
+            >
+              {t("dichiarazione.eMio")}
+            </button>
+            <button
+              className={provenienza === "altro" ? styles.sceltaAttiva : styles.scelta}
+              onClick={() => setProvenienza("altro")}
+            >
+              {t("dichiarazione.eAltro")}
+            </button>
+          </div>
 
-          <label className={styles.campo}>
-            <span>{t("campi.annoNascita")}</span>
-            <input
-              type="number"
-              inputMode="numeric"
-              min={1850}
-              max={new Date().getFullYear()}
-              value={annoNascita}
-              onChange={(e) => setAnnoNascita(e.target.value)}
-            />
-          </label>
+          {/* Percorso "è mio": un solo tocco. */}
+          {provenienza === "mio" && (
+            <label className={styles.consenso}>
+              <input
+                type="checkbox"
+                checked={confermaMia}
+                onChange={(e) => setConfermaMia(e.target.checked)}
+              />
+              <span>{t("dichiarazione.confermaMia")}</span>
+            </label>
+          )}
 
-          <label className={styles.campo}>
-            <span>{t("campi.nota")}</span>
-            <textarea
-              rows={3}
-              value={nota}
-              maxLength={limiti.testoLunghezzaMassima}
-              onChange={(e) => setNota(e.target.value)}
-              placeholder={t("campi.notaEsempio")}
-            />
-            <small className={styles.aiuto}>
-              {t("campi.notaAiuto")}{" "}
-              <span className={styles.contatore}>
-                {nota.length}/{limiti.testoLunghezzaMassima}
-              </span>
-            </small>
-          </label>
+          {/* Percorso "è di un'altra persona": l'avviso obbligatorio. */}
+          {provenienza === "altro" && (
+            <>
+              <label className={styles.campo}>
+                <span>{t("campi.nomeTestimone")}</span>
+                <input
+                  type="text"
+                  value={nomeNarratore}
+                  onChange={(e) => setNomeNarratore(e.target.value)}
+                  autoComplete="off"
+                />
+              </label>
+              <label className={styles.campo}>
+                <span>{t("campi.annoNascita")}</span>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min={1850}
+                  max={new Date().getFullYear()}
+                  value={annoNascita}
+                  onChange={(e) => setAnnoNascita(e.target.value)}
+                />
+              </label>
 
-          <label className={styles.consenso}>
-            <input
-              type="checkbox"
-              checked={consenso}
-              onChange={(e) => setConsenso(e.target.checked)}
-            />
-            <span>{t("consenso.etichetta")}</span>
-          </label>
-          <p className={styles.aiuto}>{t("consenso.spiegazione")}</p>
+              <p className={styles.avvisoPesante}>{t("dichiarazione.avvisoTerzi")}</p>
 
-          <p className={styles.registroPubblico}>{t("registro")}</p>
+              <label className={styles.consenso}>
+                <input
+                  type="checkbox"
+                  checked={permesso}
+                  onChange={(e) => setPermesso(e.target.checked)}
+                />
+                <span>{t("dichiarazione.hoPermesso")}</span>
+              </label>
+              <label className={styles.consenso}>
+                <input
+                  type="checkbox"
+                  checked={consensoVoce}
+                  onChange={(e) => setConsensoVoce(e.target.checked)}
+                />
+                <span>{t("dichiarazione.consensoVoce")}</span>
+              </label>
+              <label className={styles.consenso}>
+                <input
+                  type="checkbox"
+                  checked={veridicitaAltro}
+                  onChange={(e) => setVeridicitaAltro(e.target.checked)}
+                />
+                <span>{t("dichiarazione.veridicita")}</span>
+              </label>
+            </>
+          )}
+
+          {/* Nota di chi raccoglie: sempre disponibile. */}
+          {provenienza && (
+            <label className={styles.campo}>
+              <span>{t("campi.nota")}</span>
+              <textarea
+                rows={3}
+                value={nota}
+                maxLength={limiti.testoLunghezzaMassima}
+                onChange={(e) => setNota(e.target.value)}
+                placeholder={t("campi.notaEsempio")}
+              />
+              <small className={styles.aiuto}>
+                {t("campi.notaAiuto")}{" "}
+                <span className={styles.contatore}>
+                  {nota.length}/{limiti.testoLunghezzaMassima}
+                </span>
+              </small>
+            </label>
+          )}
+
+          {provenienza && <p className={styles.registroPubblico}>{t("registro")}</p>}
 
           <div className={styles.azioni}>
             <button className={styles.secondario} onClick={() => setFase("riascolta")}>
@@ -284,12 +360,11 @@ export function CatturaMemoria() {
             <button
               className={styles.primario}
               onClick={() => void salva()}
-              disabled={!consenso || salvataggio}
+              disabled={!dichiarazioneOk || salvataggio}
             >
-              {salvataggio ? t("azioni.salvataggio") : t("azioni.salva")}
+              {salvataggio ? t("azioni.salvataggio") : t("azioni.pubblica")}
             </button>
           </div>
-          {!consenso && <p className={styles.aiuto}>{t("consenso.obbligatorio")}</p>}
         </div>
       )}
     </section>

@@ -26,7 +26,8 @@
       "indietro": "Back",
       "salva": "Save the memory",
       "salvataggio": "Saving…",
-      "altraMemoria": "Record another memory"
+      "altraMemoria": "Record another memory",
+      "pubblica": "Publish"
     },
     "riascolto": {
       "durata": "Recording of {durata}. Listen back before continuing."
@@ -59,6 +60,16 @@
       "inviata": "It has been sent.",
       "inCorso": "Sending…",
       "offline": "It is safe on your phone. It will send itself as soon as the network is back."
+    },
+    "dichiarazione": {
+      "domanda": "Are the story and the voice yours or someone else's?",
+      "eMio": "It's mine",
+      "eAltro": "It's someone else's",
+      "confermaMia": "This is my story and it is true as far as I know; I accept that other users listen to it and read it.",
+      "avvisoTerzi": "You may publish another person's story ONLY if you have their permission. You are responsible for having obtained it. The platform is not liable for anything published without the permission of the person involved.",
+      "hoPermesso": "I have this person's permission to publish their story.",
+      "consensoVoce": "This person accepts that their voice is published and listened to.",
+      "veridicita": "The story is true as far as I know."
     }
   },
   "mappa": {

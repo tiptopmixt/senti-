@@ -36,6 +36,11 @@ export interface MemoriaLocale {
   nota: string | null;
   poiId: string | null;
 
+  // Dichiarazione per-contenuto (la prova specifica, salvata all'invio).
+  vocePropria: boolean;      // true = la mia storia; false = di un'altra persona
+  permessoTerzi: boolean;    // se non è mia, dichiaro di avere il permesso
+  veridicita: boolean;       // è vera per quanto ne so
+
   stato: StatoInvio;
   tentativi: number;
   ultimoErrore: string | null;

@@ -93,6 +93,47 @@ export async function urlAudioFirmato(mediaPath: string): Promise<string | null>
 }
 
 /**
+ * Pubblica una memoria audio E salva la dichiarazione, in un'unica transazione
+ * lato server (RPC pubblica_memoria). La dichiarazione è la prova specifica per
+ * quel contenuto: viene registrata davvero, non solo mostrata.
+ *
+ * Il server rifiuta: storia altrui senza permesso; audio senza consenso alla
+ * voce; senza dichiarazione di veridicità.
+ */
+export async function pubblicaMemoriaAudio(input: {
+  mediaPath: string;
+  audioDurationMs: number | null;
+  poiId: string | null;
+  note: string | null;
+  narratorName: string | null;
+  narratorBirthYear: number | null;
+  eventYear: number | null;
+  narratorConsent: boolean;
+  isAnonymous: boolean;
+  vocePropria: boolean;
+  permessoTerzi: boolean;
+  veridicita: boolean;
+}): Promise<{ id: string }> {
+  const { data, error } = await getSupabaseClient().rpc("pubblica_memoria", {
+    p_kind: "audio",
+    p_poi_id: input.poiId,
+    p_media_path: input.mediaPath,
+    p_audio_duration_ms: input.audioDurationMs,
+    p_body: input.note,
+    p_narrator_name: input.narratorName,
+    p_narrator_birth_year: input.narratorBirthYear,
+    p_event_year: input.eventYear,
+    p_narrator_consent: input.narratorConsent,
+    p_is_anonymous: input.isAnonymous,
+    p_voce_propria: input.vocePropria,
+    p_permesso_terzi: input.permessoTerzi,
+    p_veridicita: input.veridicita,
+  });
+  if (error) throw new Error(`Pubblicazione fallita: ${error.message}`);
+  return { id: String(data) };
+}
+
+/**
  * Memorie pubbliche di un luogo. Passa SOLO dalla vista `v_contributions_public`:
  * è il meccanismo che garantisce che `author_id` non esca mai.
  */

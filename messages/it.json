@@ -26,7 +26,8 @@
       "indietro": "Indietro",
       "salva": "Salva la memoria",
       "salvataggio": "Salvataggio…",
-      "altraMemoria": "Registra un'altra memoria"
+      "altraMemoria": "Registra un'altra memoria",
+      "pubblica": "Pubblica"
     },
     "riascolto": {
       "durata": "Registrazione di {durata}. Riascoltala prima di continuare."
@@ -59,6 +60,16 @@
       "inviata": "È stata inviata.",
       "inCorso": "Invio in corso…",
       "offline": "È al sicuro sul telefono. Partirà da sola appena torna la rete."
+    },
+    "dichiarazione": {
+      "domanda": "Il racconto e la voce sono tuoi o di un'altra persona?",
+      "eMio": "È mio",
+      "eAltro": "È di un'altra persona",
+      "confermaMia": "È la mia storia ed è vera per quanto ne so; accetto che altri utenti la ascoltino e la leggano.",
+      "avvisoTerzi": "Puoi pubblicare il racconto di un'altra persona SOLO se hai il suo permesso. Sei tu il responsabile di averlo ottenuto. La piattaforma non risponde di pubblicazioni fatte senza il permesso della persona coinvolta.",
+      "hoPermesso": "Ho il permesso di questa persona a pubblicare il suo racconto.",
+      "consensoVoce": "Questa persona accetta che la sua voce sia pubblicata e ascoltata.",
+      "veridicita": "Il racconto è vero per quanto ne so."
     }
   },
   "mappa": {

@@ -5,7 +5,7 @@ import {
   tutteLeMemorie,
   type MemoriaLocale,
 } from "./db";
-import { caricaAudio, creaMemoriaAudio } from "@/lib/queries/contributions";
+import { caricaAudio, pubblicaMemoriaAudio } from "@/lib/queries/contributions";
 
 /**
  * Coda di invio delle memorie registrate.
@@ -54,14 +54,19 @@ async function inviaUna(m: MemoriaLocale): Promise<void> {
 
   const percorso = await caricaAudio(m.id, m.blob, m.mimeType);
 
-  await creaMemoriaAudio({
-    poiId: m.poiId,
+  await pubblicaMemoriaAudio({
     mediaPath: percorso,
     audioDurationMs: m.durataMs,
+    poiId: m.poiId,
     note: m.nota,
     narratorName: m.narratoreNome,
     narratorBirthYear: m.narratoreAnnoNascita,
+    eventYear: null,
     narratorConsent: m.consenso,
+    isAnonymous: true,
+    vocePropria: m.vocePropria,
+    permessoTerzi: m.permessoTerzi,
+    veridicita: m.veridicita,
   });
 
   // Inviata: il server ne è ora custode, liberiamo lo spazio sul telefono.
