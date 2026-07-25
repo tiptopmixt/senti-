@@ -170,6 +170,10 @@
   opacity: 0.7;
 }
 
+.azioniVoce {
+  margin-top: 0.5rem;
+}
+
 /* --- Player audio --- */
 .player {
   width: 100%;

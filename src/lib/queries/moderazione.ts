@@ -18,6 +18,10 @@ const memoriaModerazioneSchema = z.object({
   event_year: z.number().int().nullable(),
   text_source: z.enum(["raccoglitore", "automatica", "nessuno"]),
   narrator_consent: z.boolean(),
+  voce_propria: z.boolean().nullable(),
+  permesso_terzi: z.boolean().nullable(),
+  segnalazioni: z.number().int(),
+  motivi_segnalazioni: z.string().nullable(),
   created_at: z.string(),
 });
 export type MemoriaModerazione = z.infer<typeof memoriaModerazioneSchema>;

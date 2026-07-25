@@ -166,7 +166,10 @@
     "aiutoVuoto": "Nessun suggerimento.",
     "aiutoErrore": "Assistente non disponibile: {errore}",
     "approva": "Approva",
-    "rifiuta": "Rifiuta"
+    "rifiuta": "Rifiuta",
+    "storiaAltrui": "Storia altrui",
+    "segnalata": "{n, plural, one {# segnalazione} other {# segnalazioni}}",
+    "motivi": "Motivi"
   },
   "io": {
     "titolo": "Il tuo registro",
@@ -228,6 +231,17 @@
       "titolo": "Cookie",
       "tecnici": "I cookie tecnici sono sempre attivi: servono a far funzionare l'app e non si possono disattivare.",
       "statistiche": "Attiva i cookie di statistica (per capire come viene usata l'app)"
+    }
+  },
+  "segnala": {
+    "segnala": "Segnala",
+    "grazie": "Segnalato, grazie.",
+    "perche": "Perché lo segnali?",
+    "motivi": {
+      "falso_ingannevole": "Contenuto falso o ingannevole",
+      "senza_permesso": "Pubblicato senza permesso della persona coinvolta",
+      "offensivo": "Offensivo o inappropriato",
+      "altro": "Altro motivo"
     }
   }
 }

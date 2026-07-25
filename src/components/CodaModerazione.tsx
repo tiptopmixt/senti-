@@ -132,10 +132,24 @@ function RigaMemoria({
       <div className={styles.metaRiga}>
         <span className={styles.luogo}>{memoria.poi_nome ?? t("senzaLuogo")}</span>
         <span className={styles.tipo}>{t(`tipo.${memoria.kind}`)}</span>
+        {memoria.voce_propria === false && (
+          <span className={styles.tipo}>{t("storiaAltrui")}</span>
+        )}
         {!memoria.narrator_consent && (
           <span className={styles.allarme}>{t("senzaConsenso")}</span>
         )}
+        {memoria.segnalazioni > 0 && (
+          <span className={styles.allarme}>
+            {t("segnalata", { n: memoria.segnalazioni })}
+          </span>
+        )}
       </div>
+
+      {memoria.segnalazioni > 0 && memoria.motivi_segnalazioni && (
+        <p className={styles.motiviSegnalazione}>
+          {t("motivi")}: {memoria.motivi_segnalazioni}
+        </p>
+      )}
 
       {memoria.narrator_name && (
         <p className={styles.testimone}>

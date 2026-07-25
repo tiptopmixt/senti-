@@ -6,6 +6,7 @@ import { Link } from "@/i18n/navigation";
 import { cosaESuccessoQui, type VoceTempo } from "@/lib/queries/timeline";
 import { urlAudioFirmato } from "@/lib/queries/contributions";
 import { registraVisita } from "@/lib/queries/dashboard";
+import { Segnala } from "./Segnala";
 import styles from "./ColonnaTempo.module.css";
 
 interface Props {
@@ -120,6 +121,13 @@ function VoceRiga({ voce }: { voce: VoceTempo }) {
         )}
         {voce.tipo === "memoria" && voce.text_source === "raccoglitore" && voce.testo && (
           <p className={styles.origineTesto}>{t("origine.raccoglitore")}</p>
+        )}
+
+        {/* Segnala: solo sulle memorie degli utenti, non sugli eventi storici. */}
+        {voce.tipo === "memoria" && (
+          <div className={styles.azioniVoce}>
+            <Segnala contributionId={voce.id} />
+          </div>
         )}
       </div>
     </li>

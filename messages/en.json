@@ -166,7 +166,10 @@
     "aiutoVuoto": "No suggestions.",
     "aiutoErrore": "Assistant unavailable: {errore}",
     "approva": "Approve",
-    "rifiuta": "Reject"
+    "rifiuta": "Reject",
+    "storiaAltrui": "Someone else's story",
+    "segnalata": "{n, plural, one {# report} other {# reports}}",
+    "motivi": "Reasons"
   },
   "io": {
     "titolo": "Your ledger",
@@ -228,6 +231,17 @@
       "titolo": "Cookies",
       "tecnici": "Technical cookies are always on: they run the app and cannot be turned off.",
       "statistiche": "Enable statistics cookies (to understand how the app is used)"
+    }
+  },
+  "segnala": {
+    "segnala": "Report",
+    "grazie": "Reported, thank you.",
+    "perche": "Why are you reporting it?",
+    "motivi": {
+      "falso_ingannevole": "False or misleading content",
+      "senza_permesso": "Published without the involved person's permission",
+      "offensivo": "Offensive or inappropriate",
+      "altro": "Other reason"
     }
   }
 }
