@@ -3,7 +3,12 @@
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import { cosaESuccessoQui, type VoceTempo } from "@/lib/queries/timeline";
+import {
+  contestiPerMemorie,
+  cosaESuccessoQui,
+  type ContestoStorico,
+  type VoceTempo,
+} from "@/lib/queries/timeline";
 import { urlAudioFirmato } from "@/lib/queries/contributions";
 import { registraVisita } from "@/lib/queries/dashboard";
 import { Segnala } from "./Segnala";
@@ -32,14 +37,22 @@ interface Props {
 export function ColonnaTempo({ lon, lat, nomeLuogo, poiId, onChiudi }: Props) {
   const t = useTranslations("qui");
   const [voci, setVoci] = useState<VoceTempo[] | null>(null);
+  const [contesti, setContesti] = useState<Map<string, ContestoStorico>>(new Map());
   const [errore, setErrore] = useState<string | null>(null);
 
   useEffect(() => {
     let vivo = true;
     setVoci(null);
+    setContesti(new Map());
     setErrore(null);
     cosaESuccessoQui(lon, lat)
-      .then((v) => vivo && setVoci(v))
+      .then(async (v) => {
+        if (!vivo) return;
+        setVoci(v);
+        const idMemorie = v.filter((x) => x.tipo === "memoria").map((x) => x.id);
+        const c = await contestiPerMemorie(idMemorie);
+        if (vivo) setContesti(c);
+      })
       .catch((e) => vivo && setErrore(e instanceof Error ? e.message : String(e)));
     // Registra la visita al luogo (fire-and-forget, dedup lato server).
     if (poiId) void registraVisita(poiId);
@@ -80,7 +93,11 @@ export function ColonnaTempo({ lon, lat, nomeLuogo, poiId, onChiudi }: Props) {
       {voci !== null && voci.length > 0 && (
         <ol className={styles.colonna}>
           {voci.map((v) => (
-            <VoceRiga key={`${v.tipo}-${v.id}`} voce={v} />
+            <VoceRiga
+              key={`${v.tipo}-${v.id}`}
+              voce={v}
+              contesto={v.tipo === "memoria" ? contesti.get(v.id) : undefined}
+            />
           ))}
         </ol>
       )}
@@ -88,7 +105,13 @@ export function ColonnaTempo({ lon, lat, nomeLuogo, poiId, onChiudi }: Props) {
   );
 }
 
-function VoceRiga({ voce }: { voce: VoceTempo }) {
+function VoceRiga({
+  voce,
+  contesto,
+}: {
+  voce: VoceTempo;
+  contesto?: ContestoStorico;
+}) {
   const t = useTranslations("qui");
   const campagna = voce.tipo === "campagna";
 
@@ -128,6 +151,24 @@ function VoceRiga({ voce }: { voce: VoceTempo }) {
           <div className={styles.azioniVoce}>
             <Segnala contributionId={voce.id} />
           </div>
+        )}
+
+        {/* Contesto storico: riquadro SEPARATO, aggiunta della piattaforma.
+            È chiaramente distinto dal racconto e non ne giudica la verità. */}
+        {contesto && (
+          <aside className={styles.contesto}>
+            <p className={styles.contestoTitolo}>{contesto.titolo}</p>
+            <p className={styles.contestoTesto}>{contesto.corpo}</p>
+            {contesto.fonte_url && (
+              <p className={styles.contestoFonte}>
+                {t("contesto.fonte")}:{" "}
+                <a href={contesto.fonte_url} target="_blank" rel="noopener noreferrer">
+                  {contesto.fonte_nome ?? contesto.fonte_url}
+                </a>
+              </p>
+            )}
+            <p className={styles.contestoNota}>{t("contesto.nota")}</p>
+          </aside>
         )}
       </div>
     </li>

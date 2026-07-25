@@ -404,6 +404,10 @@ verify_jwt = true
 [functions.curate]
 verify_jwt = true
 
+# `context` aggiunge il contesto storico (azione della piattaforma).
+[functions.context]
+verify_jwt = true
+
 [analytics]
 enabled = true
 port = 54327

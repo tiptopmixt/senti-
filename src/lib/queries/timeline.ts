@@ -23,6 +23,31 @@ const voceSchema = z.object({
 });
 export type VoceTempo = z.infer<typeof voceSchema>;
 
+// --- Contesto storico (aggiunta della piattaforma, separata dal racconto) ---
+const contestoSchema = z.object({
+  contribution_id: z.guid(),
+  titolo: z.string(),
+  corpo: z.string(),
+  fonte_nome: z.string().nullable(),
+  fonte_url: z.string().nullable(),
+});
+export type ContestoStorico = z.infer<typeof contestoSchema>;
+
+/** Contesti storici per un insieme di memorie (uno alla volta, batch unico). */
+export async function contestiPerMemorie(
+  ids: string[],
+): Promise<Map<string, ContestoStorico>> {
+  if (ids.length === 0) return new Map();
+  const { data, error } = await getSupabaseClient()
+    .from("contribution_context")
+    .select("contribution_id, titolo, corpo, fonte_nome, fonte_url")
+    .in("contribution_id", ids);
+  if (error) return new Map();
+  const righe = contestoSchema.array().safeParse(data ?? []);
+  if (!righe.success) return new Map();
+  return new Map(righe.data.map((c) => [c.contribution_id, c]));
+}
+
 export async function cosaESuccessoQui(
   lon: number,
   lat: number,

@@ -129,6 +129,10 @@
       "titolo": "Nothing here yet.",
       "testo": "No memories and no events within range of this point. You can be the first voice to tell it.",
       "invito": "Tell this place"
+    },
+    "contesto": {
+      "fonte": "Source",
+      "nota": "Context added by the platform, not part of the testimony."
     }
   },
   "condividi": {

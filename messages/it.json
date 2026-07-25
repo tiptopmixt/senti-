@@ -129,6 +129,10 @@
       "titolo": "Qui non c'è ancora niente.",
       "testo": "Nessuna memoria e nessun evento nel raggio di questo punto. Puoi essere la prima voce a raccontarlo.",
       "invito": "Racconta questo luogo"
+    },
+    "contesto": {
+      "fonte": "Fonte",
+      "nota": "Contesto aggiunto dalla piattaforma, non fa parte della testimonianza."
     }
   },
   "condividi": {

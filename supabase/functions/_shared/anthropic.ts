@@ -49,3 +49,60 @@ export async function synthesize(system: string, user: string): Promise<string> 
     .join("\n")
     .trim();
 }
+
+/**
+ * Contesto storico di un fatto pubblico citato in una testimonianza.
+ *
+ * Usa la ricerca web per trovare una FONTE VERA (niente link inventati). Regole
+ * ferree nel prompt: non dice mai se il racconto è vero o falso, non commenta la
+ * testimonianza, e se non trova una fonte affidabile restituisce null.
+ */
+export async function contestoStorico(testo: string): Promise<{
+  corpo: string;
+  fonte_nome: string | null;
+  fonte_url: string | null;
+} | null> {
+  const system = `Sei un assistente che aggiunge CONTESTO STORICO accanto a una testimonianza personale, come nota separata della piattaforma. Non fai parte della testimonianza.
+
+Regole assolute:
+- NON dichiarare mai se il racconto è vero o falso. NON commentare, valutare o mettere in dubbio la testimonianza.
+- Interviene SOLO se la testimonianza cita un fatto storico pubblico e databile (una battaglia, un evento noto, una data precisa, un luogo storico).
+- Cerca sul web una fonte affidabile (enciclopedia, archivio, istituzione) e cita SOLO informazioni che trovi nella fonte. NON inventare date, nomi o link.
+- Se NON trovi un fatto storico pubblico, o NON trovi una fonte affidabile, non scrivere nulla.
+
+Rispondi SOLO con un oggetto JSON, senza altro testo:
+{"trovato": true|false, "corpo": "2-4 frasi di contesto storico neutro", "fonte_nome": "nome della fonte", "fonte_url": "URL della fonte"}
+Se trovato è false, gli altri campi possono essere vuoti.`;
+
+  const response = await client().messages.create({
+    model: MODEL,
+    max_tokens: 1024,
+    system,
+    tools: [{ type: "web_search_20260209", name: "web_search", max_uses: 3 }],
+    messages: [
+      {
+        role: "user",
+        content: `Testimonianza:\n"${testo}"\n\nC'è un fatto storico pubblico e databile? Rispondi solo col JSON.`,
+      },
+    ],
+  });
+
+  const testoRisposta = response.content
+    .filter((b): b is Anthropic.TextBlock => b.type === "text")
+    .map((b) => b.text)
+    .join("\n");
+
+  const match = testoRisposta.match(/\{[\s\S]*\}/);
+  if (!match) return null;
+  try {
+    const j = JSON.parse(match[0]);
+    if (!j.trovato || !j.corpo) return null;
+    return {
+      corpo: String(j.corpo).trim(),
+      fonte_nome: j.fonte_nome ? String(j.fonte_nome) : null,
+      fonte_url: j.fonte_url ? String(j.fonte_url) : null,
+    };
+  } catch {
+    return null;
+  }
+}
