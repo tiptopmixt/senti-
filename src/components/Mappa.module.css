@@ -117,49 +117,42 @@
   border-top-color: #a98a63;
 }
 
-/* --- Azioni principali, grandi e in basso (fixed = sempre a portata) --- */
-.aggiungi {
+/* --- Azioni: pillole compatte in basso a destra, poco invasive --- */
+.aggiungi,
+.sonoQui {
   position: fixed;
-  left: 0.75rem;
   right: 0.75rem;
-  bottom: 7.3rem;
-  min-height: 3.5rem;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
+  gap: 0.35rem;
+  min-height: 2.5rem;
+  padding: 0 0.9rem;
   font: inherit;
-  font-size: 1.1rem;
+  font-size: 0.9rem;
   font-weight: 700;
   border: none;
-  border-radius: 0.85rem;
+  border-radius: 2rem;
   cursor: pointer;
-  background: #2f2415;
   color: #f6f1e4;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.3);
   z-index: 4;
 }
 
+.aggiungi {
+  bottom: 4.6rem;
+  background: #2f2415;
+}
+
 .sonoQui {
-  position: fixed;
-  left: 0.75rem;
-  right: 0.75rem;
-  bottom: 3.5rem;
-  min-height: 3.5rem;
-  font: inherit;
-  font-size: 1.1rem;
+  bottom: 1.6rem;
   font-weight: 600;
-  border: none;
-  border-radius: 0.85rem;
-  cursor: pointer;
   background: #7a2f22;
-  color: #f6f1e4;
-  z-index: 4;
 }
 
 .suggerimento {
   position: fixed;
   left: 0.75rem;
-  right: 0.75rem;
+  right: 9.5rem; /* lascia spazio alle pillole a destra */
   bottom: 1.1rem;
   margin: 0;
   text-align: center;

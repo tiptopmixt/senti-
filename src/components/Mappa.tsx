@@ -5,7 +5,6 @@ import { useTranslations } from "next-intl";
 import type { GeoJSONSource, Map as MapLibreMap } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import {
-  COLORI_CERTEZZA,
   TRATTEGGIO_CERTEZZA,
   stileCartaAntica,
 } from "@/lib/mappa/stile";
@@ -32,6 +31,27 @@ const CENTRO: [number, number] = [12, 35];
 const ZOOM = 1.6;
 
 const CERTEZZE = ["attestato", "probabile", "ipotetico"] as const;
+
+// Un colore per ogni impero/fazione: le frecce di ogni campagna prendono il
+// colore del suo impero, così si distingue a colpo d'occhio chi è chi.
+const COLORE_IMPERO: Record<string, string> = {
+  egitto: "#b8860b",
+  persia: "#6b3fa0",
+  grecia: "#1f6f8b",
+  cartagine: "#b5651d",
+  roma: "#a01818",
+  arabi: "#2e7d32",
+  franchi: "#3949ab",
+  crociati: "#8d6e63",
+  mongoli: "#d84315",
+  ottomani: "#00838f",
+  spagna: "#c2185b",
+  francia: "#283593",
+  russia: "#5d4037",
+  italia: "#558b2f",
+  mondiali: "#37474f",
+};
+const COLORE_DEFAULT = "#5c3a1e";
 
 interface PuntoNuovo {
   lon: number;
@@ -232,16 +252,17 @@ export function Mappa() {
     const mappa = mappaRef.current;
     if (!mappa || !pronta) return;
 
-    // Filtro dei livelli percorso.
+    // Filtro dei livelli percorso (linee e frecce).
     for (const c of CERTEZZE) {
-      const id = `percorsi-${c}`;
-      if (!mappa.getLayer(id)) continue;
-      mappa.setFilter(
-        id,
-        routeIdsVisibili === null
-          ? null
-          : ["in", ["get", "route_id"], ["literal", routeIdsVisibili]],
-      );
+      for (const id of [`percorsi-${c}`, `percorsi-${c}-frecce`]) {
+        if (!mappa.getLayer(id)) continue;
+        mappa.setFilter(
+          id,
+          routeIdsVisibili === null
+            ? null
+            : ["in", ["get", "route_id"], ["literal", routeIdsVisibili]],
+        );
+      }
     }
 
     const infoSrc = mappa.getSource("campagna-info") as GeoJSONSource | undefined;
@@ -524,13 +545,29 @@ export function Mappa() {
 /** Carica ritrovamenti e percorsi e li disegna. `store` riceve i segmenti
  *  caricati, così il componente può calcolare i limiti per il centraggio. */
 async function caricaDati(mappa: MapLibreMap, store?: (s: Segmento[]) => void) {
-  const [luoghi, segmenti] = await Promise.all([
+  const [luoghi, segmenti, cmds, routes, imps] = await Promise.all([
     luoghiPubblici().catch(() => []),
     segmentiPercorsi().catch(() => []),
+    condottieri().catch(() => []),
+    percorsi().catch(() => []),
+    imperi().catch(() => []),
   ]);
   store?.(segmenti);
 
-  // --- Percorsi: un livello per grado di certezza --------------------------
+  // route_id → colore dell'impero (per colorare linee e frecce per fazione).
+  const empColor = new Map(imps.map((e) => [e.id, COLORE_IMPERO[e.slug] ?? COLORE_DEFAULT]));
+  const cmdEmp = new Map(cmds.map((c) => [c.id, c.empire_id]));
+  const routeColor = new Map<string, string>();
+  for (const r of routes) {
+    const eid = r.commander_id ? cmdEmp.get(r.commander_id) : null;
+    routeColor.set(r.id, (eid && empColor.get(eid)) || COLORE_DEFAULT);
+  }
+  const coloreDi = (routeId: string) => routeColor.get(routeId) ?? COLORE_DEFAULT;
+
+  // --- Percorsi: linee colorate per impero + frecce direzionali ------------
+  // La certezza resta lo STILE della linea (continua/tratteggiata/punteggiata);
+  // il COLORE indica l'impero/fazione. Le frecce mostrano la direzione (e la
+  // lunghezza) della campagna.
   for (const certezza of CERTEZZE) {
     const idSorgente = `percorsi-${certezza}`;
     const dati: GeoJSON.FeatureCollection = {
@@ -540,7 +577,7 @@ async function caricaDati(mappa: MapLibreMap, store?: (s: Segmento[]) => void) {
         .map((s) => ({
           type: "Feature" as const,
           geometry: s.geojson as GeoJSON.LineString,
-          properties: { route_id: s.route_id, certainty: s.certainty },
+          properties: { route_id: s.route_id, certainty: s.certainty, color: coloreDi(s.route_id) },
         })),
     };
 
@@ -558,9 +595,29 @@ async function caricaDati(mappa: MapLibreMap, store?: (s: Segmento[]) => void) {
       source: idSorgente,
       layout: { "line-cap": tratteggio ? "butt" : "round", "line-join": "round" },
       paint: {
-        "line-color": COLORI_CERTEZZA[certezza],
+        "line-color": ["get", "color"],
         "line-width": ["interpolate", ["linear"], ["zoom"], 3, 1.5, 15, 4.5],
         ...(tratteggio ? { "line-dasharray": tratteggio } : {}),
+      },
+    });
+    // Frecce direzionali lungo la linea, dello stesso colore dell'impero.
+    mappa.addLayer({
+      id: `${idSorgente}-frecce`,
+      type: "symbol",
+      source: idSorgente,
+      layout: {
+        "symbol-placement": "line",
+        "symbol-spacing": 90,
+        "text-field": "▸",
+        "text-size": ["interpolate", ["linear"], ["zoom"], 3, 14, 10, 24],
+        "text-rotation-alignment": "map",
+        "text-keep-upright": false,
+        "text-allow-overlap": true,
+      },
+      paint: {
+        "text-color": ["get", "color"],
+        "text-halo-color": "#f0e5cc",
+        "text-halo-width": 1.2,
       },
     });
   }
