@@ -27,5 +27,8 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.11",
     "typescript": "^5"
+  },
+  "overrides": {
+    "@swc/helpers": "0.5.23"
   }
 }
