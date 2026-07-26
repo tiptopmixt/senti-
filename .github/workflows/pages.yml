@@ -42,8 +42,9 @@ jobs:
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
           # In produzione la modalità demo è SEMPRE spenta: niente selettore, niente seed.
           NEXT_PUBLIC_DEMO: "false"
-          # Sottocartella se il sito è una "project page" (es. /senti); vuoto con dominio custom.
-          NEXT_PUBLIC_BASE_PATH: ${{ vars.NEXT_PUBLIC_BASE_PATH }}
+          # Sottocartella della "project page": il repo è tiptopmixt.github.io/senti-.
+          # (Se un domani usi un dominio custom, rimetti "" o la variabile del repo.)
+          NEXT_PUBLIC_BASE_PATH: "/senti-"
           NEXT_PUBLIC_MAP_TILES_URL: ${{ vars.NEXT_PUBLIC_MAP_TILES_URL }}
           NEXT_PUBLIC_MAP_FONTS_URL: ${{ vars.NEXT_PUBLIC_MAP_FONTS_URL }}
 
