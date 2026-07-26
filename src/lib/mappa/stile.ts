@@ -13,10 +13,12 @@ import type { StyleSpecification } from "maplibre-gl";
  */
 
 // Sorgente delle tessere. Configurabile: vedi la nota in fondo al file.
+// NB: `||` e non `??` — in CI la variabile può arrivare come stringa vuota "",
+// che NON è undefined: con `??` resterebbe vuota e la mappa si romperebbe.
 const SORGENTE_TILES =
-  process.env.NEXT_PUBLIC_MAP_TILES_URL ?? "https://tiles.openfreemap.org/planet";
+  process.env.NEXT_PUBLIC_MAP_TILES_URL || "https://tiles.openfreemap.org/planet";
 const SORGENTE_FONTS =
-  process.env.NEXT_PUBLIC_MAP_FONTS_URL ??
+  process.env.NEXT_PUBLIC_MAP_FONTS_URL ||
   "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf";
 
 // Palette pergamena.
