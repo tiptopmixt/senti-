@@ -50,7 +50,7 @@ export function Dashboard() {
 
   // Stato vuoto: non sei zeri, ma il luogo più vicino da raccontare.
   if ((dati.contributi ?? 0) === 0) {
-    const luogo = dati.luogo_da_raccontare_vicino;
+    const luogo = dati.campagna_da_esplorare_vicino;
     return (
       <section className={styles.contenitore}>
         <h1 className={styles.titolo}>{t("titolo")}</h1>
@@ -58,7 +58,7 @@ export function Dashboard() {
           <p className={styles.vuotoTesto}>{t("vuoto.intro")}</p>
           {luogo ? (
             <>
-              <p className={styles.vuotoLuogo}>{luogo.name}</p>
+              <p className={styles.vuotoLuogo}>{luogo.title}</p>
               <p className={styles.vuotoTesto}>{t("vuoto.vicino")}</p>
             </>
           ) : (

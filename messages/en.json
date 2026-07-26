@@ -1,11 +1,11 @@
 {
   "app": {
     "name": "Senti",
-    "tagline": "A map of paths and trails enriched by people's memories."
+    "tagline": "The world map of finds, along the routes of history's great commanders."
   },
   "home": {
     "foundationNote": "Project foundation in progress.",
-    "vaiARaccontare": "Record a memory",
+    "vaiARaccontare": "Add a find",
     "vaiAllaMappa": "Open the map",
     "vaiAllIo": "My ledger"
   },
@@ -14,72 +14,87 @@
     "en": "English",
     "switch": "Change language"
   },
+  "categorie": {
+    "titolo": "What did you find?",
+    "sottotitolo": "Pick the right icon: it drives how it looks on the map.",
+    "battaglia": "Battle",
+    "munizioni": "Ammunition",
+    "equipaggiamento": "Equipment",
+    "fortificazione": "Fortification",
+    "caduti": "Fallen",
+    "tesori": "Treasure",
+    "minerali": "Minerals",
+    "fossili": "Fossils",
+    "archeologico": "Archaeological find",
+    "monumento": "Monument",
+    "aneddoto": "Anecdote / legend",
+    "foto_storica": "Historical photo"
+  },
   "cattura": {
-    "titolo": "Tell a memory",
-    "sottotitolo": "Press the button and let the person remember out loud. Details come afterwards: don't interrupt the story.",
-    "registro": "Everything you publish is recorded under your name, even when you choose to stay anonymous: others see Anonymous voice, the ledger knows it is you. Today the ledger is worth recognition. If the platform ever generates revenue, the ledger is the basis on which it gets shared. We promise no figures: we promise the count is transparent and that nobody can erase it.",
+    "titolo": "Add a find",
+    "sottotitolo": "Pick the icon, then add a photo or a couple of lines. Location comes from GPS or a tap on the map.",
+    "registro": "Everything you publish is recorded under your name, even when you choose anonymity: others see an anonymous name, the ledger knows it's you. Today the ledger is about recognition. If the platform ever earns revenue, the ledger is the basis for sharing it. We don't promise figures: we promise the count is transparent and no one can erase it.",
     "azioni": {
-      "registra": "Record",
-      "ferma": "Stop",
-      "rifai": "Record again",
-      "continua": "Continue",
+      "scattaFoto": "Take or pick a photo",
+      "scriviTesto": "Write text",
       "indietro": "Back",
-      "salva": "Save the memory",
-      "salvataggio": "Saving…",
-      "altraMemoria": "Record another memory",
+      "salva": "Publish the find",
+      "salvataggio": "Publishing…",
+      "altro": "Add another find",
       "pubblica": "Publish"
     },
-    "riascolto": {
-      "durata": "Recording of {durata}. Listen back before continuing."
-    },
     "campi": {
-      "nomeTestimone": "Who is speaking",
-      "annoNascita": "Year of birth",
-      "nota": "A line or two to find it again",
-      "notaEsempio": "e.g. rebuilding the bridge in 1948",
-      "notaAiuto": "These are your words, not the witness's: they only help you find the memory again. The voice stays the original."
-    },
-    "consenso": {
-      "etichetta": "The person speaking has consented to publishing this memory.",
-      "spiegazione": "Without consent the memory stays private: nobody sees it, and it is never transcribed.",
-      "obbligatorio": "The speaker's consent is required before saving."
+      "titolo": "Find title",
+      "titoloEsempio": "e.g. Shell casings by the ford",
+      "descrizione": "Describe what you found",
+      "annoEvento": "Year (if known)",
+      "nascondiPosizione": "Hide the exact location (for treasure or sites to protect)"
     },
     "coda": {
-      "inInvio": "{n, plural, one {# memory being sent…} other {# memories being sent…}}",
-      "attesaRete": "{n, plural, one {# memory waiting for network} other {# memories waiting for network}}"
+      "inInvio": "{n, plural, one {# find sending…} other {# finds sending…}}",
+      "attesaRete": "{n, plural, one {# find waiting for network} other {# finds waiting for network}}"
     },
     "limiti": {
-      "durataMassima": "Up to {minuti} minutes: tell one episode at a time.",
-      "restano": "{tempo} left",
-      "rimanentiMese": "{n, plural, =0 {no memories left this month} one {# memory left this month} other {# memories left this month}}",
-      "fermataAutomatica": "Recording stopped by itself at {minuti} minutes. What you recorded is safe: if the story continues, save this one and record another.",
-      "quotaEsaurita": "You have used up this month's memories. Come back next month."
+      "rimanentiMese": "{n, plural, =0 {no finds this month} one {# find this month} other {# finds this month}}",
+      "quotaEsaurita": "You've used up this month's finds. Come back next month."
     },
     "salvata": {
-      "titolo": "Memory saved",
-      "inviata": "It has been sent.",
-      "inCorso": "Sending…",
-      "offline": "It is safe on your phone. It will send itself as soon as the network is back."
+      "titolo": "Find published",
+      "inviata": "It's online.",
+      "inCorso": "Publishing…",
+      "offline": "It's safe on your phone. It'll go out on its own when the network is back."
     },
     "dichiarazione": {
-      "domanda": "Are the story and the voice yours or someone else's?",
+      "domanda": "Are the content and photo yours or someone else's?",
       "eMio": "It's mine",
-      "eAltro": "It's someone else's",
-      "confermaMia": "This is my story and it is true as far as I know; I accept that other users listen to it and read it.",
-      "avvisoTerzi": "You may publish another person's story ONLY if you have their permission. You are responsible for having obtained it. The platform is not liable for anything published without the permission of the person involved.",
-      "hoPermesso": "I have this person's permission to publish their story.",
-      "consensoVoce": "This person accepts that their voice is published and listened to.",
-      "veridicita": "The story is true as far as I know."
+      "eAltro": "It's someone else's / a source",
+      "confermaMia": "It's mine and true as far as I know; I accept that other users see it.",
+      "avvisoTerzi": "You may publish someone else's content or a source ONLY if you have permission. You are responsible for obtaining it. The platform is not liable for content published without permission.",
+      "hoPermesso": "I have permission to publish this content.",
+      "veridicita": "What I state is true as far as I know."
     }
   },
   "mappa": {
     "titolo": "The map",
     "sonoQui": "I'm here",
-    "suggerimentoToccoLungo": "Press and hold on the map to mark another point",
-    "luogoCreato": "Place created.",
+    "suggerimentoToccoLungo": "Press and hold on the map to mark a find",
+    "luogoCreato": "Find marked.",
     "filtri": {
-      "raccontati": "Places with memories",
-      "daRaccontare": "Places to tell"
+      "condottiero": "Empire / commander",
+      "tutti": "All empires",
+      "tuttoImpero": "— All of: {nome} —",
+      "schedaImpero": "Empire details",
+      "categoria": "Type of find"
+    },
+    "info": {
+      "impero": "Empire",
+      "combattenti": "Combatants",
+      "esito": "Outcome",
+      "durata": "Duration",
+      "apogeo": "Peak",
+      "fonte": "Source",
+      "nota": "Historical context with source, separate from users' finds.",
+      "chiudi": "Close"
     },
     "certezza": {
       "attestato": "Attested",
@@ -88,21 +103,21 @@
     },
     "vicini": {
       "titolo": "Did you mean one of these?",
-      "spiegazione": "There is already a place marked nearby. If it is the same one, go back and use it: two entries for the same spot split its memories in two."
+      "spiegazione": "There's already a find marked nearby. If it's the same, go back and use it: two cards for the same spot split the contributions."
     },
     "nuovoLuogo": {
-      "titolo": "New place",
-      "nome": "What is it called",
-      "esempio": "e.g. Ponte degli Alpini"
+      "titolo": "New find",
+      "nome": "What do you call it",
+      "esempio": "e.g. Shell casings by the ford"
     },
     "azioni": {
-      "creaLuogo": "Create the place",
+      "creaLuogo": "Mark the find",
       "annulla": "Cancel",
       "salvataggio": "Saving…"
     },
     "errori": {
-      "gpsNonDisponibile": "This device does not provide a location.",
-      "gpsNegato": "I cannot read your location. Check permissions."
+      "gpsNonDisponibile": "This device does not provide location.",
+      "gpsNegato": "I can't read the location. Check permissions."
     }
   },
   "qui": {
@@ -110,29 +125,24 @@
     "questoLuogo": "This place",
     "chiudi": "Close",
     "caricamento": "One moment…",
-    "ascolta": "Listen",
-    "senzaData": "Undated",
+    "senzaData": "No date",
     "livello": {
       "campagna": "Campaign",
-      "memoria": "Memory"
+      "ritrovamento": "Find"
     },
     "certezza": {
       "attestato": "attested",
       "probabile": "probable",
       "ipotetico": "hypothetical"
     },
-    "origine": {
-      "automatica": "Automatically transcribed text, may contain errors.",
-      "raccoglitore": "Note by whoever collected the memory — not the witness's words."
-    },
     "vuoto": {
       "titolo": "Nothing here yet.",
-      "testo": "No memories and no events within range of this point. You can be the first voice to tell it.",
-      "invito": "Tell this place"
+      "testo": "No finds and no events within range of this point. You could be the first to mark one.",
+      "invito": "Add a find"
     },
     "contesto": {
       "fonte": "Source",
-      "nota": "Context added by the platform, not part of the testimony."
+      "nota": "Historical context added by the platform, not part of the find."
     }
   },
   "condividi": {
@@ -151,27 +161,24 @@
     "titolo": "Enter as a demo user"
   },
   "cura": {
-    "titolo": "Memories to moderate",
+    "titolo": "Reported content",
     "caricamento": "One moment…",
-    "nonCuratrice": "This page is for curators. In test mode, choose \"Curatrice\" from the selector at the bottom.",
-    "vuota": "No memories waiting. All moderated.",
-    "conteggio": "{n, plural, one {# memory waiting} other {# memories waiting}}",
+    "nonCuratrice": "This page is for moderators only. In test mode, pick \"Moderator\" from the selector below.",
+    "vuota": "No reported content. All clear.",
+    "conteggio": "{n, plural, one {# reported item} other {# reported items}}",
     "senzaLuogo": "No place",
-    "senzaConsenso": "No consent",
     "evento": "event {anno}",
     "tipo": {
-      "audio": "Audio",
       "testo": "Text",
       "foto": "Photo"
     },
-    "ascolta": "Listen",
-    "chiediAiuto": "Ask the assistant",
+    "chiediAiuto": "Ask the assistant for help",
     "aiutoInCorso": "The assistant is looking…",
-    "aiutoVuoto": "No suggestions.",
+    "aiutoVuoto": "No suggestion.",
     "aiutoErrore": "Assistant unavailable: {errore}",
-    "approva": "Approve",
-    "rifiuta": "Reject",
-    "storiaAltrui": "Someone else's story",
+    "rimuovi": "Remove",
+    "ripristina": "Restore",
+    "rimosso": "Removed",
     "segnalata": "{n, plural, one {# report} other {# reports}}",
     "motivi": "Reasons"
   },
@@ -179,45 +186,45 @@
     "titolo": "Your ledger",
     "caricamento": "One moment…",
     "citazioni": "Citations",
-    "citazioniNota": "how many times your memories are cited in the narratives",
+    "citazioniNota": "how often your finds are cited in narrations",
     "unicaVoce": "Sole voice",
-    "unicaVoceNota": "places where you are the only witness",
+    "unicaVoceNota": "places where you're the only witness",
     "punti": "points",
-    "quota": "{pct}% of the whole ledger",
-    "registroNota": "The ledger is worth recognition. If the platform ever generates revenue, it is the basis on which it gets shared. The count is transparent and nobody can erase it.",
+    "quota": "{pct}% of the total ledger",
+    "registroNota": "The ledger is about recognition. If the platform ever earns revenue, it's the basis for sharing it. The count is transparent and no one can erase it.",
     "conteggi": {
-      "pois": "Places",
-      "contributi": "Memories",
+      "pois": "Finds",
+      "contributi": "Content",
       "reazioni": "Reactions",
       "visite": "Visits"
     },
-    "privacyNota": "Only numbers: you don't know who voted or visited, and nobody knows about you.",
+    "privacyNota": "Only numbers: you don't know who voted or visited, and no one knows about you.",
     "vuoto": {
-      "intro": "You haven't told anything yet. But you are not a screen of zeros.",
-      "vicino": "is near you and has no memories yet. You could be its first voice.",
-      "generico": "There is a place, out there, still waiting for its first voice.",
-      "invito": "Tell a memory"
+      "intro": "You haven't marked anything yet. But you're not a screen of zeros.",
+      "vicino": "is the campaign nearest to you: start there.",
+      "generico": "There's a campaign out there waiting for your first find.",
+      "invito": "Add a find"
     }
   },
   "onboarding": {
     "intro": {
       "titolo": "Welcome to Senti",
-      "comeFunziona": "Senti is a map of memories. Each person tells their own story tied to a place, and together the stories give voice to the land.",
-      "anonimo": "You can choose to stay anonymous: others won't see your name, but the system will. It's how your contributions are recognised and kept in the ledger.",
-      "regola": "Tell your own story and you are responsible for it. To publish someone else's, you must have their permission.",
+      "comeFunziona": "Senti is a map of finds along the routes of history's great commanders. The routes are already traced: you enrich them with what you find or know — war relics, but also minerals, fossils, treasure.",
+      "anonimo": "You can choose to stay anonymous: others won't see your name, but the system will. It's used to recognize your contributions and track them in the ledger.",
+      "regola": "What you publish is your responsibility. To publish someone else's content or a source you must have permission.",
       "hoCapito": "Got it, continue",
-      "prova": "Senti is in trial and is built with the help of artificial intelligence: it may contain errors or behave unexpectedly. Use it keeping that in mind."
+      "prova": "Senti is a trial and is built with the help of artificial intelligence: it may contain errors or behave unexpectedly. Use it accordingly."
     },
     "patto": {
       "titolo": "Terms and privacy",
-      "testo": "Before you start, take a look at the Terms of use and the Privacy notice. The Terms are accepted once; the Privacy notice explains how we handle your data.",
+      "testo": "Before you start, take a look at the Terms of use and the Privacy notice. Terms are accepted once; the Privacy notice explains how we handle your data.",
       "leggiTermini": "Read the Terms",
       "leggiPrivacy": "Read the Privacy notice",
       "accetto": "I accept the Terms and have read the Privacy notice"
     },
     "cookie": {
       "titolo": "Cookies",
-      "testo": "We use technical cookies, needed to run the app and always on. Only if you want, we also use statistics cookies to understand how the app is used. You can change your mind anytime in settings.",
+      "testo": "We use technical cookies, necessary to operate and always on. Only if you want, we also use statistics cookies to understand how the app is used. You can change your mind anytime in settings.",
       "dettagli": "Cookie details",
       "accetta": "Accept all",
       "rifiuta": "Reject non-essential"
@@ -235,17 +242,18 @@
     "salvato": "Choice saved.",
     "cookie": {
       "titolo": "Cookies",
-      "tecnici": "Technical cookies are always on: they run the app and cannot be turned off.",
+      "tecnici": "Technical cookies are always on: they make the app work and can't be disabled.",
       "statistiche": "Enable statistics cookies (to understand how the app is used)"
     }
   },
   "segnala": {
     "segnala": "Report",
-    "grazie": "Reported, thank you.",
+    "grazie": "Reported, thanks.",
     "perche": "Why are you reporting it?",
     "motivi": {
       "falso_ingannevole": "False or misleading content",
-      "senza_permesso": "Published without the involved person's permission",
+      "senza_permesso": "Published without the person's/owner's permission",
+      "illecito": "Unauthorized dig or protected site",
       "offensivo": "Offensive or inappropriate",
       "altro": "Other reason"
     }

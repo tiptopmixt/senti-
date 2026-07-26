@@ -14,64 +14,77 @@ export type Locale = z.infer<typeof localeSchema>;
 // Primitive riutilizzabili.
 export const uuidSchema = z.guid();
 
-// Enum allineati alle migrazioni.
-export const contributionKindSchema = z.enum(["foto", "audio", "testo"]);
-export const contributionStatusSchema = z.enum([
-  "in_attesa",
-  "approvato",
-  "rifiutato",
+// Enum allineati alle migrazioni (0001).
+export const contributionKindSchema = z.enum(["foto", "testo"]);
+export const contributionStatusSchema = z.enum(["pubblicato", "rimosso"]);
+export const certaintySchema = z.enum(["attestato", "probabile", "ipotetico"]);
+
+// Le 12 categorie/icone di ritrovamento. L'ordine è quello del picker.
+export const findingTypeSchema = z.enum([
+  "battaglia",
+  "munizioni",
+  "equipaggiamento",
+  "fortificazione",
+  "caduti",
+  "tesori",
+  "minerali",
+  "fossili",
+  "archeologico",
+  "monumento",
+  "aneddoto",
+  "foto_storica",
 ]);
-export const textSourceSchema = z.enum([
-  "raccoglitore",
-  "automatica",
-  "nessuno",
-]);
+export type FindingType = z.infer<typeof findingTypeSchema>;
 
-const currentYear = new Date().getFullYear();
+/** Emoji segnaposto per categoria (poi sostituite da SVG dedicati). */
+export const FINDING_EMOJI: Record<FindingType, string> = {
+  battaglia: "⚔️",
+  munizioni: "🔫",
+  equipaggiamento: "🪖",
+  fortificazione: "🏰",
+  caduti: "⚰️",
+  tesori: "🗝️",
+  minerali: "💎",
+  fossili: "🦴",
+  archeologico: "🏺",
+  monumento: "🏛️",
+  aneddoto: "📜",
+  foto_storica: "📷",
+};
 
-/**
- * Dati del testimone raccolti dall'interfaccia.
- * Il consenso è il cancello: senza, la memoria resta privata.
- */
-export const narratorInputSchema = z.object({
-  narratorName: z.string().trim().min(1).max(120).nullable(),
-  narratorBirthYear: z
-    .number()
-    .int()
-    .min(1850)
-    .max(currentYear)
-    .nullable(),
-  narratorConsent: z.boolean(),
-});
-export type NarratorInput = z.infer<typeof narratorInputSchema>;
+/** Ordine di presentazione delle categorie nel picker. */
+export const FINDING_TYPES: FindingType[] = findingTypeSchema.options;
 
-/** Payload per creare una memoria audio. */
-export const audioContributionInputSchema = narratorInputSchema.extend({
+/** Payload per pubblicare un ritrovamento (RPC pubblica_ritrovamento). */
+export const nuovoRitrovamentoSchema = z.object({
+  findingType: findingTypeSchema,
+  name: z.string().trim().min(1).max(200),
+  lon: z.number().min(-180).max(180),
+  lat: z.number().min(-90).max(90),
+  kind: contributionKindSchema,
+  body: z.string().trim().max(5000).nullable(),
+  mediaPath: z.string().nullable(),
   poiId: uuidSchema.nullable(),
-  mediaPath: z.string().min(1),
-  audioDurationMs: z.number().int().min(0).max(7_200_000).nullable(),
-  // Nota scritta da chi raccoglie: indice di servizio, non le parole del testimone.
-  note: z.string().trim().max(5000).nullable(),
+  routeId: uuidSchema.nullable(),
+  eventYear: z.number().int().min(-3000).max(new Date().getFullYear() + 1).nullable(),
+  hazardFlag: z.boolean(),
+  isAnonymous: z.boolean(),
+  vocePropria: z.boolean(),
+  permessoTerzi: z.boolean().nullable(),
+  veridicita: z.boolean(),
 });
-export type AudioContributionInput = z.infer<
-  typeof audioContributionInputSchema
->;
+export type NuovoRitrovamento = z.infer<typeof nuovoRitrovamentoSchema>;
 
-/** Memoria come esce dalla vista pubblica (mai `author_id`). */
+/** Contenuto come esce dalla vista pubblica (mai `author_id`). */
 export const publicContributionSchema = z.object({
   id: uuidSchema,
   poi_id: uuidSchema.nullable(),
   kind: contributionKindSchema,
   body: z.string().nullable(),
-  transcript: z.string().nullable(),
   media_path: z.string().nullable(),
   is_anonymous: z.boolean(),
   author_label: z.string().nullable(),
   author_public_id: uuidSchema.nullable(),
   created_at: z.string(),
-  narrator_name: z.string().nullable(),
-  narrator_birth_year: z.number().int().nullable(),
-  text_source: textSourceSchema,
-  audio_duration_ms: z.number().int().nullable(),
 });
 export type PublicContribution = z.infer<typeof publicContributionSchema>;

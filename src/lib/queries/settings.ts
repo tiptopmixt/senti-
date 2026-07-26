@@ -2,12 +2,9 @@ import { z } from "zod";
 import { getSupabaseClient } from "@/lib/supabase/client";
 
 /**
- * Limiti dell'applicazione, letti dal database.
+ * Limiti dell'applicazione, letti dal database (app_settings).
  *
  * Stanno lì e non nel codice perché durante il pilota andranno ritoccati.
- * Il client li legge per poterli MOSTRARE prima che l'utente registri: un
- * limite scoperto dopo, sbattendoci contro, è tempo perso e una testimonianza
- * potenzialmente persa.
  */
 const limiteSchema = z.object({
   chiave: z.string(),
@@ -15,16 +12,14 @@ const limiteSchema = z.object({
 });
 
 export interface Limiti {
-  audioDurataMassimaMs: number;
   testoLunghezzaMassima: number;
-  contributiPerMese: number;
+  ritrovamentiPerMese: number;
 }
 
-/** Valori di sicurezza se il database non risponde: meglio prudenti. */
+/** Valori di sicurezza se il database non risponde. */
 export const LIMITI_PREDEFINITI: Limiti = {
-  audioDurataMassimaMs: 180_000,
   testoLunghezzaMassima: 1500,
-  contributiPerMese: 20,
+  ritrovamentiPerMese: 60,
 };
 
 export async function leggiLimiti(): Promise<Limiti> {
@@ -39,19 +34,8 @@ export async function leggiLimiti(): Promise<Limiti> {
 
   const mappa = new Map(righe.data.map((r) => [r.chiave, r.valore]));
   return {
-    audioDurataMassimaMs:
-      mappa.get("audio_durata_massima_ms") ?? LIMITI_PREDEFINITI.audioDurataMassimaMs,
-    testoLunghezzaMassima:
-      mappa.get("testo_lunghezza_massima") ?? LIMITI_PREDEFINITI.testoLunghezzaMassima,
-    contributiPerMese:
-      mappa.get("contributi_per_mese") ?? LIMITI_PREDEFINITI.contributiPerMese,
+    testoLunghezzaMassima: LIMITI_PREDEFINITI.testoLunghezzaMassima,
+    ritrovamentiPerMese:
+      mappa.get("ritrovamenti_al_mese") ?? LIMITI_PREDEFINITI.ritrovamentiPerMese,
   };
-}
-
-/** Quanti contributi restano all'utente corrente questo mese. */
-export async function contributiRimanenti(): Promise<number | null> {
-  const { data, error } = await getSupabaseClient().rpc("contributi_rimanenti");
-  if (error) return null;
-  const n = z.number().int().safeParse(data);
-  return n.success ? n.data : null;
 }

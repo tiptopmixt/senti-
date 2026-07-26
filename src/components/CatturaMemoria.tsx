@@ -1,150 +1,147 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
-import { FormaOnda } from "./FormaOnda";
-import { formattaDurata, useRegistratore } from "@/lib/audio/useRegistratore";
-import { salvaMemoria } from "@/lib/offline/db";
-import { avviaCoda, elaboraCoda, type StatoCoda } from "@/lib/offline/queue";
 import { ensureSession } from "@/lib/supabase/auth";
+import { caricaFoto, pubblicaRitrovamento } from "@/lib/queries/contributions";
+import { leggiLimiti, LIMITI_PREDEFINITI, type Limiti } from "@/lib/queries/settings";
 import {
-  contributiRimanenti,
-  leggiLimiti,
-  LIMITI_PREDEFINITI,
-  type Limiti,
-} from "@/lib/queries/settings";
+  FINDING_EMOJI,
+  FINDING_TYPES,
+  type FindingType,
+} from "@/lib/validation";
 import styles from "./CatturaMemoria.module.css";
 
-type Fase = "registra" | "riascolta" | "dati";
+type Fase = "categoria" | "dati" | "dichiarazione";
 
 /**
- * Cattura di una memoria, prima di qualunque accesso.
+ * Aggiungi un ritrovamento. Il gesto centrale è la scelta dell'ICONA: che tipo
+ * di ritrovamento è. Poi si aggiungono foto e/o testo e la posizione. Infine la
+ * dichiarazione di responsabilità (voce propria o permesso di terzi + veridicità).
  *
- * Ordine deliberato: si registra PRIMA, si compilano i dati DOPO. Chi raccoglie
- * una testimonianza non può fermare un anziano che ha iniziato a parlare per
- * riempire un modulo.
- *
- * I limiti (durata, lunghezza, quantità) arrivano dal database e vengono
- * mostrati PRIMA: la registrazione si ferma da sola al tetto, così nessuna
- * testimonianza viene persa per un rifiuto tardivo.
+ * I ritrovamenti sono pubblici subito: la dichiarazione è la prova che chi
+ * pubblica risponde di ciò che pubblica.
  */
-export function CatturaMemoria() {
+export function CatturaRitrovamento() {
   const t = useTranslations("cattura");
+  const tc = useTranslations("categorie");
+  const tm = useTranslations("mappa");
 
   const [limiti, setLimiti] = useState<Limiti>(LIMITI_PREDEFINITI);
-  const [rimanenti, setRimanenti] = useState<number | null>(null);
+  const [fase, setFase] = useState<Fase>("categoria");
+  const [categoria, setCategoria] = useState<FindingType | null>(null);
+  const [titolo, setTitolo] = useState("");
+  const [descrizione, setDescrizione] = useState("");
+  const [anno, setAnno] = useState("");
+  const [nascondi, setNascondi] = useState(false);
+  const [foto, setFoto] = useState<File | null>(null);
+  const [coord, setCoord] = useState<{ lon: number; lat: number } | null>(null);
+  const [gpsErrore, setGpsErrore] = useState<string | null>(null);
 
-  const {
-    stato,
-    durataMs,
-    registrazione,
-    errore,
-    fermataDalLimite,
-    analyserRef,
-    avvia,
-    ferma,
-    annulla,
-  } = useRegistratore(limiti.audioDurataMassimaMs);
-
-  const [fase, setFase] = useState<Fase>("registra");
-  const [nomeNarratore, setNomeNarratore] = useState("");
-  const [annoNascita, setAnnoNascita] = useState("");
-  const [nota, setNota] = useState("");
-  // Dichiarazione per-contenuto. provenienza guida i due percorsi.
   const [provenienza, setProvenienza] = useState<"mio" | "altro" | null>(null);
-  const [confermaMia, setConfermaMia] = useState(false);   // percorso "è mio", un tocco
-  const [permesso, setPermesso] = useState(false);         // "altro": ho il permesso
-  const [consensoVoce, setConsensoVoce] = useState(false); // "altro": consenso alla voce
+  const [confermaMia, setConfermaMia] = useState(false);
+  const [permesso, setPermesso] = useState(false);
   const [veridicitaAltro, setVeridicitaAltro] = useState(false);
+
   const [salvataggio, setSalvataggio] = useState(false);
   const [salvata, setSalvata] = useState(false);
-  const [coda, setCoda] = useState<StatoCoda | null>(null);
+  const [errore, setErrore] = useState<string | null>(null);
 
-  // La sessione anonima parte in sottofondo: nessuna schermata di accesso.
+  // Sessione anonima in sottofondo + limiti + coordinate dalla mappa (query).
   useEffect(() => {
     void (async () => {
       try {
         await ensureSession();
         setLimiti(await leggiLimiti());
-        setRimanenti(await contributiRimanenti());
       } catch {
-        // Senza rete si registra lo stesso: valgono i limiti predefiniti.
+        /* offline: valgono i predefiniti */
       }
     })();
-    return avviaCoda(setCoda);
+    if (typeof window !== "undefined") {
+      const q = new URLSearchParams(window.location.search);
+      const lon = Number(q.get("lon"));
+      const lat = Number(q.get("lat"));
+      if (Number.isFinite(lon) && Number.isFinite(lat) && (lon !== 0 || lat !== 0)) {
+        setCoord({ lon, lat });
+      }
+    }
   }, []);
 
-  useEffect(() => {
-    if (registrazione) setFase("riascolta");
-  }, [registrazione]);
+  function sonoQui() {
+    setGpsErrore(null);
+    if (!navigator.geolocation) {
+      setGpsErrore(tm("errori.gpsNonDisponibile"));
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => setCoord({ lon: pos.coords.longitude, lat: pos.coords.latitude }),
+      () => setGpsErrore(tm("errori.gpsNegato")),
+      { enableHighAccuracy: true, timeout: 10000 },
+    );
+  }
 
-  const urlRiascolto = useMemo(
-    () => (registrazione ? URL.createObjectURL(registrazione.blob) : null),
-    [registrazione],
-  );
-  useEffect(() => {
-    return () => {
-      if (urlRiascolto) URL.revokeObjectURL(urlRiascolto);
-    };
-  }, [urlRiascolto]);
-
-  const restanoMs = Math.max(0, limiti.audioDurataMassimaMs - durataMs);
-  const quotaEsaurita = rimanenti !== null && rimanenti <= 0;
-
-  // La dichiarazione è completa? Un tocco se è mia; le tre conferme se è altrui.
   const dichiarazioneOk =
     provenienza === "mio"
       ? confermaMia
       : provenienza === "altro"
-        ? permesso && consensoVoce && veridicitaAltro
+        ? permesso && veridicitaAltro
         : false;
 
-  async function salva() {
-    if (!registrazione || !dichiarazioneOk) return;
+  const datiOk = titolo.trim() !== "" && coord !== null && (foto !== null || descrizione.trim() !== "");
+
+  async function pubblica() {
+    if (!categoria || !coord || !dichiarazioneOk) return;
     setSalvataggio(true);
+    setErrore(null);
     try {
       const mia = provenienza === "mio";
-      const anno = annoNascita.trim() === "" ? null : Number(annoNascita);
-      await salvaMemoria({
-        id: crypto.randomUUID(),
-        blob: registrazione.blob,
-        mimeType: registrazione.mimeType,
-        durataMs: registrazione.durataMs,
-        creataIl: Date.now(),
-        // Se è la mia storia, il narratore sono io: niente nome del testimone.
-        narratoreNome: mia ? null : nomeNarratore.trim() || null,
-        narratoreAnnoNascita: mia ? null : (Number.isFinite(anno) ? anno : null),
-        // Consenso alla voce: implicito se è mia, esplicito se è di un altro.
-        consenso: mia ? true : consensoVoce,
-        nota: nota.trim() || null,
+      let mediaPath: string | null = null;
+      let kind: "foto" | "testo" = "testo";
+      if (foto) {
+        const id = crypto.randomUUID();
+        mediaPath = await caricaFoto(id, foto, foto.type || "image/jpeg");
+        kind = "foto";
+      }
+      const annoNum = anno.trim() === "" ? null : Number(anno);
+      await pubblicaRitrovamento({
+        findingType: categoria,
+        name: titolo.trim(),
+        lon: coord.lon,
+        lat: coord.lat,
+        kind,
+        body: descrizione.trim() || null,
+        mediaPath,
         poiId: null,
+        routeId: null,
+        eventYear: Number.isFinite(annoNum) ? annoNum : null,
+        hazardFlag: nascondi,
+        isAnonymous: true,
         vocePropria: mia,
-        permessoTerzi: mia ? false : permesso,
+        permessoTerzi: mia ? null : permesso,
         veridicita: mia ? true : veridicitaAltro,
-        stato: "in_attesa",
-        tentativi: 0,
-        ultimoErrore: null,
       });
       setSalvata(true);
-      void elaboraCoda();
-      setRimanenti((r) => (r === null ? null : Math.max(0, r - 1)));
+    } catch (e) {
+      setErrore(e instanceof Error ? e.message : String(e));
     } finally {
       setSalvataggio(false);
     }
   }
 
   function ricomincia() {
-    annulla();
-    setFase("registra");
-    setNomeNarratore("");
-    setAnnoNascita("");
-    setNota("");
+    setFase("categoria");
+    setCategoria(null);
+    setTitolo("");
+    setDescrizione("");
+    setAnno("");
+    setNascondi(false);
+    setFoto(null);
     setProvenienza(null);
     setConfermaMia(false);
     setPermesso(false);
-    setConsensoVoce(false);
     setVeridicitaAltro(false);
     setSalvata(false);
+    setErrore(null);
   }
 
   // --- Esito ----------------------------------------------------------------
@@ -153,15 +150,9 @@ export function CatturaMemoria() {
       <section className={styles.contenitore}>
         <p className={styles.esitoIcona} aria-hidden="true">✓</p>
         <h2 className={styles.titolo}>{t("salvata.titolo")}</h2>
-        <p className={styles.testo}>
-          {coda && !coda.online
-            ? t("salvata.offline")
-            : coda && coda.inAttesa > 0
-              ? t("salvata.inCorso")
-              : t("salvata.inviata")}
-        </p>
+        <p className={styles.testo}>{t("salvata.inviata")}</p>
         <button className={styles.primario} onClick={ricomincia}>
-          {t("azioni.altraMemoria")}
+          {t("azioni.altro")}
         </button>
       </section>
     );
@@ -172,84 +163,125 @@ export function CatturaMemoria() {
       <h1 className={styles.titolo}>{t("titolo")}</h1>
       <p className={styles.testo}>{t("sottotitolo")}</p>
 
-      {coda && coda.inAttesa > 0 && (
-        <p className={coda.online ? styles.avviso : styles.avvisoOffline}>
-          {coda.online
-            ? t("coda.inInvio", { n: coda.inAttesa })
-            : t("coda.attesaRete", { n: coda.inAttesa })}
-        </p>
-      )}
-
       {errore && <p className={styles.errore}>{errore}</p>}
 
-      {quotaEsaurita && <p className={styles.errore}>{t("limiti.quotaEsaurita")}</p>}
-
-      {/* --- Registrazione --- */}
-      {fase === "registra" && (
+      {/* --- 1. Categoria/icona --- */}
+      {fase === "categoria" && (
         <div className={styles.blocco}>
-          <div className={styles.onda}>
-            <FormaOnda analyserRef={analyserRef} attiva={stato === "registrazione"} />
+          <p className={styles.domanda}>{tc("titolo")}</p>
+          <p className={styles.testo}>{tc("sottotitolo")}</p>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
+            {FINDING_TYPES.map((ft) => (
+              <button
+                key={ft}
+                onClick={() => {
+                  setCategoria(ft);
+                  setFase("dati");
+                }}
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "14px 6px",
+                  borderRadius: 12,
+                  border: categoria === ft ? "2px solid #7a2f22" : "1px solid #cbb98f",
+                  background: "#fbf5e6",
+                  cursor: "pointer",
+                  fontSize: 14,
+                }}
+              >
+                <span style={{ fontSize: 28 }} aria-hidden="true">{FINDING_EMOJI[ft]}</span>
+                <span>{tc(ft)}</span>
+              </button>
+            ))}
           </div>
-
-          <p className={styles.timer} aria-live="polite">
-            {formattaDurata(durataMs)}
-          </p>
-
-          <p className={styles.aiuto}>
-            {stato === "registrazione"
-              ? t("limiti.restano", { tempo: formattaDurata(restanoMs) })
-              : t("limiti.durataMassima", {
-                  minuti: Math.round(limiti.audioDurataMassimaMs / 60000),
-                })}
-            {rimanenti !== null && ` · ${t("limiti.rimanentiMese", { n: rimanenti })}`}
-          </p>
-
-          {stato === "registrazione" ? (
-            <button className={styles.registraAttivo} onClick={ferma}>
-              {t("azioni.ferma")}
-            </button>
-          ) : (
-            <button
-              className={styles.registra}
-              onClick={() => void avvia()}
-              disabled={quotaEsaurita}
-            >
-              {t("azioni.registra")}
-            </button>
-          )}
         </div>
       )}
 
-      {/* --- Riascolto --- */}
-      {fase === "riascolta" && registrazione && urlRiascolto && (
+      {/* --- 2. Dati (foto/testo + posizione) --- */}
+      {fase === "dati" && categoria && (
         <div className={styles.blocco}>
-          {fermataDalLimite && (
-            <p className={styles.avviso}>
-              {t("limiti.fermataAutomatica", {
-                minuti: Math.round(limiti.audioDurataMassimaMs / 60000),
-              })}
+          <p className={styles.domanda}>
+            {FINDING_EMOJI[categoria]} {tc(categoria)}
+          </p>
+
+          <label className={styles.campo}>
+            <span>{t("campi.titolo")}</span>
+            <input
+              type="text"
+              value={titolo}
+              onChange={(e) => setTitolo(e.target.value)}
+              placeholder={t("campi.titoloEsempio")}
+              autoFocus
+            />
+          </label>
+
+          <label className={styles.campo}>
+            <span>{t("azioni.scattaFoto")}</span>
+            <input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={(e) => setFoto(e.target.files?.[0] ?? null)}
+            />
+          </label>
+
+          <label className={styles.campo}>
+            <span>{t("campi.descrizione")}</span>
+            <textarea
+              rows={3}
+              value={descrizione}
+              maxLength={limiti.testoLunghezzaMassima}
+              onChange={(e) => setDescrizione(e.target.value)}
+            />
+          </label>
+
+          <label className={styles.campo}>
+            <span>{t("campi.annoEvento")}</span>
+            <input
+              type="number"
+              inputMode="numeric"
+              value={anno}
+              onChange={(e) => setAnno(e.target.value)}
+            />
+          </label>
+
+          <label className={styles.consenso}>
+            <input type="checkbox" checked={nascondi} onChange={(e) => setNascondi(e.target.checked)} />
+            <span>{t("campi.nascondiPosizione")}</span>
+          </label>
+
+          {/* Posizione */}
+          {coord ? (
+            <p className={styles.testo}>
+              📍 {coord.lat.toFixed(5)}, {coord.lon.toFixed(5)}
             </p>
-          )}
-          <p className={styles.testo}>
-            {t("riascolto.durata", { durata: formattaDurata(registrazione.durataMs) })}
-          </p>
-          {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
-          <audio className={styles.player} src={urlRiascolto} controls preload="metadata" />
-          <div className={styles.azioni}>
-            <button className={styles.secondario} onClick={ricomincia}>
-              {t("azioni.rifai")}
+          ) : (
+            <button className={styles.secondario} onClick={sonoQui}>
+              📍 {tm("sonoQui")}
             </button>
-            <button className={styles.primario} onClick={() => setFase("dati")}>
-              {t("azioni.continua")}
+          )}
+          {gpsErrore && <p className={styles.errore}>{gpsErrore}</p>}
+
+          <div className={styles.azioni}>
+            <button className={styles.secondario} onClick={() => setFase("categoria")}>
+              {t("azioni.indietro")}
+            </button>
+            <button
+              className={styles.primario}
+              onClick={() => setFase("dichiarazione")}
+              disabled={!datiOk}
+            >
+              {t("azioni.pubblica")}
             </button>
           </div>
         </div>
       )}
 
-      {/* --- Dichiarazione: una domanda sola, poi il percorso leggero o pesante --- */}
-      {fase === "dati" && (
+      {/* --- 3. Dichiarazione di responsabilità --- */}
+      {fase === "dichiarazione" && (
         <div className={styles.blocco}>
-          {/* La domanda unica. */}
           <p className={styles.domanda}>{t("dichiarazione.domanda")}</p>
           <div className={styles.scelteProvenienza}>
             <button
@@ -266,103 +298,39 @@ export function CatturaMemoria() {
             </button>
           </div>
 
-          {/* Percorso "è mio": un solo tocco. */}
           {provenienza === "mio" && (
             <label className={styles.consenso}>
-              <input
-                type="checkbox"
-                checked={confermaMia}
-                onChange={(e) => setConfermaMia(e.target.checked)}
-              />
+              <input type="checkbox" checked={confermaMia} onChange={(e) => setConfermaMia(e.target.checked)} />
               <span>{t("dichiarazione.confermaMia")}</span>
             </label>
           )}
 
-          {/* Percorso "è di un'altra persona": l'avviso obbligatorio. */}
           {provenienza === "altro" && (
             <>
-              <label className={styles.campo}>
-                <span>{t("campi.nomeTestimone")}</span>
-                <input
-                  type="text"
-                  value={nomeNarratore}
-                  onChange={(e) => setNomeNarratore(e.target.value)}
-                  autoComplete="off"
-                />
-              </label>
-              <label className={styles.campo}>
-                <span>{t("campi.annoNascita")}</span>
-                <input
-                  type="number"
-                  inputMode="numeric"
-                  min={1850}
-                  max={new Date().getFullYear()}
-                  value={annoNascita}
-                  onChange={(e) => setAnnoNascita(e.target.value)}
-                />
-              </label>
-
               <p className={styles.avvisoPesante}>{t("dichiarazione.avvisoTerzi")}</p>
-
               <label className={styles.consenso}>
-                <input
-                  type="checkbox"
-                  checked={permesso}
-                  onChange={(e) => setPermesso(e.target.checked)}
-                />
+                <input type="checkbox" checked={permesso} onChange={(e) => setPermesso(e.target.checked)} />
                 <span>{t("dichiarazione.hoPermesso")}</span>
               </label>
               <label className={styles.consenso}>
-                <input
-                  type="checkbox"
-                  checked={consensoVoce}
-                  onChange={(e) => setConsensoVoce(e.target.checked)}
-                />
-                <span>{t("dichiarazione.consensoVoce")}</span>
-              </label>
-              <label className={styles.consenso}>
-                <input
-                  type="checkbox"
-                  checked={veridicitaAltro}
-                  onChange={(e) => setVeridicitaAltro(e.target.checked)}
-                />
+                <input type="checkbox" checked={veridicitaAltro} onChange={(e) => setVeridicitaAltro(e.target.checked)} />
                 <span>{t("dichiarazione.veridicita")}</span>
               </label>
             </>
           )}
 
-          {/* Nota di chi raccoglie: sempre disponibile. */}
-          {provenienza && (
-            <label className={styles.campo}>
-              <span>{t("campi.nota")}</span>
-              <textarea
-                rows={3}
-                value={nota}
-                maxLength={limiti.testoLunghezzaMassima}
-                onChange={(e) => setNota(e.target.value)}
-                placeholder={t("campi.notaEsempio")}
-              />
-              <small className={styles.aiuto}>
-                {t("campi.notaAiuto")}{" "}
-                <span className={styles.contatore}>
-                  {nota.length}/{limiti.testoLunghezzaMassima}
-                </span>
-              </small>
-            </label>
-          )}
-
           {provenienza && <p className={styles.registroPubblico}>{t("registro")}</p>}
 
           <div className={styles.azioni}>
-            <button className={styles.secondario} onClick={() => setFase("riascolta")}>
+            <button className={styles.secondario} onClick={() => setFase("dati")}>
               {t("azioni.indietro")}
             </button>
             <button
               className={styles.primario}
-              onClick={() => void salva()}
+              onClick={() => void pubblica()}
               disabled={!dichiarazioneOk || salvataggio}
             >
-              {salvataggio ? t("azioni.salvataggio") : t("azioni.pubblica")}
+              {salvataggio ? t("azioni.salvataggio") : t("azioni.salva")}
             </button>
           </div>
         </div>
@@ -370,3 +338,6 @@ export function CatturaMemoria() {
     </section>
   );
 }
+
+// Compatibilità: la pagina importa ancora `CatturaMemoria`.
+export const CatturaMemoria = CatturaRitrovamento;

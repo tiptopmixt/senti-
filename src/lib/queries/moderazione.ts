@@ -1,46 +1,39 @@
 import { z } from "zod";
 import { getSupabaseClient } from "@/lib/supabase/client";
+import { contributionKindSchema, contributionStatusSchema, findingTypeSchema } from "@/lib/validation";
 
 /**
- * La coda di moderazione. Passa dalle RPC che verificano il ruolo curatrice e
- * non espongono mai author_id: si modera il contenuto, non l'identità.
+ * La coda dei contenuti segnalati. Passa dalle RPC che verificano il ruolo
+ * moderatore e non espongono mai author_id: si modera il contenuto, non
+ * l'identità. I ritrovamenti sono pubblici subito; qui si interviene a posteriori.
  */
-const memoriaModerazioneSchema = z.object({
+const contenutoSegnalatoSchema = z.object({
   id: z.guid(),
   poi_id: z.guid().nullable(),
   poi_nome: z.string().nullable(),
-  kind: z.enum(["foto", "audio", "testo"]),
+  finding_type: findingTypeSchema.nullable(),
+  kind: contributionKindSchema,
   body: z.string().nullable(),
-  transcript: z.string().nullable(),
   media_path: z.string().nullable(),
-  narrator_name: z.string().nullable(),
-  narrator_birth_year: z.number().int().nullable(),
+  status: contributionStatusSchema,
   event_year: z.number().int().nullable(),
-  text_source: z.enum(["raccoglitore", "automatica", "nessuno"]),
-  narrator_consent: z.boolean(),
-  voce_propria: z.boolean().nullable(),
-  permesso_terzi: z.boolean().nullable(),
   segnalazioni: z.number().int(),
   motivi_segnalazioni: z.string().nullable(),
   created_at: z.string(),
 });
-export type MemoriaModerazione = z.infer<typeof memoriaModerazioneSchema>;
+export type ContenutoSegnalato = z.infer<typeof contenutoSegnalatoSchema>;
 
-export async function memorieDaModerare(): Promise<MemoriaModerazione[]> {
-  const { data, error } = await getSupabaseClient().rpc("memorie_da_moderare");
+export async function contenutiSegnalati(): Promise<ContenutoSegnalato[]> {
+  const { data, error } = await getSupabaseClient().rpc("contenuti_segnalati");
   if (error) throw new Error(`Lettura della coda fallita: ${error.message}`);
-  return memoriaModerazioneSchema.array().parse(data ?? []);
+  return contenutoSegnalatoSchema.array().parse(data ?? []);
 }
 
-export async function moderaMemoria(
-  id: string,
-  approva: boolean,
-  motivo?: string,
-): Promise<void> {
-  const { error } = await getSupabaseClient().rpc("modera_memoria", {
+/** Rimuove (true) o ripristina (false) un contenuto segnalato. */
+export async function moderaContenuto(id: string, rimuovi: boolean): Promise<void> {
+  const { error } = await getSupabaseClient().rpc("modera_contenuto", {
     p_id: id,
-    p_approva: approva,
-    p_motivo: motivo ?? null,
+    p_rimuovi: rimuovi,
   });
   if (error) throw new Error(`Moderazione fallita: ${error.message}`);
 }

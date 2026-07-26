@@ -1,52 +1,62 @@
 -- =============================================================================
--- 0002_poi_contributions.sql — Luoghi e memorie
+-- 0003_luoghi_ritrovamenti.sql — Luoghi (pin) e ritrovamenti
 --
--- Tabelle: pois, contributions, contribution_links, post_votes, anon_aliases.
--- Viste pubbliche v_*_public che NON espongono mai author_id (meccanismo di
--- privacy: la RLS filtra righe, le viste filtrano colonne).
+-- Un POI è un pin sulla mappa: un LUOGO DI RITROVAMENTO con una CATEGORIA/icona
+-- (finding_type). I `contributions` sono i contenuti agganciati al pin: foto con
+-- didascalia o testo. I ritrovamenti sono PUBBLICI SUBITO (status 'pubblicato').
+--
+-- Viste pubbliche v_*_public: NON espongono MAI author_id. La RLS filtra righe,
+-- le viste filtrano colonne — è il meccanismo dell'anonimato.
 -- =============================================================================
 
--- Tipo di collegamento tra contributi (dedup e gestione conflitti).
-create type public.link_kind as enum ('stesso_episodio', 'conflitto', 'correlato');
+-- Tipo di collegamento tra ritrovamenti (dedup e gestione conflitti).
+create type public.link_kind as enum ('stesso_ritrovamento', 'conflitto', 'correlato');
 
--- --- pois --------------------------------------------------------------------
--- Un luogo sulla mappa. Se hazard_flag è true le coordinate esatte non escono
--- mai dalle viste pubbliche (offuscamento deterministico).
+-- --- pois: il pin/luogo del ritrovamento -------------------------------------
+-- finding_type è l'icona scelta per prima dall'utente. Se hazard_flag (es. un
+-- tesoro o un sito di scavo da proteggere) le coordinate esatte non escono mai
+-- dalle viste pubbliche. certainty nasce 'ipotetico' per i ritrovamenti utente.
 create table public.pois (
-  id          uuid primary key default gen_random_uuid(),
-  author_id   uuid default auth.uid() references auth.users (id) on delete set null,
-  name        text not null,
-  description text,
-  geog        geography(Point, 4326) not null,
-  hazard_flag boolean not null default false,
-  created_at  timestamptz not null default now()
+  id           uuid primary key default gen_random_uuid(),
+  author_id    uuid default auth.uid() references auth.users (id) on delete set null,
+  name         text not null,
+  description  text,
+  finding_type public.finding_type not null,
+  certainty    public.certainty not null default 'ipotetico',
+  event_year   integer,
+  geog         geography(Point, 4326) not null,
+  hazard_flag  boolean not null default false,
+  created_at   timestamptz not null default now(),
+  constraint pois_event_year_sane
+    check (event_year is null or event_year between -3000 and extract(year from now())::int + 1)
 );
 create index pois_geog_idx on public.pois using gist (geog);
+create index pois_finding_type_idx on public.pois (finding_type);
 alter table public.pois enable row level security;
 
--- --- contributions -----------------------------------------------------------
--- Una memoria: foto/audio/testo su un luogo. I punti nascono all'approvazione.
+-- --- contributions: foto/testo agganciati a un pin ---------------------------
+-- I punti nascono alla PUBBLICAZIONE (trigger in 0004). Niente audio.
 create table public.contributions (
   id           uuid primary key default gen_random_uuid(),
   author_id    uuid default auth.uid() references auth.users (id) on delete set null,
   poi_id       uuid references public.pois (id) on delete cascade,
   kind         public.contribution_kind not null,
-  body         text,                        -- testo (per kind='testo')
-  media_path   text,                        -- percorso in Storage (foto/audio)
-  transcript   text,                        -- trascrizione Whisper (audio)
+  body         text,                        -- testo o didascalia della foto
+  media_path   text,                        -- percorso in Storage (foto)
   embedding    vector(1536),                -- embedding del contenuto
   is_anonymous boolean not null default true,
-  status       public.contribution_status not null default 'in_attesa',
+  status       public.contribution_status not null default 'pubblicato',
+  -- Provenienza/responsabilità del contenuto (dichiarata alla pubblicazione).
+  voce_propria   boolean,                   -- true = mio; false = di un'altra persona/fonte
+  permesso_terzi boolean,                   -- se non è mio, dichiaro di avere il permesso
   created_at   timestamptz not null default now(),
-  approved_at  timestamptz
+  published_at timestamptz not null default now()
 );
 create index contributions_poi_idx on public.contributions (poi_id);
 create index contributions_author_idx on public.contributions (author_id);
 alter table public.contributions enable row level security;
 
--- --- contribution_links ------------------------------------------------------
--- Collega due contributi (stesso episodio, conflitto, correlato). Azione
--- editoriale: la gestiscono i curatori.
+-- --- contribution_links (azione dei moderatori) ------------------------------
 create table public.contribution_links (
   id                uuid primary key default gen_random_uuid(),
   from_contribution uuid not null references public.contributions (id) on delete cascade,
@@ -60,9 +70,7 @@ create table public.contribution_links (
 );
 alter table public.contribution_links enable row level security;
 
--- --- post_votes --------------------------------------------------------------
--- Reazioni ai contributi. Un utente non può votare un proprio contributo
--- (trigger sotto). Un voto per utente per contributo.
+-- --- post_votes: reazioni ----------------------------------------------------
 create table public.post_votes (
   id              uuid primary key default gen_random_uuid(),
   contribution_id uuid not null references public.contributions (id) on delete cascade,
@@ -84,23 +92,20 @@ declare
 begin
   select author_id into v_author from public.contributions where id = new.contribution_id;
   if v_author is not null and v_author = new.voter_id then
-    raise exception 'Non puoi votare un tuo contributo';
+    raise exception 'Non puoi votare un tuo ritrovamento';
   end if;
   return new;
 end;
 $$;
-
 create trigger post_votes_no_self_vote
   before insert or update on public.post_votes
   for each row execute function public.forbid_self_vote();
 
--- --- anon_aliases ------------------------------------------------------------
--- Alias pubblico stabile per ogni utente: gli altri vedono "Voce anonima",
--- il public_id permette di riconoscere la stessa voce senza rivelare author_id.
+-- --- anon_aliases: alias pubblico stabile ------------------------------------
 create table public.anon_aliases (
   author_id  uuid primary key references auth.users (id) on delete cascade,
   public_id  uuid not null default gen_random_uuid() unique,
-  label      text not null default 'Voce anonima',
+  label      text not null default 'Cercatore anonimo',
   created_at timestamptz not null default now()
 );
 alter table public.anon_aliases enable row level security;
@@ -122,35 +127,29 @@ $$;
 -- =============================================================================
 -- RLS policies
 -- =============================================================================
-
--- pois: lettura diretta solo al proprietario (o curatore). Il pubblico usa la vista.
 create policy pois_select_own on public.pois for select
-  using (author_id = auth.uid() or public.is_curator());
+  using (author_id = auth.uid() or public.is_moderator());
 create policy pois_insert_own on public.pois for insert
   with check (author_id = auth.uid());
 create policy pois_update_own on public.pois for update
-  using (author_id = auth.uid() or public.is_curator())
-  with check (author_id = auth.uid() or public.is_curator());
+  using (author_id = auth.uid() or public.is_moderator())
+  with check (author_id = auth.uid() or public.is_moderator());
 create policy pois_delete_own on public.pois for delete
-  using (author_id = auth.uid() or public.is_curator());
+  using (author_id = auth.uid() or public.is_moderator());
 
--- contributions: lettura diretta solo all'autore (o curatore).
 create policy contributions_select_own on public.contributions for select
-  using (author_id = auth.uid() or public.is_curator());
+  using (author_id = auth.uid() or public.is_moderator());
 create policy contributions_insert_own on public.contributions for insert
   with check (author_id = auth.uid());
 create policy contributions_update_own on public.contributions for update
-  using (author_id = auth.uid() or public.is_curator())
-  with check (author_id = auth.uid() or public.is_curator());
+  using (author_id = auth.uid() or public.is_moderator())
+  with check (author_id = auth.uid() or public.is_moderator());
 create policy contributions_delete_own on public.contributions for delete
-  using (author_id = auth.uid() or public.is_curator());
+  using (author_id = auth.uid() or public.is_moderator());
 
--- contribution_links: solo i curatori (azione editoriale).
-create policy contribution_links_curator_all on public.contribution_links for all
-  using (public.is_curator())
-  with check (public.is_curator());
+create policy contribution_links_mod_all on public.contribution_links for all
+  using (public.is_moderator()) with check (public.is_moderator());
 
--- post_votes: si vede solo il proprio voto; si inserisce/cancella solo il proprio.
 create policy post_votes_select_own on public.post_votes for select
   using (voter_id = auth.uid());
 create policy post_votes_insert_own on public.post_votes for insert
@@ -158,22 +157,23 @@ create policy post_votes_insert_own on public.post_votes for insert
 create policy post_votes_delete_own on public.post_votes for delete
   using (voter_id = auth.uid());
 
--- anon_aliases: si vede solo il proprio alias. Nessuna scrittura dal client.
 create policy anon_aliases_select_own on public.anon_aliases for select
   using (author_id = auth.uid());
 
 -- =============================================================================
 -- Viste pubbliche — non espongono MAI author_id
--- (default security_invoker = false: girano coi diritti del proprietario e
---  scavalcano la RLS delle tabelle base, esponendo solo colonne sicure)
 -- =============================================================================
 
--- Luoghi pubblici: coordinate offuscate se hazard_flag.
+-- Luoghi pubblici: coordinate offuscate se hazard_flag. Espone finding_type
+-- (l'icona), la certezza e l'anno.
 create view public.v_pois_public as
 select
   p.id,
   p.name,
   p.description,
+  p.finding_type,
+  p.certainty,
+  p.event_year,
   p.hazard_flag,
   g.geog,
   st_y(g.geog::geometry) as lat,
@@ -187,15 +187,13 @@ cross join lateral (
          end as geog
 ) g;
 
--- Memorie pubbliche: solo approvate; autore mostrato come etichetta/alias,
--- mai come author_id.
+-- Ritrovamenti pubblici: solo pubblicati; autore come etichetta/alias, mai author_id.
 create view public.v_contributions_public as
 select
   c.id,
   c.poi_id,
   c.kind,
-  case when c.kind = 'testo' then c.body else null end as body,
-  c.transcript,
+  case when c.kind = 'testo' then c.body else c.body end as body,  -- didascalia anche per foto
   c.media_path,
   c.is_anonymous,
   case when c.is_anonymous then a.label else pr.display_name end as author_label,
@@ -204,9 +202,9 @@ select
 from public.contributions c
 left join public.anon_aliases a on a.author_id = c.author_id
 left join public.profiles pr on pr.id = c.author_id
-where c.status = 'approvato';
+where c.status = 'pubblicato';
 
--- Conteggi dei voti per contributo: aggregati, mai l'identità di chi ha votato.
+-- Conteggi dei voti: aggregati, mai l'identità di chi vota.
 create view public.v_contribution_votes_public as
 select
   contribution_id,
@@ -225,7 +223,6 @@ grant select, insert, update, delete on public.contribution_links to authenticat
 grant select, insert, delete on public.post_votes to authenticated;
 grant select on public.anon_aliases to authenticated;
 
--- Le viste pubbliche sono leggibili da tutti (anche sessioni anonime).
 grant select on public.v_pois_public to anon, authenticated;
 grant select on public.v_contributions_public to anon, authenticated;
 grant select on public.v_contribution_votes_public to anon, authenticated;

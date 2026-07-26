@@ -11,7 +11,7 @@ import "../globals.css";
 export const metadata: Metadata = {
   title: "Senti",
   description:
-    "Una mappa di percorsi e sentieri arricchiti dalla memoria delle persone.",
+    "La mappa mondiale dei ritrovamenti, lungo le rotte dei grandi condottieri della storia.",
 };
 
 // Mobile-first: la viewport è pensata per lo smartphone come dispositivo primario.

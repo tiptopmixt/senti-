@@ -8,11 +8,10 @@ import { getSupabaseClient } from "@/lib/supabase/client";
  * di chi ha votato o visitato. In cima ciò che conta di più (citazioni, luoghi
  * di cui sei l'unica voce), poi i punti, in fondo i conteggi.
  */
-const luogoVicinoSchema = z.object({
-  id: z.number(),
-  name: z.string(),
-  lat: z.number(),
-  lon: z.number(),
+const campagnaVicinaSchema = z.object({
+  id: z.guid(),
+  title: z.string(),
+  condottiero: z.string().nullable(),
 });
 
 const dashboardSchema = z.object({
@@ -25,7 +24,7 @@ const dashboardSchema = z.object({
   contributi: z.number().int().optional(),
   reazioni: z.number().int().optional(),
   visite: z.number().int().optional(),
-  luogo_da_raccontare_vicino: luogoVicinoSchema.nullable().optional(),
+  campagna_da_esplorare_vicino: campagnaVicinaSchema.nullable().optional(),
 });
 export type Dashboard = z.infer<typeof dashboardSchema>;
 

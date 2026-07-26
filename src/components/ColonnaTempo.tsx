@@ -9,7 +9,8 @@ import {
   type ContestoStorico,
   type VoceTempo,
 } from "@/lib/queries/timeline";
-import { urlAudioFirmato } from "@/lib/queries/contributions";
+import { urlFotoFirmato } from "@/lib/queries/contributions";
+import { FINDING_EMOJI, type FindingType } from "@/lib/validation";
 import { registraVisita } from "@/lib/queries/dashboard";
 import { Segnala } from "./Segnala";
 import styles from "./ColonnaTempo.module.css";
@@ -49,8 +50,8 @@ export function ColonnaTempo({ lon, lat, nomeLuogo, poiId, onChiudi }: Props) {
       .then(async (v) => {
         if (!vivo) return;
         setVoci(v);
-        const idMemorie = v.filter((x) => x.tipo === "memoria").map((x) => x.id);
-        const c = await contestiPerMemorie(idMemorie);
+        const idRitrovamenti = v.filter((x) => x.tipo === "ritrovamento").map((x) => x.id);
+        const c = await contestiPerMemorie(idRitrovamenti);
         if (vivo) setContesti(c);
       })
       .catch((e) => vivo && setErrore(e instanceof Error ? e.message : String(e)));
@@ -96,7 +97,7 @@ export function ColonnaTempo({ lon, lat, nomeLuogo, poiId, onChiudi }: Props) {
             <VoceRiga
               key={`${v.tipo}-${v.id}`}
               voce={v}
-              contesto={v.tipo === "memoria" ? contesti.get(v.id) : undefined}
+              contesto={v.tipo === "ritrovamento" ? contesti.get(v.id) : undefined}
             />
           ))}
         </ol>
@@ -123,10 +124,13 @@ function VoceRiga({
           <span className={styles.anno}>{voce.anno ?? t("senzaData")}</span>
           {campagna ? (
             <span className={`${styles.marca} ${styles[`marca_${voce.certezza}`]}`}>
-              {t(`livello.${voce.tipo}`)} · {t(`certezza.${voce.certezza}`)}
+              {t("livello.campagna")} · {t(`certezza.${voce.certezza}`)}
             </span>
           ) : (
-            <span className={styles.marcaMemoria}>{t("livello.memoria")}</span>
+            <span className={styles.marcaMemoria}>
+              {voce.finding_type ? `${FINDING_EMOJI[voce.finding_type as FindingType]} ` : ""}
+              {t("livello.ritrovamento")}
+            </span>
           )}
         </div>
 
@@ -134,20 +138,13 @@ function VoceRiga({
         {voce.sottotitolo && <p className={styles.sottotitolo}>{voce.sottotitolo}</p>}
         {voce.testo && <p className={styles.testoVoce}>{voce.testo}</p>}
 
-        {/* L'audio è la memoria: se c'è, viene prima del testo di servizio. */}
-        {voce.tipo === "memoria" && voce.media_path && (
-          <PlayerMemoria mediaPath={voce.media_path} />
+        {/* Foto del ritrovamento, se presente. */}
+        {voce.tipo === "ritrovamento" && voce.media_path && (
+          <FotoRitrovamento mediaPath={voce.media_path} />
         )}
 
-        {voce.tipo === "memoria" && voce.text_source === "automatica" && (
-          <p className={styles.origineTesto}>{t("origine.automatica")}</p>
-        )}
-        {voce.tipo === "memoria" && voce.text_source === "raccoglitore" && voce.testo && (
-          <p className={styles.origineTesto}>{t("origine.raccoglitore")}</p>
-        )}
-
-        {/* Segnala: solo sulle memorie degli utenti, non sugli eventi storici. */}
-        {voce.tipo === "memoria" && (
+        {/* Segnala: solo sui ritrovamenti degli utenti, non sugli eventi storici. */}
+        {voce.tipo === "ritrovamento" && (
           <div className={styles.azioniVoce}>
             <Segnala contributionId={voce.id} />
           </div>
@@ -175,27 +172,15 @@ function VoceRiga({
   );
 }
 
-/** Player su richiesta: l'URL firmato si chiede solo quando si preme play. */
-function PlayerMemoria({ mediaPath }: { mediaPath: string }) {
-  const t = useTranslations("qui");
+/** Foto su richiesta: l'URL firmato si chiede solo al primo render. */
+function FotoRitrovamento({ mediaPath }: { mediaPath: string }) {
   const [url, setUrl] = useState<string | null>(null);
-  const [inCorso, setInCorso] = useState(false);
 
-  async function chiediUrl() {
-    setInCorso(true);
-    const u = await urlAudioFirmato(mediaPath);
-    setUrl(u);
-    setInCorso(false);
-  }
+  useEffect(() => {
+    void urlFotoFirmato(mediaPath).then(setUrl);
+  }, [mediaPath]);
 
-  if (url) {
-    // eslint-disable-next-line jsx-a11y/media-has-caption
-    return <audio className={styles.player} src={url} controls autoPlay preload="none" />;
-  }
-
-  return (
-    <button className={styles.ascolta} onClick={() => void chiediUrl()} disabled={inCorso}>
-      {inCorso ? t("caricamento") : `▶ ${t("ascolta")}`}
-    </button>
-  );
+  if (!url) return null;
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img className={styles.player} src={url} alt="" style={{ maxWidth: "100%", borderRadius: 8 }} />;
 }

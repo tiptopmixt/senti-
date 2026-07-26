@@ -1,20 +1,15 @@
 -- =============================================================================
 -- seed.sql — Dati dimostrativi. SOLO SVILUPPO, MAI in produzione.
 --
--- Contiene: 3 utenti demo, 6 POI reali del territorio con memorie (inclusa una
--- coppia sullo stesso episodio e una con date discordanti), 1 campagna curata
--- (Napoleone, canale del Brenta, settembre 1796) con 15 segmenti datati misti
--- attestato/ipotetico, 2 sentieri CAI importati (nascono ipotetico), e alcuni
--- centri abitati per la vista "luoghi da raccontare".
+-- Struttura a due livelli: IMPERI/potenze (Roma, Persia, Mongoli, ...) e dentro i
+-- loro CONDOTTIERI/campagne (Cesare, Traiano, Scipione, ...), ognuno con un
+-- percorso tracciato. Copertura di tutti i continenti, i più comuni nei libri di
+-- storia. Più alcuni ritrovamenti demo lungo la Campagna d'Italia di Napoleone.
 --
 -- Password degli utenti demo (solo dev): demo123456
 -- =============================================================================
 
 -- --- Utenti demo -------------------------------------------------------------
--- Il trigger handle_new_user crea automaticamente profilo e alias anonimo.
--- I campi token vanno impostati a stringa vuota, non NULL: GoTrue li legge come
--- string non-nullable e con NULL fallisce l'accesso ("Database error querying
--- schema"). È il classico intoppo del seed degli utenti auth.
 insert into auth.users (
   instance_id, id, aud, role, email, encrypted_password,
   email_confirmed_at, created_at, updated_at,
@@ -28,7 +23,7 @@ insert into auth.users (
    'authenticated', 'authenticated', 'marco@demo.local', crypt('demo123456', gen_salt('bf')),
    now(), now(), now(), '{"provider":"email","providers":["email"]}', '{}', '', '', '', ''),
   ('00000000-0000-0000-0000-000000000000', '33333333-3333-3333-3333-333333333333',
-   'authenticated', 'authenticated', 'curatrice@demo.local', crypt('demo123456', gen_salt('bf')),
+   'authenticated', 'authenticated', 'moderatore@demo.local', crypt('demo123456', gen_salt('bf')),
    now(), now(), now(), '{"provider":"email","providers":["email"]}', '{}', '', '', '', '');
 
 insert into auth.identities (provider_id, user_id, identity_data, provider, last_sign_in_at, created_at, updated_at)
@@ -38,192 +33,184 @@ values
   ('22222222-2222-2222-2222-222222222222', '22222222-2222-2222-2222-222222222222',
    '{"sub":"22222222-2222-2222-2222-222222222222","email":"marco@demo.local"}', 'email', now(), now(), now()),
   ('33333333-3333-3333-3333-333333333333', '33333333-3333-3333-3333-333333333333',
-   '{"sub":"33333333-3333-3333-3333-333333333333","email":"curatrice@demo.local"}', 'email', now(), now(), now());
+   '{"sub":"33333333-3333-3333-3333-333333333333","email":"moderatore@demo.local"}', 'email', now(), now(), now());
 
--- Nomi e ruolo curatore (is_curator non è modificabile dal client, qui siamo postgres).
-update public.profiles set display_name = 'Anna'      where id = '11111111-1111-1111-1111-111111111111';
-update public.profiles set display_name = 'Marco'     where id = '22222222-2222-2222-2222-222222222222';
-update public.profiles set display_name = 'Curatrice', is_curator = true
+update public.profiles set display_name = 'Anna'  where id = '11111111-1111-1111-1111-111111111111';
+update public.profiles set display_name = 'Marco' where id = '22222222-2222-2222-2222-222222222222';
+update public.profiles set display_name = 'Moderatore', is_moderator = true
   where id = '33333333-3333-3333-3333-333333333333';
 
--- --- POI reali del territorio ------------------------------------------------
--- p6 è sensibile (hazard_flag): le sue coordinate non escono mai esatte dalle viste.
-insert into public.pois (id, author_id, name, description, geog, hazard_flag) values
-  ('a0000000-0000-0000-0000-000000000001', '11111111-1111-1111-1111-111111111111',
-   'Ponte degli Alpini', 'Il ponte coperto sul Brenta a Bassano, progettato dal Palladio.',
-   st_setsrid(st_point(11.7342, 45.7666), 4326)::geography, false),
-  ('a0000000-0000-0000-0000-000000000002', '11111111-1111-1111-1111-111111111111',
-   'Grotte di Oliero', 'Sorgenti e grotte lungo il Brenta, presso Valstagna.',
-   st_setsrid(st_point(11.6650, 45.8480), 4326)::geography, false),
-  ('a0000000-0000-0000-0000-000000000003', '33333333-3333-3333-3333-333333333333',
-   'Sacrario del Monte Grappa', 'Il sacrario militare in cima al Grappa.',
-   st_setsrid(st_point(11.7997, 45.8726), 4326)::geography, false),
-  ('a0000000-0000-0000-0000-000000000004', '11111111-1111-1111-1111-111111111111',
-   'Asiago', 'Il centro dell''Altopiano, ricostruito dopo la Grande Guerra.',
-   st_setsrid(st_point(11.5100, 45.8767), 4326)::geography, false),
-  ('a0000000-0000-0000-0000-000000000005', '11111111-1111-1111-1111-111111111111',
-   'Cismon del Grappa', 'Borgo all''imbocco del canale del Brenta.',
-   st_setsrid(st_point(11.7267, 45.9186), 4326)::geography, false),
-  ('a0000000-0000-0000-0000-000000000006', '33333333-3333-3333-3333-333333333333',
-   'Ex polveriera di Solagna', 'Sito sensibile lungo la valle (posizione approssimata).',
-   st_setsrid(st_point(11.7180, 45.8080), 4326)::geography, true);
+-- --- Imperi / potenze --------------------------------------------------------
+insert into public.empires (slug, name, continent, region, epoch, description, apogeo, source_name) values
+  ('egitto',    'Antico Egitto',        'Africa',  'Valle del Nilo',      '3100–30 a.C.',   'Una delle prime grandi civiltà, lungo il Nilo.',                 'Nuovo Regno (XVI–XI sec. a.C.)', 'Wikipedia'),
+  ('persia',    'Impero Persiano',      'Asia',    'Medio Oriente',       '550–330 a.C.',   'Il più vasto impero dell''antichità, dagli Achemenidi.',         'Dario I (circa 500 a.C.)',       'Wikipedia'),
+  ('grecia',    'Grecia e Macedonia',   'Europa',  'Mediterraneo orient.','V–IV sec. a.C.', 'Le città-stato greche e l''impero di Alessandro.',               'Alessandro Magno (323 a.C.)',    'Wikipedia'),
+  ('cartagine', 'Cartagine',            'Africa',  'Nord Africa',         'IX–146 a.C.',    'Potenza marittima del Mediterraneo occidentale.',                'Guerre puniche (III sec. a.C.)', 'Wikipedia'),
+  ('roma',      'Impero Romano',        'Europa',  'Mediterraneo',        '753 a.C.–476 d.C.','Il più grande impero dell''antichità occidentale.',            'Traiano (117 d.C.)',             'Wikipedia'),
+  ('arabi',     'Mondo arabo-islamico', 'Asia',    'Arabia e Medio Or.',  'VII–XIII sec.',  'L''espansione dell''Islam dai deserti d''Arabia.',               'Califfato (VIII sec.)',          'Wikipedia'),
+  ('franchi',   'Impero Carolingio',    'Europa',  'Europa occidentale',  'VIII–IX sec.',   'Il regno dei Franchi e la rinascita imperiale.',                 'Carlo Magno (800)',              'Wikipedia'),
+  ('crociati',  'Le Crociate',          'Europa',  'Europa e Levante',    '1096–1291',      'Le spedizioni cristiane verso la Terra Santa.',                  'Regno di Gerusalemme (1099)',    'Wikipedia'),
+  ('mongoli',   'Impero Mongolo',       'Asia',    'Asia centrale',       'XIII–XIV sec.',  'Il più vasto impero contiguo della storia.',                     'Gengis Khan e successori',       'Wikipedia'),
+  ('ottomani',  'Impero Ottomano',      'Asia',    'Anatolia e Balcani',  '1299–1922',      'Impero a cavallo tra Europa e Asia.',                            'Solimano il Magnifico (XVI sec.)','Wikipedia'),
+  ('spagna',    'Impero Spagnolo',      'America', 'Europa e Americhe',   'XV–XIX sec.',    'L''impero su cui non tramontava mai il sole.',                   'Conquista delle Americhe (XVI sec.)','Wikipedia'),
+  ('francia',   'Impero Napoleonico',   'Europa',  'Europa',              '1804–1815',      'L''egemonia francese sull''Europa con Napoleone.',               'Apogeo del 1812',                'Wikipedia'),
+  ('russia',    'Impero Russo',         'Europa',  'Russia',              '1547–1917',      'Il più esteso stato d''Europa.',                                 'XIX secolo',                     'Wikipedia'),
+  ('italia',    'Risorgimento italiano','Europa',  'Italia',              '1848–1871',      'Il processo di unità nazionale italiana.',                       'Unità d''Italia (1861)',         'Wikipedia'),
+  ('mondiali',  'Guerre Mondiali',      'Globale', 'Mondo',               '1914–1945',      'I due conflitti globali del Novecento.',                         'Metà del XX secolo',             'Wikipedia');
 
--- --- Memorie (contributions) -------------------------------------------------
--- Tutte approvate e con consenso del narratore -> generano punti per Anna.
+-- --- Condottieri (dentro gli imperi) -----------------------------------------
+insert into public.commanders (empire_id, slug, name, epoch, region, bio, combattenti, esito, durata, source_name)
+select e.id, v.slug, v.name, v.epoch, v.region, v.bio, v.comb, v.esito, v.durata, 'Wikipedia'
+from (values
+  -- Egitto
+  ('egitto','ramesse','Ramesse II','XIII sec. a.C.','Egitto e Siria','Il faraone della battaglia di Kadesh contro gli Ittiti.','~20.000 egizi','Pareggio, primo trattato di pace noto','1274 a.C.'),
+  ('egitto','thutmose','Thutmose III','XV sec. a.C.','Egitto e Canaan','Il faraone conquistatore, vittorioso a Megiddo.','Esercito egizio','Vittoria egizia','1457 a.C.'),
+  -- Persia
+  ('persia','ciro','Ciro il Grande','VI sec. a.C.','Medio Oriente','Fondatore dell''impero achemenide, conquistò Babilonia.','Esercito persiano','Conquista di Babilonia','539 a.C.'),
+  ('persia','dario','Dario I','490 a.C.','Grecia','Guidò la prima guerra persiana, sconfitto a Maratona.','~25.000 persiani','Sconfitta a Maratona','490 a.C.'),
+  ('persia','serse','Serse','480 a.C.','Grecia','Guidò la seconda invasione della Grecia.','Esercito enorme','Sconfitta a Salamina','480 a.C.'),
+  -- Grecia e Macedonia
+  ('grecia','leonida','Leonida','480 a.C.','Termopili','Re di Sparta, eroe delle Termopili.','300 spartani e alleati','Sconfitta eroica','480 a.C.'),
+  ('grecia','temistocle','Temistocle','480 a.C.','Salamina','Stratega ateniese, vincitore navale a Salamina.','Flotta greca','Vittoria navale decisiva','480 a.C.'),
+  ('grecia','alessandro','Alessandro Magno','334–323 a.C.','Dall''Egitto all''Indo','Conquistò il più grande impero dell''antichità.','~48.000 macedoni','Vittoria, impero fino all''Indo','334–323 a.C.'),
+  -- Cartagine
+  ('cartagine','annibale','Annibale','218–202 a.C.','Alpi e Italia','Attraversò le Alpi con gli elefanti nella seconda guerra punica.','~50.000 e 37 elefanti','Vittoria a Canne, sconfitta a Zama','218–202 a.C.'),
+  ('cartagine','amilcare','Amilcare Barca','III sec. a.C.','Iberia','Padre di Annibale, espanse Cartagine in Iberia.','Esercito cartaginese','Espansione in Iberia','237–228 a.C.'),
+  -- Roma
+  ('roma','scipione','Scipione l''Africano','202 a.C.','Nord Africa','Sconfisse Annibale a Zama.','~30.000 romani','Vittoria decisiva su Cartagine','202 a.C.'),
+  ('roma','cesare','Giulio Cesare','58–50 a.C.','Gallia','Conquistò la Gallia, narrata nel De bello Gallico.','~50.000 legionari','Conquista della Gallia','58–50 a.C.'),
+  ('roma','traiano','Traiano','101–106 d.C.','Dacia','Portò l''impero alla massima espansione con le guerre daciche.','~150.000 romani','Conquista della Dacia','101–106 d.C.'),
+  ('roma','augusto','Augusto','31 a.C.','Grecia','Vinse ad Azio, primo imperatore romano.','Flotta romana','Vittoria, nascita dell''impero','31 a.C.'),
+  -- Mondo arabo
+  ('arabi','maometto','Maometto','622–632','Arabia','Unificò l''Arabia e fondò la comunità islamica.','Primi musulmani','Unificazione dell''Arabia','622–632'),
+  ('arabi','khalid','Khalid ibn al-Walid','636','Siria','Generale delle conquiste islamiche, vittorioso allo Yarmuk.','Eserciti arabi','Conquista della Siria','636'),
+  ('arabi','saladino','Saladino','1187','Terra Santa','Riconquistò Gerusalemme dopo la battaglia di Hattin.','Esercito ayyubide','Presa di Gerusalemme','1187'),
+  -- Franchi
+  ('franchi','carlomagno','Carlo Magno','768–814','Europa occidentale','Re dei Franchi, incoronato imperatore nell''800.','Esercito franco','Rinascita imperiale (800)','768–814'),
+  ('franchi','martello','Carlo Martello','732','Francia','Arrestò l''avanzata araba a Poitiers.','Franchi','Vittoria a Poitiers','732'),
+  -- Crociate
+  ('crociati','goffredo','Goffredo di Buglione','1096–1099','Europa e Levante','Guidò la prima crociata alla presa di Gerusalemme.','~35.000 crociati','Presa di Gerusalemme','1096–1099'),
+  ('crociati','riccardo','Riccardo Cuor di Leone','1189–1192','Terra Santa','Protagonista della terza crociata contro Saladino.','Crociati','Tregua con Saladino','1189–1192'),
+  -- Mongoli
+  ('mongoli','gengis','Gengis Khan','1206–1227','Asia','Fondatore dell''impero mongolo.','~100.000 cavalieri','Impero dall''Asia all''Europa','1206–1227'),
+  ('mongoli','subotai','Subotai','1236–1242','Russia e Ungheria','Generale mongolo, invase l''Europa orientale.','Orde mongole','Vittorie in Russia e Ungheria','1236–1242'),
+  ('mongoli','kublai','Kublai Khan','1271–1279','Cina','Conquistò la Cina e fondò la dinastia Yuan.','Esercito mongolo','Conquista della Cina','1271–1279'),
+  -- Ottomani
+  ('ottomani','maomettoii','Maometto II','1453','Costantinopoli','Conquistò Costantinopoli, fine dell''impero bizantino.','~80.000 ottomani','Presa di Costantinopoli','1453'),
+  ('ottomani','solimano','Solimano il Magnifico','1520–1566','Balcani','Portò l''impero al suo apogeo.','~100.000 ottomani','Apogeo dell''impero','1520–1566'),
+  -- Spagna / Americhe
+  ('spagna','colombo','Cristoforo Colombo','1492','Atlantico','Raggiunse le Americhe per la corona di Spagna.','3 caravelle','Sbarco nelle Americhe','1492'),
+  ('spagna','cortes','Hernán Cortés','1519–1521','Messico','Conquistò l''impero azteco.','~500 spagnoli e alleati','Caduta di Tenochtitlan','1519–1521'),
+  ('spagna','pizarro','Francisco Pizarro','1532–1533','Perù','Conquistò l''impero inca.','~180 spagnoli','Caduta dell''impero inca','1532–1533'),
+  -- Napoleone
+  ('francia','napoleone_it','Napoleone — Campagna d''Italia','1796–1797','Italia settentrionale','Le prime grandi vittorie di Napoleone in Italia.','~40.000 francesi','Vittoria francese','1796–1797'),
+  ('francia','napoleone_eg','Napoleone — Campagna d''Egitto','1798–1799','Egitto','Spedizione in Egitto, vittoria alle Piramidi.','Armata francese','Vittoria terrestre, poi ritiro','1798–1799'),
+  ('francia','napoleone_ru','Napoleone — Campagna di Russia','1812','Russia','L''invasione della Russia finita in disastro.','~600.000 uomini','Disastro, ritirata da Mosca','1812'),
+  ('francia','napoleone_wa','Napoleone — Waterloo','1815','Belgio','L''ultima battaglia di Napoleone.','~73.000 francesi','Sconfitta finale','1815'),
+  -- Russia
+  ('russia','pietro','Pietro il Grande','1700–1721','Nord Europa','Vinse la grande guerra del Nord, Russia potenza europea.','Esercito russo','Vittoria su Poltava','1700–1721'),
+  ('russia','kutuzov','Kutuzov','1812','Russia','Logorò la Grande Armata di Napoleone.','Esercito russo','Salvezza della Russia','1812'),
+  -- Risorgimento
+  ('italia','garibaldi','Garibaldi — Spedizione dei Mille','1860','Italia meridionale','Con i Mille conquistò il Sud per l''Unità d''Italia.','1.000 volontari','Conquista del Sud, Unità d''Italia','1860'),
+  -- Guerre mondiali
+  ('mondiali','grande_guerra','Prima Guerra Mondiale','1915–1918','Fronte italiano','Il fronte dell''Isonzo e del Grappa.','Milioni di soldati','Vittoria dell''Intesa','1915–1918'),
+  ('mondiali','normandia','Sbarco in Normandia','1944','Francia','Lo sbarco alleato che aprì il fronte occidentale.','~156.000 alleati','Apertura del fronte occidentale','1944'),
+  ('mondiali','seconda_guerra','Seconda Guerra Mondiale','1943–1945','Italia','La campagna d''Italia e la Linea Gotica.','Milioni di soldati','Vittoria alleata','1943–1945')
+) as v(empire_slug, slug, name, epoch, region, bio, comb, esito, durata)
+join public.empires e on e.slug = v.empire_slug;
 
--- Coppia sullo STESSO EPISODIO (ricostruzione del ponte, 1948) su Ponte degli Alpini.
-insert into public.contributions
-  (id, author_id, collected_by, poi_id, kind, body, narrator_name, narrator_birth_year, narrator_consent, is_anonymous, status)
-values
-  ('b0000000-0000-0000-0000-000000000001', '11111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111',
-   'a0000000-0000-0000-0000-000000000001', 'testo',
-   'Ricordo quando gli alpini rifecero il ponte dopo la guerra, nel 1948. Tutto il paese aiuto a portare le travi.',
-   'Bruno Marchetti', 1929, true, false, 'approvato'),
-  ('b0000000-0000-0000-0000-000000000002', '11111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111',
-   'a0000000-0000-0000-0000-000000000001', 'testo',
-   'Da bambina vidi gli alpini ricostruire il Ponte Vecchio nel 1948. C''erano canti e polenta per tutti.',
-   'Elsa Girardi', 1933, true, true, 'approvato');
+-- --- Percorsi (uno per condottiero) ------------------------------------------
+insert into public.routes (commander_id, kind, title, geom)
+select c.id, 'campagna', v.title, v.g::geometry
+from (values
+  ('ramesse',       'Battaglia di Kadesh',        'SRID=4326;LINESTRING(31.2 30.0, 34.8 31.5, 36.52 34.55)'),
+  ('thutmose',      'Battaglia di Megiddo',       'SRID=4326;LINESTRING(31.2 30.0, 34.4 31.4, 35.18 32.58)'),
+  ('ciro',          'Conquista di Babilonia',     'SRID=4326;LINESTRING(53.0 30.0, 48.5 32.0, 44.42 32.54)'),
+  ('dario',         'Prima guerra persiana',      'SRID=4326;LINESTRING(52.5 29.6, 44.0 35.0, 26.5 40.0, 23.96 38.15)'),
+  ('serse',         'Seconda guerra persiana',    'SRID=4326;LINESTRING(52.5 29.6, 40.0 39.0, 26.4 40.15, 22.54 38.80, 23.50 37.96)'),
+  ('leonida',       'Le Termopili',               'SRID=4326;LINESTRING(22.43 37.07, 22.54 38.80)'),
+  ('temistocle',    'Salamina',                   'SRID=4326;LINESTRING(23.73 37.98, 23.50 37.96)'),
+  ('alessandro',    'Conquista dell''Asia',       'SRID=4326;LINESTRING(22.95 40.63, 36.0 36.0, 44.42 33.31, 68.0 30.0)'),
+  ('annibale',      'Seconda guerra punica',      'SRID=4326;LINESTRING(3.0 42.0, 7.0 45.0, 11.0 44.5, 16.13 41.30)'),
+  ('amilcare',      'Espansione in Iberia',       'SRID=4326;LINESTRING(10.3 36.8, 3.0 39.0, -0.5 38.0)'),
+  ('scipione',      'Battaglia di Zama',          'SRID=4326;LINESTRING(12.4 41.9, 10.0 37.5, 9.4 36.3)'),
+  ('cesare',        'Guerra Gallica',             'SRID=4326;LINESTRING(2.35 48.85, 4.83 45.76, 6.0 47.0)'),
+  ('traiano',       'Guerre daciche',             'SRID=4326;LINESTRING(20.0 44.0, 21.9 45.0, 22.9 45.62)'),
+  ('augusto',       'Battaglia di Azio',          'SRID=4326;LINESTRING(12.4 41.9, 17.0 40.0, 20.9 38.9)'),
+  ('maometto',      'Unificazione dell''Arabia',  'SRID=4326;LINESTRING(39.82 21.42, 39.6 24.47)'),
+  ('khalid',        'Conquista della Siria',      'SRID=4326;LINESTRING(39.6 24.47, 37.0 31.0, 36.05 32.73)'),
+  ('saladino',      'Riconquista di Gerusalemme', 'SRID=4326;LINESTRING(44.4 33.3, 38.0 33.5, 35.23 31.78)'),
+  ('carlomagno',    'Espansione carolingia',      'SRID=4326;LINESTRING(6.08 50.77, 9.15 45.18, 12.5 41.9)'),
+  ('martello',      'Battaglia di Poitiers',      'SRID=4326;LINESTRING(-1.0 43.0, 0.34 46.58)'),
+  ('goffredo',      'Prima Crociata',             'SRID=4326;LINESTRING(4.85 45.75, 19.0 47.5, 26.4 40.15, 35.23 31.78)'),
+  ('riccardo',      'Terza Crociata',             'SRID=4326;LINESTRING(-1.5 47.0, 14.5 40.8, 35.0 32.9)'),
+  ('gengis',        'Conquiste mongole',          'SRID=4326;LINESTRING(106.92 47.92, 90.0 44.0, 60.0 40.0)'),
+  ('subotai',       'Invasione dell''Europa',     'SRID=4326;LINESTRING(90.0 48.0, 50.0 50.0, 21.0 47.0, 19.04 47.50)'),
+  ('kublai',        'Conquista della Cina',       'SRID=4326;LINESTRING(106.92 47.92, 116.40 39.90)'),
+  ('maomettoii',    'Caduta di Costantinopoli',   'SRID=4326;LINESTRING(29.1 40.2, 28.98 41.01)'),
+  ('solimano',      'Avanzata nei Balcani',       'SRID=4326;LINESTRING(28.98 41.01, 20.0 45.0, 16.37 48.20)'),
+  ('colombo',       'Scoperta dell''America',     'SRID=4326;LINESTRING(-6.3 36.0, -40.0 28.0, -74.0 23.0)'),
+  ('cortes',        'Conquista degli Aztechi',    'SRID=4326;LINESTRING(-96.1 19.2, -98.0 19.3, -99.13 19.43)'),
+  ('pizarro',       'Conquista degli Inca',       'SRID=4326;LINESTRING(-79.0 -8.0, -75.0 -11.0, -71.97 -13.53)'),
+  ('napoleone_it',  'Campagna d''Italia',         'SRID=4326;LINESTRING(11.50 45.60, 11.62 45.68, 11.75 45.77)'),
+  ('napoleone_eg',  'Campagna d''Egitto',         'SRID=4326;LINESTRING(5.37 43.30, 20.0 34.0, 31.2 30.0)'),
+  ('napoleone_ru',  'Campagna di Russia',         'SRID=4326;LINESTRING(23.0 54.0, 31.0 55.0, 37.62 55.75)'),
+  ('napoleone_wa',  'Waterloo',                   'SRID=4326;LINESTRING(2.35 48.85, 4.40 50.68)'),
+  ('pietro',        'Grande guerra del Nord',     'SRID=4326;LINESTRING(30.31 59.94, 34.55 49.59)'),
+  ('kutuzov',       'Resistenza a Napoleone',     'SRID=4326;LINESTRING(35.82 55.51, 37.62 55.75)'),
+  ('garibaldi',     'Spedizione dei Mille',       'SRID=4326;LINESTRING(12.43 37.80, 13.36 38.11, 14.25 40.85)'),
+  ('grande_guerra', 'Fronte dell''Isonzo',        'SRID=4326;LINESTRING(13.55 45.95, 12.70 45.90, 11.80 45.87)'),
+  ('normandia',     'Sbarco in Normandia',        'SRID=4326;LINESTRING(-1.10 49.30, 0.5 49.2, 2.35 48.85)'),
+  ('seconda_guerra','Linea Gotica',               'SRID=4326;LINESTRING(15.09 37.08, 12.6 41.9, 10.30 44.10, 11.34 44.49)')
+) as v(cmd_slug, title, g)
+join public.commanders c on c.slug = v.cmd_slug;
 
--- Coppia con DATE DISCORDANTI (bombardamento di Asiago) su Asiago.
-insert into public.contributions
-  (id, author_id, collected_by, poi_id, kind, body, narrator_name, narrator_birth_year, narrator_consent, is_anonymous, status)
-values
-  ('b0000000-0000-0000-0000-000000000003', '11111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111',
-   'a0000000-0000-0000-0000-000000000004', 'testo',
-   'Il grande bombardamento su Asiago fu nel maggio del 1916.',
-   'Guido Rigoni', 1928, true, false, 'approvato'),
-  ('b0000000-0000-0000-0000-000000000004', '11111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111',
-   'a0000000-0000-0000-0000-000000000004', 'testo',
-   'Mia nonna diceva che Asiago fu colpita nel giugno 1916, non a maggio.',
-   'Maria Stella', 1931, true, true, 'approvato');
+-- Un segmento attestato con fonte per ogni percorso → linea continua sulla mappa.
+insert into public.route_segments (route_id, seq, geom, certainty, importance, sources)
+select r.id, 1, r.geom, 'attestato', 3, '[{"cit":"Fonte storica di riferimento"}]'::jsonb
+from public.routes r;
 
--- Altre memorie sparse.
-insert into public.contributions
-  (author_id, collected_by, poi_id, kind, body, narrator_name, narrator_birth_year, narrator_consent, is_anonymous, status)
-values
-  ('11111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111',
-   'a0000000-0000-0000-0000-000000000001', 'testo',
-   'Il sabato sul ponte c''era il mercato e si sentiva profumo di bacala.',
-   'Bruno Marchetti', 1929, true, false, 'approvato'),
-  ('11111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111',
-   'a0000000-0000-0000-0000-000000000002', 'testo',
-   'Da ragazzi ci si tuffava nelle acque fredde delle sorgenti di Oliero.',
-   'Rina Bonato', 1936, true, true, 'approvato'),
-  ('11111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111',
-   'a0000000-0000-0000-0000-000000000003', 'testo',
-   'Salivamo al sacrario ogni anno con la sezione alpini, a piedi da Romano.',
-   'Attilio Zen', 1927, true, false, 'approvato'),
-  ('11111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111',
-   'a0000000-0000-0000-0000-000000000005', 'testo',
-   'Alla stazione di Cismon passavano i treni carichi di legname dalla valle.',
-   'Teresa Fabris', 1934, true, true, 'approvato'),
-  ('11111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111',
-   'a0000000-0000-0000-0000-000000000006', 'testo',
-   'Da bambini ci dicevano di stare lontani dalla vecchia polveriera.',
-   'Gino Parolin', 1930, true, true, 'approvato'),
-  ('11111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111',
-   'a0000000-0000-0000-0000-000000000002', 'testo',
-   'I battellieri portavano il legname sulle zattere lungo il Brenta fino a Venezia.',
-   'Rina Bonato', 1936, true, false, 'approvato'),
-  ('11111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111',
-   'a0000000-0000-0000-0000-000000000003', 'testo',
-   'Mio zio non torno mai dal Grappa: il suo nome e su una lapide del sacrario.',
-   'Attilio Zen', 1927, true, true, 'approvato'),
-  ('11111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111',
-   'a0000000-0000-0000-0000-000000000005', 'testo',
-   'A Cismon si passava il confine di notte, con la neve, per portare il sale.',
-   'Teresa Fabris', 1934, true, false, 'approvato'),
-  ('11111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111',
-   'a0000000-0000-0000-0000-000000000006', 'testo',
-   'Una volta la polveriera salto in aria e i vetri tremarono in tutta la valle.',
-   'Gino Parolin', 1930, true, false, 'approvato');
+-- --- Ritrovamenti demo lungo la Campagna d'Italia di Napoleone ---------------
+do $$
+declare
+  r_napo uuid;
+  p uuid;
+begin
+  select r.id into r_napo from public.routes r
+    join public.commanders c on c.id = r.commander_id where c.slug = 'napoleone_it';
 
--- Collegamenti editoriali tra contributi.
-insert into public.contribution_links (from_contribution, to_contribution, kind, note, created_by) values
-  ('b0000000-0000-0000-0000-000000000001', 'b0000000-0000-0000-0000-000000000002', 'stesso_episodio',
-   'Due testimoni della ricostruzione del ponte nel 1948.', '33333333-3333-3333-3333-333333333333'),
-  ('b0000000-0000-0000-0000-000000000003', 'b0000000-0000-0000-0000-000000000004', 'conflitto',
-   'Date discordanti sul bombardamento di Asiago (maggio vs giugno 1916).', '33333333-3333-3333-3333-333333333333');
+  insert into public.pois (author_id, name, finding_type, certainty, event_year, geog, route_id)
+  values ('11111111-1111-1111-1111-111111111111', 'Bossoli presso il guado', 'munizioni', 'probabile', 1796,
+          'SRID=4326;POINT(11.55 45.63)'::geography, r_napo) returning id into p;
+  insert into public.contributions (author_id, poi_id, kind, body, voce_propria, permesso_terzi)
+  values ('11111111-1111-1111-1111-111111111111', p, 'testo',
+          'Trovati alcuni bossoli anneriti lungo l''argine, dopo una piena.', true, null);
 
--- --- Centri abitati (stile GeoNames) -----------------------------------------
-insert into public.places (id, name, ascii_name, population, admin1, country_code, feature_code, geog) values
-  (3181557, 'Bassano del Grappa', 'Bassano del Grappa', 43200, '20', 'IT', 'PPL', st_setsrid(st_point(11.7342, 45.7666), 4326)::geography),
-  (3173864, 'Marostica',          'Marostica',          13800, '20', 'IT', 'PPL', st_setsrid(st_point(11.6560, 45.7450), 4326)::geography),
-  (3182997, 'Asiago',             'Asiago',              6300, '20', 'IT', 'PPL', st_setsrid(st_point(11.5100, 45.8767), 4326)::geography),
-  (3164450, 'Valstagna',          'Valstagna',           1900, '20', 'IT', 'PPL', st_setsrid(st_point(11.6614, 45.8514), 4326)::geography),
-  (3178650, 'Cismon del Grappa',  'Cismon del Grappa',    900, '20', 'IT', 'PPL', st_setsrid(st_point(11.7267, 45.9186), 4326)::geography),
-  (3177700, 'Enego',              'Enego',               1800, '20', 'IT', 'PPL', st_setsrid(st_point(11.7100, 45.9450), 4326)::geography),
-  (3165330, 'Solagna',            'Solagna',             1900, '20', 'IT', 'PPL', st_setsrid(st_point(11.7180, 45.8080), 4326)::geography);
+  insert into public.pois (author_id, name, finding_type, certainty, event_year, geog, route_id)
+  values ('22222222-2222-2222-2222-222222222222', 'Scontro al ponte', 'battaglia', 'ipotetico', 1796,
+          'SRID=4326;POINT(11.63 45.69)'::geography, r_napo) returning id into p;
+  insert into public.contributions (author_id, poi_id, kind, body, voce_propria, permesso_terzi)
+  values ('22222222-2222-2222-2222-222222222222', p, 'testo',
+          'I racconti di famiglia parlano di uno scontro proprio qui, ma non ho fonti.', true, null);
 
--- --- Campagna curata: Napoleone nel canale del Brenta (settembre 1796) -------
-insert into public.routes (id, kind, title, actor, geom, created_by) values
-  ('c0000000-0000-0000-0000-000000000001', 'campagna',
-   'Napoleone nel canale del Brenta', 'Napoleone',
-   st_geomfromtext('LINESTRING(11.7342 45.7666, 11.7180 45.8080, 11.6614 45.8514, 11.7267 45.9186, 11.7440 45.9480)', 4326),
-   '33333333-3333-3333-3333-333333333333');
+  insert into public.pois (author_id, name, finding_type, certainty, event_year, geog, hazard_flag, route_id)
+  values ('11111111-1111-1111-1111-111111111111', 'Monete nel muretto', 'tesori', 'probabile', 1797,
+          'SRID=4326;POINT(11.70 45.74)'::geography, true, r_napo) returning id into p;
+  insert into public.contributions (author_id, poi_id, kind, body, voce_propria, permesso_terzi)
+  values ('11111111-1111-1111-1111-111111111111', p, 'testo',
+          'Due monete di rame in un muretto a secco. Posizione volutamente approssimata.', true, null);
 
--- 15 eventi datati come segmenti consecutivi; ogni terzo è 'attestato' (con fonte),
--- gli altri 'ipotetico'.
-insert into public.route_segments (route_id, seq, geom, date_from, date_to, certainty, sources)
-select
-  'c0000000-0000-0000-0000-000000000001',
-  gs,
-  st_linesubstring(r.geom, (gs - 1) / 15.0, gs / 15.0),
-  date '1796-09-01' + (gs - 1),
-  date '1796-09-01' + (gs - 1),
-  case when gs % 3 = 0 then 'attestato'::public.certainty else 'ipotetico'::public.certainty end,
-  case when gs % 3 = 0
-       then '[{"cit":"Bollettino dell''Armata d''Italia, settembre 1796"}]'::jsonb
-       else '[]'::jsonb end
-from generate_series(1, 15) as gs
-cross join (select geom from public.routes where id = 'c0000000-0000-0000-0000-000000000001') as r;
+  insert into public.pois (author_id, name, finding_type, certainty, geog, route_id)
+  values ('22222222-2222-2222-2222-222222222222', 'Ammonite nel greto', 'fossili', 'attestato',
+          'SRID=4326;POINT(11.58 45.66)'::geography, r_napo) returning id into p;
+  insert into public.contributions (author_id, poi_id, kind, body, voce_propria, permesso_terzi)
+  values ('22222222-2222-2222-2222-222222222222', p, 'testo',
+          'Una bella ammonite nel greto del torrente: niente a che vedere con la guerra, ma affascinante.', true, null);
 
--- --- Sentieri CAI importati (nascono ipotetico) ------------------------------
-insert into public.routes (id, kind, title, actor, geom, source_ref, created_by) values
-  ('c0000000-0000-0000-0000-000000000002', 'sentiero', 'Sentiero CAI 778', 'CAI 778',
-   st_geomfromtext('LINESTRING(11.7342 45.7666, 11.7600 45.8000, 11.7997 45.8726)', 4326),
-   'osm/relation/778', '33333333-3333-3333-3333-333333333333'),
-  ('c0000000-0000-0000-0000-000000000003', 'sentiero', 'Sentiero CAI 925', 'CAI 925',
-   st_geomfromtext('LINESTRING(11.5100 45.8767, 11.5500 45.9000, 11.6000 45.9200)', 4326),
-   'osm/relation/925', '33333333-3333-3333-3333-333333333333');
-
-insert into public.route_segments (route_id, seq, geom, certainty, sources)
-select id, 1, geom, 'ipotetico'::public.certainty, '[]'::jsonb
-from public.routes
-where id in ('c0000000-0000-0000-0000-000000000002', 'c0000000-0000-0000-0000-000000000003');
-
--- --- Glossario toponimi del territorio pilota --------------------------------
--- Passato a Whisper come suggerimento: migliora molto il riconoscimento dei
--- nomi di luogo locali (che altrimenti vengono storpiati).
-insert into public.toponym_glossary (area_name, area, terms, lang, is_default) values
-  ('Valbrenta e Altopiano',
-   st_geogfromtext('POLYGON((11.40 45.68, 11.95 45.68, 11.95 46.02, 11.40 46.02, 11.40 45.68))'),
-   array[
-     'Bassano del Grappa', 'Ponte degli Alpini', 'Ponte Vecchio', 'Brenta',
-     'Canale del Brenta', 'Valbrenta', 'Valstagna', 'Oliero', 'Solagna',
-     'Campolongo sul Brenta', 'Pove del Grappa', 'Romano d''Ezzelino',
-     'Cismon del Grappa', 'Primolano', 'Enego', 'Monte Grappa', 'Cima Grappa',
-     'Col Moschin', 'Asiago', 'Altopiano dei Sette Comuni', 'Gallio', 'Foza',
-     'Roana', 'Rotzo', 'Conco', 'Lusiana', 'Marostica', 'Nove', 'Cartigliano',
-     'Val Frenzela', 'Cala del Sasso', 'Sacrario', 'Sasso Stefani'
-   ],
-   'it', false),
-  ('Default',
-   null,
-   array['Bassano del Grappa', 'Brenta', 'Monte Grappa', 'Asiago', 'Valbrenta'],
-   'it', true);
-
--- --- Importanza degli eventi e anno delle memorie ----------------------------
--- I segmenti attestati della campagna sono i momenti salienti: si vedono da
--- più lontano nella colonna del tempo.
-update public.route_segments
-   set importance = 3
- where certainty = 'attestato'
-   and route_id = 'c0000000-0000-0000-0000-000000000001';
-
--- Anno dell'episodio ricordato (dichiarato dai narratori): colloca le memorie
--- sulla linea del tempo accanto agli eventi delle campagne.
-update public.contributions set event_year = 1948
- where id in ('b0000000-0000-0000-0000-000000000001', 'b0000000-0000-0000-0000-000000000002');
-update public.contributions set event_year = 1916
- where id in ('b0000000-0000-0000-0000-000000000003', 'b0000000-0000-0000-0000-000000000004');
+  insert into public.pois (author_id, name, finding_type, certainty, geog, route_id)
+  values ('11111111-1111-1111-1111-111111111111', 'Vena di quarzo', 'minerali', 'probabile',
+          'SRID=4326;POINT(11.66 45.71)'::geography, r_napo) returning id into p;
+  insert into public.contributions (author_id, poi_id, kind, body, voce_propria, permesso_terzi)
+  values ('11111111-1111-1111-1111-111111111111', p, 'testo',
+          'Cristalli di quarzo affioranti dopo una frana lungo il sentiero.', true, null);
+end $$;

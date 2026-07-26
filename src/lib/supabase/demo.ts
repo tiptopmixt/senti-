@@ -14,7 +14,7 @@ export const DEMO_ATTIVO = process.env.NEXT_PUBLIC_DEMO === "true";
 const PASSWORD_DEMO = "demo123456";
 
 export interface UtenteDemo {
-  chiave: "anna" | "marco" | "curatrice";
+  chiave: "anna" | "marco" | "moderatore";
   email: string;
   etichetta: string;
   descrizione: string;
@@ -25,7 +25,7 @@ export const UTENTI_DEMO: UtenteDemo[] = [
     chiave: "anna",
     email: "anna@demo.local",
     etichetta: "Anna",
-    descrizione: "con uno storico di memorie e punti",
+    descrizione: "con ritrovamenti e punti",
   },
   {
     chiave: "marco",
@@ -34,10 +34,10 @@ export const UTENTI_DEMO: UtenteDemo[] = [
     descrizione: "nuovo, zero contributi",
   },
   {
-    chiave: "curatrice",
-    email: "curatrice@demo.local",
-    etichetta: "Curatrice",
-    descrizione: "può moderare le memorie",
+    chiave: "moderatore",
+    email: "moderatore@demo.local",
+    etichetta: "Moderatore",
+    descrizione: "può moderare i contenuti segnalati",
   },
 ];
 
@@ -52,10 +52,10 @@ export async function entraComeDemo(email: string): Promise<void> {
   if (error) throw new Error(`Accesso demo fallito: ${error.message}`);
 }
 
-/** Profilo dell'utente corrente (nome, se curatore). */
+/** Profilo dell'utente corrente (nome, se moderatore). */
 export async function profiloCorrente(): Promise<{
   display_name: string | null;
-  is_curator: boolean;
+  is_moderator: boolean;
 } | null> {
   const supabase = getSupabaseClient();
   const { data: sess } = await supabase.auth.getSession();
@@ -63,8 +63,8 @@ export async function profiloCorrente(): Promise<{
 
   const { data } = await supabase
     .from("profiles")
-    .select("display_name, is_curator")
+    .select("display_name, is_moderator")
     .eq("id", sess.session.user.id)
     .maybeSingle();
-  return data ?? { display_name: null, is_curator: false };
+  return data ?? { display_name: null, is_moderator: false };
 }

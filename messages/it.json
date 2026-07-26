@@ -1,11 +1,11 @@
 {
   "app": {
     "name": "Senti",
-    "tagline": "Una mappa di percorsi e sentieri arricchiti dalla memoria delle persone."
+    "tagline": "La mappa mondiale dei ritrovamenti, lungo le rotte dei grandi condottieri della storia."
   },
   "home": {
     "foundationNote": "Fondazione del progetto in corso.",
-    "vaiARaccontare": "Registra una memoria",
+    "vaiARaccontare": "Aggiungi un ritrovamento",
     "vaiAllaMappa": "Apri la mappa",
     "vaiAllIo": "Il mio registro"
   },
@@ -14,72 +14,87 @@
     "en": "Inglese",
     "switch": "Cambia lingua"
   },
+  "categorie": {
+    "titolo": "Cosa hai trovato?",
+    "sottotitolo": "Scegli l'icona giusta: guida come appare sulla mappa.",
+    "battaglia": "Battaglia",
+    "munizioni": "Munizioni",
+    "equipaggiamento": "Equipaggiamento",
+    "fortificazione": "Fortificazione",
+    "caduti": "Caduti",
+    "tesori": "Tesori",
+    "minerali": "Minerali",
+    "fossili": "Fossili",
+    "archeologico": "Reperto archeologico",
+    "monumento": "Monumento",
+    "aneddoto": "Aneddoto / leggenda",
+    "foto_storica": "Foto storica"
+  },
   "cattura": {
-    "titolo": "Racconta una memoria",
-    "sottotitolo": "Premi il pulsante e lascia parlare chi ricorda. I dati li aggiungi dopo: non interrompere il racconto.",
-    "registro": "Ogni cosa che pubblichi viene registrata a tuo nome, anche quando scegli l'anonimato: gli altri vedono Voce anonima, il registro sa che sei tu. Oggi il registro vale riconoscimento. Se la piattaforma genererà ricavi, il registro è la base con cui vengono divisi. Non promettiamo cifre: promettiamo che il conteggio è trasparente e che nessuno può cancellarlo.",
+    "titolo": "Aggiungi un ritrovamento",
+    "sottotitolo": "Scegli l'icona, poi aggiungi una foto o due righe. La posizione la prendi dal GPS o con un tocco sulla mappa.",
+    "registro": "Ogni cosa che pubblichi viene registrata a tuo nome, anche quando scegli l'anonimato: gli altri vedono un nome anonimo, il registro sa che sei tu. Oggi il registro vale riconoscimento. Se la piattaforma genererà ricavi, il registro è la base con cui vengono divisi. Non promettiamo cifre: promettiamo che il conteggio è trasparente e che nessuno può cancellarlo.",
     "azioni": {
-      "registra": "Registra",
-      "ferma": "Ferma",
-      "rifai": "Rifai",
-      "continua": "Continua",
+      "scattaFoto": "Scatta o scegli una foto",
+      "scriviTesto": "Scrivi un testo",
       "indietro": "Indietro",
-      "salva": "Salva la memoria",
-      "salvataggio": "Salvataggio…",
-      "altraMemoria": "Registra un'altra memoria",
+      "salva": "Pubblica il ritrovamento",
+      "salvataggio": "Pubblicazione…",
+      "altro": "Aggiungi un altro ritrovamento",
       "pubblica": "Pubblica"
     },
-    "riascolto": {
-      "durata": "Registrazione di {durata}. Riascoltala prima di continuare."
-    },
     "campi": {
-      "nomeTestimone": "Chi racconta",
-      "annoNascita": "Anno di nascita",
-      "nota": "Due righe per ritrovarla",
-      "notaEsempio": "Es. la ricostruzione del ponte nel 1948",
-      "notaAiuto": "Queste sono parole tue, non del testimone: servono solo a ritrovare la memoria. La voce resta l'originale."
-    },
-    "consenso": {
-      "etichetta": "Chi racconta ha dato il consenso a pubblicare questa memoria.",
-      "spiegazione": "Senza consenso la memoria resta privata: nessuno la vede, e non viene mai trascritta.",
-      "obbligatorio": "Serve il consenso di chi racconta per poter salvare."
+      "titolo": "Titolo del ritrovamento",
+      "titoloEsempio": "Es. Bossoli presso il guado",
+      "descrizione": "Descrivi cosa hai trovato",
+      "annoEvento": "Anno (se lo sai)",
+      "nascondiPosizione": "Nascondi la posizione esatta (per tesori o siti da proteggere)"
     },
     "coda": {
-      "inInvio": "{n, plural, one {# memoria in invio…} other {# memorie in invio…}}",
-      "attesaRete": "{n, plural, one {# memoria in attesa di rete} other {# memorie in attesa di rete}}"
+      "inInvio": "{n, plural, one {# ritrovamento in invio…} other {# ritrovamenti in invio…}}",
+      "attesaRete": "{n, plural, one {# ritrovamento in attesa di rete} other {# ritrovamenti in attesa di rete}}"
     },
     "limiti": {
-      "durataMassima": "Massimo {minuti} minuti: racconta un episodio alla volta.",
-      "restano": "Restano {tempo}",
-      "rimanentiMese": "{n, plural, =0 {nessuna memoria questo mese} one {# memoria questo mese} other {# memorie questo mese}}",
-      "fermataAutomatica": "La registrazione si è fermata da sola ai {minuti} minuti. Quello che hai registrato è al sicuro: se il racconto continua, salvala e registrane un'altra.",
-      "quotaEsaurita": "Hai esaurito le memorie di questo mese. Riprendi il mese prossimo."
+      "rimanentiMese": "{n, plural, =0 {nessun ritrovamento questo mese} one {# ritrovamento questo mese} other {# ritrovamenti questo mese}}",
+      "quotaEsaurita": "Hai esaurito i ritrovamenti di questo mese. Riprendi il mese prossimo."
     },
     "salvata": {
-      "titolo": "Memoria salvata",
-      "inviata": "È stata inviata.",
-      "inCorso": "Invio in corso…",
+      "titolo": "Ritrovamento pubblicato",
+      "inviata": "È online.",
+      "inCorso": "Pubblicazione in corso…",
       "offline": "È al sicuro sul telefono. Partirà da sola appena torna la rete."
     },
     "dichiarazione": {
-      "domanda": "Il racconto e la voce sono tuoi o di un'altra persona?",
+      "domanda": "Il contenuto e la foto sono tuoi o di un'altra persona?",
       "eMio": "È mio",
-      "eAltro": "È di un'altra persona",
-      "confermaMia": "È la mia storia ed è vera per quanto ne so; accetto che altri utenti la ascoltino e la leggano.",
-      "avvisoTerzi": "Puoi pubblicare il racconto di un'altra persona SOLO se hai il suo permesso. Sei tu il responsabile di averlo ottenuto. La piattaforma non risponde di pubblicazioni fatte senza il permesso della persona coinvolta.",
-      "hoPermesso": "Ho il permesso di questa persona a pubblicare il suo racconto.",
-      "consensoVoce": "Questa persona accetta che la sua voce sia pubblicata e ascoltata.",
-      "veridicita": "Il racconto è vero per quanto ne so."
+      "eAltro": "È di un'altra persona / fonte",
+      "confermaMia": "È mio ed è vero per quanto ne so; accetto che altri utenti lo vedano.",
+      "avvisoTerzi": "Puoi pubblicare contenuti di un'altra persona o fonte SOLO se hai il permesso. Sei tu il responsabile di averlo ottenuto. La piattaforma non risponde di pubblicazioni fatte senza permesso.",
+      "hoPermesso": "Ho il permesso di pubblicare questo contenuto.",
+      "veridicita": "Quello che dichiaro è vero per quanto ne so."
     }
   },
   "mappa": {
     "titolo": "La mappa",
     "sonoQui": "Sono qui",
-    "suggerimentoToccoLungo": "Tieni premuto sulla mappa per segnare un altro punto",
-    "luogoCreato": "Luogo creato.",
+    "suggerimentoToccoLungo": "Tieni premuto sulla mappa per segnare un ritrovamento",
+    "luogoCreato": "Ritrovamento segnato.",
     "filtri": {
-      "raccontati": "Luoghi raccontati",
-      "daRaccontare": "Luoghi da raccontare"
+      "condottiero": "Impero / condottiero",
+      "tutti": "Tutti gli imperi",
+      "tuttoImpero": "— Tutto: {nome} —",
+      "schedaImpero": "Scheda impero",
+      "categoria": "Tipo di ritrovamento"
+    },
+    "info": {
+      "impero": "Impero",
+      "combattenti": "Combattenti",
+      "esito": "Esito",
+      "durata": "Durata",
+      "apogeo": "Apogeo",
+      "fonte": "Fonte",
+      "nota": "Contesto storico con fonte, separato dai ritrovamenti degli utenti.",
+      "chiudi": "Chiudi"
     },
     "certezza": {
       "attestato": "Attestato",
@@ -88,15 +103,15 @@
     },
     "vicini": {
       "titolo": "Intendevi uno di questi?",
-      "spiegazione": "Qui vicino c'è già un luogo segnato. Se è lo stesso, torna indietro e usa quello: due schede per lo stesso posto dividono le memorie in due."
+      "spiegazione": "Qui vicino c'è già un ritrovamento segnato. Se è lo stesso, torna indietro e usa quello: due schede per lo stesso posto dividono i contributi in due."
     },
     "nuovoLuogo": {
-      "titolo": "Nuovo luogo",
-      "nome": "Come si chiama",
-      "esempio": "Es. Ponte degli Alpini"
+      "titolo": "Nuovo ritrovamento",
+      "nome": "Come lo chiami",
+      "esempio": "Es. Bossoli presso il guado"
     },
     "azioni": {
-      "creaLuogo": "Crea il luogo",
+      "creaLuogo": "Segna il ritrovamento",
       "annulla": "Annulla",
       "salvataggio": "Salvataggio…"
     },
@@ -110,29 +125,24 @@
     "questoLuogo": "Questo luogo",
     "chiudi": "Chiudi",
     "caricamento": "Un momento…",
-    "ascolta": "Ascolta",
     "senzaData": "Senza data",
     "livello": {
       "campagna": "Campagna",
-      "memoria": "Memoria"
+      "ritrovamento": "Ritrovamento"
     },
     "certezza": {
       "attestato": "attestato",
       "probabile": "probabile",
       "ipotetico": "ipotetico"
     },
-    "origine": {
-      "automatica": "Testo trascritto automaticamente, può contenere errori.",
-      "raccoglitore": "Appunto di chi ha raccolto la memoria — non le parole del testimone."
-    },
     "vuoto": {
       "titolo": "Qui non c'è ancora niente.",
-      "testo": "Nessuna memoria e nessun evento nel raggio di questo punto. Puoi essere la prima voce a raccontarlo.",
-      "invito": "Racconta questo luogo"
+      "testo": "Nessun ritrovamento e nessun evento nel raggio di questo punto. Puoi essere il primo a segnalarne uno.",
+      "invito": "Aggiungi un ritrovamento"
     },
     "contesto": {
       "fonte": "Fonte",
-      "nota": "Contesto aggiunto dalla piattaforma, non fa parte della testimonianza."
+      "nota": "Contesto storico aggiunto dalla piattaforma, non fa parte del ritrovamento."
     }
   },
   "condividi": {
@@ -151,27 +161,24 @@
     "titolo": "Entra come utente demo"
   },
   "cura": {
-    "titolo": "Memorie da moderare",
+    "titolo": "Contenuti segnalati",
     "caricamento": "Un momento…",
-    "nonCuratrice": "Questa pagina è riservata alle curatrici. In modalità test, scegli \"Curatrice\" dal selettore in basso.",
-    "vuota": "Nessuna memoria in attesa. Tutto moderato.",
-    "conteggio": "{n, plural, one {# memoria in attesa} other {# memorie in attesa}}",
+    "nonCuratrice": "Questa pagina è riservata ai moderatori. In modalità test, scegli \"Moderatore\" dal selettore in basso.",
+    "vuota": "Nessun contenuto segnalato. Tutto in ordine.",
+    "conteggio": "{n, plural, one {# contenuto segnalato} other {# contenuti segnalati}}",
     "senzaLuogo": "Senza luogo",
-    "senzaConsenso": "Senza consenso",
     "evento": "evento {anno}",
     "tipo": {
-      "audio": "Audio",
       "testo": "Testo",
       "foto": "Foto"
     },
-    "ascolta": "Ascolta",
     "chiediAiuto": "Chiedi aiuto all'assistente",
     "aiutoInCorso": "L'assistente sta guardando…",
     "aiutoVuoto": "Nessun suggerimento.",
     "aiutoErrore": "Assistente non disponibile: {errore}",
-    "approva": "Approva",
-    "rifiuta": "Rifiuta",
-    "storiaAltrui": "Storia altrui",
+    "rimuovi": "Rimuovi",
+    "ripristina": "Ripristina",
+    "rimosso": "Rimosso",
     "segnalata": "{n, plural, one {# segnalazione} other {# segnalazioni}}",
     "motivi": "Motivi"
   },
@@ -179,32 +186,32 @@
     "titolo": "Il tuo registro",
     "caricamento": "Un momento…",
     "citazioni": "Citazioni",
-    "citazioniNota": "quante volte le tue memorie sono citate nelle narrazioni",
+    "citazioniNota": "quante volte i tuoi ritrovamenti sono citati nelle narrazioni",
     "unicaVoce": "Unica voce",
     "unicaVoceNota": "luoghi di cui sei l'unico testimone",
     "punti": "punti",
     "quota": "Il {pct}% del registro totale",
     "registroNota": "Il registro vale riconoscimento. Se la piattaforma genererà ricavi, è la base con cui vengono divisi. Il conteggio è trasparente e nessuno può cancellarlo.",
     "conteggi": {
-      "pois": "Luoghi",
-      "contributi": "Memorie",
+      "pois": "Ritrovamenti",
+      "contributi": "Contenuti",
       "reazioni": "Reazioni",
       "visite": "Visite"
     },
     "privacyNota": "Solo numeri: non sai chi ha votato o visitato, e nessuno lo sa di te.",
     "vuoto": {
-      "intro": "Non hai ancora raccontato nulla. Ma non sei una schermata di zeri.",
-      "vicino": "è vicino a te e non ha ancora nessuna memoria. Potresti essere la sua prima voce.",
-      "generico": "C'è un luogo, là fuori, che aspetta ancora la sua prima voce.",
-      "invito": "Racconta una memoria"
+      "intro": "Non hai ancora segnato nulla. Ma non sei una schermata di zeri.",
+      "vicino": "è la campagna più vicina a te: parti da lì.",
+      "generico": "C'è una campagna, là fuori, che aspetta il tuo primo ritrovamento.",
+      "invito": "Aggiungi un ritrovamento"
     }
   },
   "onboarding": {
     "intro": {
       "titolo": "Benvenuto in Senti",
-      "comeFunziona": "Senti è una mappa di memorie. Ogni persona racconta la propria storia legata a un luogo, e insieme le storie danno voce al territorio.",
+      "comeFunziona": "Senti è una mappa dei ritrovamenti lungo le rotte dei grandi condottieri della storia. I percorsi sono già tracciati: tu li arricchisci con quello che trovi o sai — reperti di guerra, ma anche minerali, fossili, tesori.",
       "anonimo": "Puoi scegliere di restare anonimo: gli altri non vedranno il tuo nome, ma il sistema sì. Serve a riconoscere i tuoi contributi e a tenerne traccia nel registro.",
-      "regola": "Racconta la tua storia e ne sei responsabile. Per pubblicare quella di un'altra persona devi avere il suo permesso.",
+      "regola": "Ciò che pubblichi è sotto la tua responsabilità. Per pubblicare contenuti di un'altra persona o fonte devi avere il permesso.",
       "hoCapito": "Ho capito, continua",
       "prova": "Senti è in prova ed è realizzata con l'aiuto dell'intelligenza artificiale: può contenere errori o comportarsi in modo imprevisto. Usala tenendone conto."
     },
@@ -245,7 +252,8 @@
     "perche": "Perché lo segnali?",
     "motivi": {
       "falso_ingannevole": "Contenuto falso o ingannevole",
-      "senza_permesso": "Pubblicato senza permesso della persona coinvolta",
+      "senza_permesso": "Pubblicato senza permesso della persona/proprietario",
+      "illecito": "Scavo o luogo non consentiti (sito protetto)",
       "offensivo": "Offensivo o inappropriato",
       "altro": "Altro motivo"
     }

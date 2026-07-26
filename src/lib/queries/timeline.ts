@@ -9,15 +9,15 @@ import { getSupabaseClient } from "@/lib/supabase/client";
  * — non si fondono mai — ma condividono la stessa linea del tempo.
  */
 const voceSchema = z.object({
-  tipo: z.enum(["campagna", "memoria"]),
+  tipo: z.enum(["campagna", "ritrovamento"]),
   id: z.guid(),
   titolo: z.string().nullable(),
   sottotitolo: z.string().nullable(),
   anno: z.number().int().nullable(),
   certezza: z.enum(["attestato", "probabile", "ipotetico"]).nullable(),
   testo: z.string().nullable(),
+  finding_type: z.string().nullable(),
   media_path: z.string().nullable(),
-  text_source: z.enum(["raccoglitore", "automatica", "nessuno"]).nullable(),
   distanza_m: z.number(),
   chainage_m: z.number().nullable(),
 });
