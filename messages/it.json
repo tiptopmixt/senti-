@@ -76,6 +76,7 @@
   },
   "mappa": {
     "titolo": "La mappa",
+    "aggiungi": "Aggiungi ritrovamento",
     "sonoQui": "Sono qui",
     "suggerimentoToccoLungo": "Tieni premuto sulla mappa per segnare un ritrovamento",
     "luogoCreato": "Ritrovamento segnato.",
@@ -235,7 +236,8 @@
     "termini": "Termini",
     "cookie": "Cookie",
     "impostazioni": "Impostazioni",
-    "prova": "Versione di prova, realizzata con l'aiuto dell'IA: può contenere errori."
+    "prova": "Versione di prova, realizzata con l'aiuto dell'IA: può contenere errori.",
+    "avvisoIA": "App fatta interamente con l'IA · può contenere errori"
   },
   "impostazioni": {
     "titolo": "Impostazioni",

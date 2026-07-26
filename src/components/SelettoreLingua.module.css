@@ -1,0 +1,31 @@
+.gruppo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.attivo,
+.spento {
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 0.15rem 0.4rem;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-radius: 0.35rem;
+  color: inherit;
+}
+
+.spento {
+  opacity: 0.5;
+}
+
+.attivo {
+  opacity: 1;
+  text-decoration: underline;
+}
+
+.sep {
+  opacity: 0.4;
+}

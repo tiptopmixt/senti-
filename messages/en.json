@@ -76,6 +76,7 @@
   },
   "mappa": {
     "titolo": "The map",
+    "aggiungi": "Add a find",
     "sonoQui": "I'm here",
     "suggerimentoToccoLungo": "Press and hold on the map to mark a find",
     "luogoCreato": "Find marked.",
@@ -235,7 +236,8 @@
     "termini": "Terms",
     "cookie": "Cookies",
     "impostazioni": "Settings",
-    "prova": "Trial version, built with the help of AI: it may contain errors."
+    "prova": "Trial version, built with the help of AI: it may contain errors.",
+    "avvisoIA": "App built entirely with AI · may contain errors"
   },
   "impostazioni": {
     "titolo": "Settings",

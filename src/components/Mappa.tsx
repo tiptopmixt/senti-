@@ -370,8 +370,12 @@ export function Mappa() {
         </span>
       </div>
 
+      <button className={styles.aggiungi} onClick={() => router.push("/racconta")}>
+        ➕ {t("aggiungi")}
+      </button>
+
       <button className={styles.sonoQui} onClick={sonoQui}>
-        {t("sonoQui")}
+        📍 {t("sonoQui")}
       </button>
 
       <p className={styles.suggerimento}>{t("suggerimentoToccoLungo")}</p>

@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { SelettoreLingua } from "./SelettoreLingua";
 import styles from "./PiePagina.module.css";
 
 /**
@@ -19,6 +20,7 @@ export function PiePagina() {
         <Link href="/cookie">{t("cookie")}</Link>
         <Link href="/impostazioni">{t("impostazioni")}</Link>
       </nav>
+      <SelettoreLingua />
     </footer>
   );
 }

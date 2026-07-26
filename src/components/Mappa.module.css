@@ -4,7 +4,8 @@
 .contenitore {
   position: relative;
   width: 100%;
-  height: 100dvh;
+  /* 100dvh meno la striscia dell'avviso IA in alto. */
+  height: calc(100dvh - 1.9rem);
   overflow: hidden;
 }
 
@@ -13,16 +14,16 @@
   inset: 0;
 }
 
-/* --- Filtri: sempre in vista, in alto --- */
+/* --- Filtri: sempre in vista, in alto (fixed = non spariscono scorrendo) --- */
 .filtri {
-  position: absolute;
-  top: 0.75rem;
+  position: fixed;
+  top: 2.5rem; /* sotto la striscia dell'avviso IA */
   left: 0.75rem;
   right: 4rem; /* lascia spazio ai comandi di zoom */
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
-  z-index: 2;
+  z-index: 5;
 }
 
 .filtro,
@@ -72,9 +73,9 @@
 
 /* --- Legenda della certezza --- */
 .legenda {
-  position: absolute;
+  position: fixed;
   left: 0.75rem;
-  bottom: 8.5rem;
+  bottom: 11.5rem;
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
@@ -116,9 +117,30 @@
   border-top-color: #a98a63;
 }
 
-/* --- "Sono qui": l'azione principale, grande e in basso --- */
+/* --- Azioni principali, grandi e in basso (fixed = sempre a portata) --- */
+.aggiungi {
+  position: fixed;
+  left: 0.75rem;
+  right: 0.75rem;
+  bottom: 7.3rem;
+  min-height: 3.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font: inherit;
+  font-size: 1.1rem;
+  font-weight: 700;
+  border: none;
+  border-radius: 0.85rem;
+  cursor: pointer;
+  background: #2f2415;
+  color: #f6f1e4;
+  z-index: 4;
+}
+
 .sonoQui {
-  position: absolute;
+  position: fixed;
   left: 0.75rem;
   right: 0.75rem;
   bottom: 3.5rem;
@@ -131,11 +153,11 @@
   cursor: pointer;
   background: #7a2f22;
   color: #f6f1e4;
-  z-index: 2;
+  z-index: 4;
 }
 
 .suggerimento {
-  position: absolute;
+  position: fixed;
   left: 0.75rem;
   right: 0.75rem;
   bottom: 1.1rem;
@@ -148,10 +170,10 @@
 }
 
 .messaggio {
-  position: absolute;
+  position: fixed;
   left: 0.75rem;
   right: 0.75rem;
-  bottom: 7.5rem;
+  bottom: 15rem;
   margin: 0;
   padding: 0.6rem 0.8rem;
   border-radius: 0.6rem;
