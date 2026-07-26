@@ -81,6 +81,29 @@ export async function imperi(): Promise<Impero[]> {
   return imperoSchema.array().parse(data ?? []);
 }
 
+// --- Battaglie (punti di scontro lungo i percorsi) ---------------------------
+const battagliaSchema = z.object({
+  id: uuidSchema,
+  commander_id: uuidSchema.nullable(),
+  name: z.string(),
+  year: z.number().int().nullable(),
+  side_a: z.string().nullable(),
+  side_b: z.string().nullable(),
+  outcome: z.string().nullable(),
+  source_name: z.string().nullable(),
+  lat: z.number(),
+  lon: z.number(),
+});
+export type Battaglia = z.infer<typeof battagliaSchema>;
+
+export async function battaglie(): Promise<Battaglia[]> {
+  const { data, error } = await getSupabaseClient()
+    .from("v_battles_public")
+    .select("id, commander_id, name, year, side_a, side_b, outcome, source_name, lat, lon");
+  if (error) throw new Error(`Lettura delle battaglie fallita: ${error.message}`);
+  return battagliaSchema.array().parse(data ?? []);
+}
+
 // --- Segmenti dei percorsi ---------------------------------------------------
 // La certezza vive qui: è ciò che decide come viene disegnata la linea.
 const geoJsonLineaSchema = z.object({

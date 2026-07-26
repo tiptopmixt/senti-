@@ -9,12 +9,14 @@ import {
   stileCartaAntica,
 } from "@/lib/mappa/stile";
 import {
+  battaglie,
   condottieri,
   imperi,
   luoghiPubblici,
   luoghiVicini,
   percorsi,
   segmentiPercorsi,
+  type Battaglia,
   type Condottiero,
   type Impero,
   type LuogoVicino,
@@ -74,6 +76,8 @@ export function Mappa() {
   const segmentiRef = useRef<Segmento[]>([]);
   // Condottieri per id, letti dal gestore di click sulle icone "info".
   const condottieriMapRef = useRef<Map<string, Condottiero>>(new Map());
+  // Battaglie per id, lette dal gestore di click sulle icone ⚔️.
+  const battaglieMapRef = useRef<Map<string, Battaglia>>(new Map());
 
   const [pronta, setPronta] = useState(false);
   const [listaCondottieri, setListaCondottieri] = useState<Condottiero[]>([]);
@@ -85,6 +89,7 @@ export function Mappa() {
   const [puntoTempo, setPuntoTempo] = useState<{ lon: number; lat: number; nome?: string; poiId?: string } | null>(null);
   const [infoCampagna, setInfoCampagna] = useState<Condottiero | null>(null);
   const [infoImpero, setInfoImpero] = useState<Impero | null>(null);
+  const [infoBattaglia, setInfoBattaglia] = useState<Battaglia | null>(null);
   const [messaggio, setMessaggio] = useState<string | null>(null);
 
   /** Apre il pannello "nuovo ritrovamento", ma prima controlla i doppioni vicini. */
@@ -111,10 +116,10 @@ export function Mappa() {
     };
 
     void (async () => {
-      const { Map, NavigationControl } = await import("maplibre-gl");
+      const { Map: MapCtor, NavigationControl } = await import("maplibre-gl");
       if (annullato || !contenitoreRef.current) return;
 
-      const mappa = new Map({
+      const mappa = new MapCtor({
         container: contenitoreRef.current,
         style: stileCartaAntica(),
         center: CENTRO,
@@ -130,8 +135,9 @@ export function Mappa() {
       mappa.on("error", (e) => console.error("[mappa] errore:", e.error?.message ?? e));
 
       mappa.on("load", () => {
-        void caricaDati(mappa, (segs) => {
+        void caricaDati(mappa, (segs, batts) => {
           segmentiRef.current = segs;
+          battaglieMapRef.current = new Map(batts.map((b) => [b.id, b]));
         });
         setPronta(true);
       });
@@ -162,6 +168,14 @@ export function Mappa() {
           if (c) setInfoCampagna(c);
           return;
         }
+        // Tocco su un'icona ⚔️: apre la scheda della battaglia.
+        const batt = mappa.queryRenderedFeatures(e.point, { layers: ["battaglie"] });
+        if (batt.length > 0) {
+          const bid = batt[0].properties?.id as string | undefined;
+          const b = bid ? battaglieMapRef.current.get(bid) : null;
+          if (b) setInfoBattaglia(b);
+          return;
+        }
         // Tocco su un gruppo (cluster): zooma per aprirlo.
         const gruppi = mappa.queryRenderedFeatures(e.point, { layers: ["ritrovamenti-cluster"] });
         if (gruppi.length > 0 && gruppi[0].geometry.type === "Point") {
@@ -185,7 +199,7 @@ export function Mappa() {
           });
         }
       });
-      for (const layer of ["ritrovamenti", "ritrovamenti-cluster", "campagna-info"]) {
+      for (const layer of ["ritrovamenti", "ritrovamenti-cluster", "campagna-info", "battaglie"]) {
         mappa.on("mouseenter", layer, () => {
           mappa.getCanvas().style.cursor = "pointer";
         });
@@ -239,6 +253,16 @@ export function Mappa() {
     return listaPercorsi.filter((p) => p.commander_id && commanderIds.has(p.commander_id)).map((p) => p.id);
   }, [selezione, listaPercorsi, listaCondottieri]);
 
+  // I commander_id visibili (per filtrare le battaglie con la stessa logica).
+  const commanderIdsVisibili = useMemo(() => {
+    if (!selezione) return null;
+    if (selezione.startsWith("empire:")) {
+      const eid = selezione.slice("empire:".length);
+      return listaCondottieri.filter((c) => c.empire_id === eid).map((c) => c.id);
+    }
+    return [selezione];
+  }, [selezione, listaCondottieri]);
+
   // Impero selezionato (per il pulsante "scheda impero").
   const imperoSel = useMemo(() => {
     if (!selezione.startsWith("empire:")) return null;
@@ -263,6 +287,16 @@ export function Mappa() {
             : ["in", ["get", "route_id"], ["literal", routeIdsVisibili]],
         );
       }
+    }
+
+    // Filtro delle battaglie ⚔️ per condottiero (stessa logica dei percorsi).
+    if (mappa.getLayer("battaglie")) {
+      mappa.setFilter(
+        "battaglie",
+        commanderIdsVisibili === null
+          ? null
+          : ["in", ["get", "commander_id"], ["literal", commanderIdsVisibili]],
+      );
     }
 
     const infoSrc = mappa.getSource("campagna-info") as GeoJSONSource | undefined;
@@ -320,7 +354,7 @@ export function Mappa() {
         { padding: 80, maxZoom: 9, duration: 1400 },
       );
     }
-  }, [routeIdsVisibili, pronta, listaPercorsi]);
+  }, [routeIdsVisibili, commanderIdsVisibili, pronta, listaPercorsi]);
 
   // --- "Sono qui": GPS -------------------------------------------------------
   function sonoQui() {
@@ -508,6 +542,41 @@ export function Mappa() {
         </div>
       )}
 
+      {/* --- Scheda della battaglia (chi contro chi) --- */}
+      {infoBattaglia && (
+        <div className={styles.pannello} role="dialog" aria-modal="true">
+          <h2 className={styles.titoloPannello}>⚔️ {infoBattaglia.name}</h2>
+          {infoBattaglia.year != null && (
+            <p className={styles.testoPannello}>
+              {infoBattaglia.year < 0
+                ? `${-infoBattaglia.year} a.C.`
+                : `${infoBattaglia.year} d.C.`}
+            </p>
+          )}
+          {(infoBattaglia.side_a || infoBattaglia.side_b) && (
+            <p className={styles.testoPannello} style={{ fontWeight: 600 }}>
+              {infoBattaglia.side_a} ⚔️ {infoBattaglia.side_b}
+            </p>
+          )}
+          {infoBattaglia.outcome && (
+            <p className={styles.testoPannello}>
+              <strong>{t("info.esito")}:</strong> {infoBattaglia.outcome}
+            </p>
+          )}
+          {infoBattaglia.source_name && (
+            <p className={styles.testoPannello}>
+              {t("info.fonte")}: {infoBattaglia.source_name}
+            </p>
+          )}
+          <p className={styles.testoPannello} style={{ opacity: 0.7 }}>{t("info.nota")}</p>
+          <div className={styles.azioni}>
+            <button className={styles.primario} onClick={() => setInfoBattaglia(null)}>
+              {t("info.chiudi")}
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* --- Pannello nuovo ritrovamento --- */}
       {puntoNuovo && (
         <div className={styles.pannello} role="dialog" aria-modal="true">
@@ -544,15 +613,19 @@ export function Mappa() {
 
 /** Carica ritrovamenti e percorsi e li disegna. `store` riceve i segmenti
  *  caricati, così il componente può calcolare i limiti per il centraggio. */
-async function caricaDati(mappa: MapLibreMap, store?: (s: Segmento[]) => void) {
-  const [luoghi, segmenti, cmds, routes, imps] = await Promise.all([
+async function caricaDati(
+  mappa: MapLibreMap,
+  store?: (s: Segmento[], b: Battaglia[]) => void,
+) {
+  const [luoghi, segmenti, cmds, routes, imps, batts] = await Promise.all([
     luoghiPubblici().catch(() => []),
     segmentiPercorsi().catch(() => []),
     condottieri().catch(() => []),
     percorsi().catch(() => []),
     imperi().catch(() => []),
+    battaglie().catch(() => []),
   ]);
-  store?.(segmenti);
+  store?.(segmenti, batts);
 
   // route_id → colore dell'impero (per colorare linee e frecce per fazione).
   const empColor = new Map(imps.map((e) => [e.id, COLORE_IMPERO[e.slug] ?? COLORE_DEFAULT]));
@@ -723,6 +796,32 @@ async function caricaDati(mappa: MapLibreMap, store?: (s: Segmento[]) => void) {
       layout: {
         "text-field": "ℹ️",
         "text-size": ["interpolate", ["linear"], ["zoom"], 3, 20, 12, 32],
+        "text-allow-overlap": true,
+      },
+    });
+  }
+
+  // --- Battaglie: punti di scontro ⚔️ (chi contro chi) ---------------------
+  const datiBattaglie: GeoJSON.FeatureCollection = {
+    type: "FeatureCollection",
+    features: batts.map((b) => ({
+      type: "Feature" as const,
+      geometry: { type: "Point" as const, coordinates: [b.lon, b.lat] },
+      properties: { id: b.id, commander_id: b.commander_id ?? "" },
+    })),
+  };
+  const sorgBatt = mappa.getSource("battaglie");
+  if (sorgBatt) {
+    (sorgBatt as GeoJSONSource).setData(datiBattaglie);
+  } else {
+    mappa.addSource("battaglie", { type: "geojson", data: datiBattaglie });
+    mappa.addLayer({
+      id: "battaglie",
+      type: "symbol",
+      source: "battaglie",
+      layout: {
+        "text-field": "⚔️",
+        "text-size": ["interpolate", ["linear"], ["zoom"], 3, 15, 12, 26],
         "text-allow-overlap": true,
       },
     });
