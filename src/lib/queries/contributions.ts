@@ -63,6 +63,7 @@ export async function pubblicaRitrovamento(
     p_name: dati.name,
     p_lon: dati.lon,
     p_lat: dati.lat,
+    p_zone_radius_m: dati.zoneRadiusM,
     p_kind: dati.kind,
     p_body: dati.body,
     p_media_path: dati.mediaPath,

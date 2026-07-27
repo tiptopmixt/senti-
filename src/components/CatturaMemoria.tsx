@@ -3,58 +3,48 @@
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { ensureSession } from "@/lib/supabase/auth";
-import { caricaFoto, pubblicaRitrovamento } from "@/lib/queries/contributions";
-import { leggiLimiti, LIMITI_PREDEFINITI, type Limiti } from "@/lib/queries/settings";
-import {
-  FINDING_EMOJI,
-  FINDING_TYPES,
-  type FindingType,
-} from "@/lib/validation";
+import { getSupabaseClient } from "@/lib/supabase/client";
+import { centroOffuscato } from "@/lib/geo/zona";
+import { pulisciFoto } from "@/lib/foto/pulisci";
+import { avviaCoda, salvaMemoria, type StatoCoda } from "@/lib/offline/coda";
+import { RAGGI_ZONA, type FindingType } from "@/lib/validation";
 import styles from "./CatturaMemoria.module.css";
 
-type Fase = "categoria" | "dati" | "dichiarazione";
+type Fase = "zona" | "dettagli";
 
 /**
- * Aggiungi un ritrovamento. Il gesto centrale è la scelta dell'ICONA: che tipo
- * di ritrovamento è. Poi si aggiungono foto e/o testo e la posizione. Infine la
- * dichiarazione di responsabilità (voce propria o permesso di terzi + veridicità).
+ * Aggiungi una memoria. Semplice come mandare un messaggio.
  *
- * I ritrovamenti sono pubblici subito: la dichiarazione è la prova che chi
- * pubblica risponde di ciò che pubblica.
+ * La posizione non è MAI precisa: dal punto indicato (GPS o tocco sulla mappa) si
+ * ricava un centro scostato a caso e si salva solo una ZONA ampia (1/3/5 km). Il
+ * punto esatto non viene mai inviato né memorizzato.
  */
 export function CatturaRitrovamento() {
-  const t = useTranslations("cattura");
-  const tc = useTranslations("categorie");
+  const t = useTranslations("memoria");
   const tm = useTranslations("mappa");
 
-  const [limiti, setLimiti] = useState<Limiti>(LIMITI_PREDEFINITI);
-  const [fase, setFase] = useState<Fase>("categoria");
-  const [categoria, setCategoria] = useState<FindingType | null>(null);
-  const [titolo, setTitolo] = useState("");
-  const [descrizione, setDescrizione] = useState("");
-  const [anno, setAnno] = useState("");
-  const [nascondi, setNascondi] = useState(false);
-  const [foto, setFoto] = useState<File | null>(null);
-  const [coord, setCoord] = useState<{ lon: number; lat: number } | null>(null);
+  const [fase, setFase] = useState<Fase>("zona");
+  // Punto preciso: serve SOLO a calcolare il centro, poi si scarta. Mai inviato.
+  const [puntoPreciso, setPuntoPreciso] = useState<{ lon: number; lat: number } | null>(null);
+  const [raggio, setRaggio] = useState<number>(1000);
   const [gpsErrore, setGpsErrore] = useState<string | null>(null);
 
-  const [provenienza, setProvenienza] = useState<"mio" | "altro" | null>(null);
-  const [confermaMia, setConfermaMia] = useState(false);
-  const [permesso, setPermesso] = useState(false);
-  const [veridicitaAltro, setVeridicitaAltro] = useState(false);
+  const [descrizione, setDescrizione] = useState("");
+  const [foto, setFoto] = useState<File | null>(null);
+  const [anonimo, setAnonimo] = useState(true);
+  const [nome, setNome] = useState("");
 
   const [salvataggio, setSalvataggio] = useState(false);
-  const [salvata, setSalvata] = useState(false);
+  const [esito, setEsito] = useState<"inviata" | "in_coda" | null>(null);
   const [errore, setErrore] = useState<string | null>(null);
+  const [coda, setCoda] = useState<StatoCoda | null>(null);
 
-  // Sessione anonima in sottofondo + limiti + coordinate dalla mappa (query).
   useEffect(() => {
     void (async () => {
       try {
         await ensureSession();
-        setLimiti(await leggiLimiti());
       } catch {
-        /* offline: valgono i predefiniti */
+        /* offline / login anonimo assente: la coda riproverà */
       }
     })();
     if (typeof window !== "undefined") {
@@ -62,9 +52,10 @@ export function CatturaRitrovamento() {
       const lon = Number(q.get("lon"));
       const lat = Number(q.get("lat"));
       if (Number.isFinite(lon) && Number.isFinite(lat) && (lon !== 0 || lat !== 0)) {
-        setCoord({ lon, lat });
+        setPuntoPreciso({ lon, lat });
       }
     }
+    return avviaCoda(setCoda);
   }, []);
 
   function sonoQui() {
@@ -74,53 +65,64 @@ export function CatturaRitrovamento() {
       return;
     }
     navigator.geolocation.getCurrentPosition(
-      (pos) => setCoord({ lon: pos.coords.longitude, lat: pos.coords.latitude }),
+      (pos) => setPuntoPreciso({ lon: pos.coords.longitude, lat: pos.coords.latitude }),
       () => setGpsErrore(tm("errori.gpsNegato")),
       { enableHighAccuracy: true, timeout: 10000 },
     );
   }
 
-  const dichiarazioneOk =
-    provenienza === "mio"
-      ? confermaMia
-      : provenienza === "altro"
-        ? permesso && veridicitaAltro
-        : false;
-
-  const datiOk = titolo.trim() !== "" && coord !== null && (foto !== null || descrizione.trim() !== "");
+  const descrizioneOk = descrizione.trim() !== "";
 
   async function pubblica() {
-    if (!categoria || !coord || !dichiarazioneOk) return;
+    if (!puntoPreciso || !descrizioneOk) return;
     setSalvataggio(true);
     setErrore(null);
     try {
-      const mia = provenienza === "mio";
-      let mediaPath: string | null = null;
-      let kind: "foto" | "testo" = "testo";
-      if (foto) {
-        const id = crypto.randomUUID();
-        mediaPath = await caricaFoto(id, foto, foto.type || "image/jpeg");
-        kind = "foto";
+      // Centro scostato: da qui in poi il punto preciso non serve più e si scarta.
+      const [lon, lat] = centroOffuscato(puntoPreciso.lon, puntoPreciso.lat, raggio);
+
+      // Nome facoltativo: se scelto, aggiorna il nome pubblico del profilo.
+      if (!anonimo && nome.trim() !== "") {
+        try {
+          const s = await ensureSession();
+          await getSupabaseClient()
+            .from("profiles")
+            .update({ display_name: nome.trim().slice(0, 60) })
+            .eq("id", s.user.id);
+        } catch {
+          /* non bloccare la pubblicazione per il nome */
+        }
       }
-      const annoNum = anno.trim() === "" ? null : Number(anno);
-      await pubblicaRitrovamento({
-        findingType: categoria,
-        name: titolo.trim(),
-        lon: coord.lon,
-        lat: coord.lat,
-        kind,
-        body: descrizione.trim() || null,
-        mediaPath,
-        poiId: null,
-        routeId: null,
-        eventYear: Number.isFinite(annoNum) ? annoNum : null,
-        hazardFlag: nascondi,
-        isAnonymous: true,
-        vocePropria: mia,
-        permessoTerzi: mia ? null : permesso,
-        veridicita: mia ? true : veridicitaAltro,
-      });
-      setSalvata(true);
+
+      // Foto facoltativa: ripulita dai metadati (EXIF/GPS) prima dell'invio.
+      let fotoBlob: Blob | undefined;
+      if (foto) fotoBlob = await pulisciFoto(foto);
+
+      const testo = descrizione.trim();
+      const stato = await salvaMemoria(
+        {
+          findingType: "aneddoto" as FindingType,
+          name: testo.slice(0, 60) || "Memoria",
+          lon,
+          lat,
+          zoneRadiusM: raggio,
+          kind: fotoBlob ? "foto" : "testo",
+          body: testo,
+          mediaPath: null,
+          poiId: null,
+          routeId: null,
+          eventYear: null,
+          hazardFlag: false,
+          isAnonymous: anonimo,
+          vocePropria: true,
+          permessoTerzi: null,
+          veridicita: true,
+        },
+        fotoBlob,
+        fotoBlob ? "image/jpeg" : undefined,
+      );
+
+      setEsito(stato);
     } catch (e) {
       setErrore(e instanceof Error ? e.message : String(e));
     } finally {
@@ -129,30 +131,28 @@ export function CatturaRitrovamento() {
   }
 
   function ricomincia() {
-    setFase("categoria");
-    setCategoria(null);
-    setTitolo("");
+    setFase("zona");
+    setPuntoPreciso(null);
+    setRaggio(1000);
     setDescrizione("");
-    setAnno("");
-    setNascondi(false);
     setFoto(null);
-    setProvenienza(null);
-    setConfermaMia(false);
-    setPermesso(false);
-    setVeridicitaAltro(false);
-    setSalvata(false);
+    setAnonimo(true);
+    setNome("");
+    setEsito(null);
     setErrore(null);
   }
 
   // --- Esito ----------------------------------------------------------------
-  if (salvata) {
+  if (esito) {
     return (
       <section className={styles.contenitore}>
         <p className={styles.esitoIcona} aria-hidden="true">✓</p>
         <h2 className={styles.titolo}>{t("salvata.titolo")}</h2>
-        <p className={styles.testo}>{t("salvata.inviata")}</p>
+        <p className={styles.testo}>
+          {esito === "in_coda" ? t("salvata.inCoda") : t("salvata.inviata")}
+        </p>
         <button className={styles.primario} onClick={ricomincia}>
-          {t("azioni.altro")}
+          {t("azioni.altra")}
         </button>
       </section>
     );
@@ -161,102 +161,22 @@ export function CatturaRitrovamento() {
   return (
     <section className={styles.contenitore}>
       <h1 className={styles.titolo}>{t("titolo")}</h1>
-      <p className={styles.testo}>{t("sottotitolo")}</p>
+
+      {coda && coda.inAttesa > 0 && (
+        <p className={coda.online ? styles.avviso : styles.avvisoOffline}>
+          {t("coda.inAttesa", { n: coda.inAttesa })}
+        </p>
+      )}
 
       {errore && <p className={styles.errore}>{errore}</p>}
 
-      {/* --- 1. Categoria/icona --- */}
-      {fase === "categoria" && (
+      {/* --- 1. Zona (mai il punto esatto) --- */}
+      {fase === "zona" && (
         <div className={styles.blocco}>
-          <p className={styles.domanda}>{tc("titolo")}</p>
-          <p className={styles.testo}>{tc("sottotitolo")}</p>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
-            {FINDING_TYPES.map((ft) => (
-              <button
-                key={ft}
-                onClick={() => {
-                  setCategoria(ft);
-                  setFase("dati");
-                }}
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  gap: 6,
-                  padding: "14px 6px",
-                  borderRadius: 12,
-                  border: categoria === ft ? "2px solid #7a2f22" : "1px solid #cbb98f",
-                  background: "#fbf5e6",
-                  cursor: "pointer",
-                  fontSize: 14,
-                }}
-              >
-                <span style={{ fontSize: 28 }} aria-hidden="true">{FINDING_EMOJI[ft]}</span>
-                <span>{tc(ft)}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
+          <p className={styles.aiutoZona}>{t("aiutoZona")}</p>
 
-      {/* --- 2. Dati (foto/testo + posizione) --- */}
-      {fase === "dati" && categoria && (
-        <div className={styles.blocco}>
-          <p className={styles.domanda}>
-            {FINDING_EMOJI[categoria]} {tc(categoria)}
-          </p>
-
-          <label className={styles.campo}>
-            <span>{t("campi.titolo")}</span>
-            <input
-              type="text"
-              value={titolo}
-              onChange={(e) => setTitolo(e.target.value)}
-              placeholder={t("campi.titoloEsempio")}
-              autoFocus
-            />
-          </label>
-
-          <label className={styles.campo}>
-            <span>{t("azioni.scattaFoto")}</span>
-            <input
-              type="file"
-              accept="image/*"
-              capture="environment"
-              onChange={(e) => setFoto(e.target.files?.[0] ?? null)}
-            />
-          </label>
-
-          <label className={styles.campo}>
-            <span>{t("campi.descrizione")}</span>
-            <textarea
-              rows={3}
-              value={descrizione}
-              maxLength={limiti.testoLunghezzaMassima}
-              onChange={(e) => setDescrizione(e.target.value)}
-            />
-          </label>
-
-          <label className={styles.campo}>
-            <span>{t("campi.annoEvento")}</span>
-            <input
-              type="number"
-              inputMode="numeric"
-              value={anno}
-              onChange={(e) => setAnno(e.target.value)}
-            />
-          </label>
-
-          <label className={styles.consenso}>
-            <input type="checkbox" checked={nascondi} onChange={(e) => setNascondi(e.target.checked)} />
-            <span>{t("campi.nascondiPosizione")}</span>
-          </label>
-
-          {/* Posizione */}
-          {coord ? (
-            <p className={styles.testo}>
-              📍 {coord.lat.toFixed(5)}, {coord.lon.toFixed(5)}
-            </p>
+          {puntoPreciso ? (
+            <p className={styles.testo}>✅ {t("posizionePresa")}</p>
           ) : (
             <button className={styles.secondario} onClick={sonoQui}>
               📍 {tm("sonoQui")}
@@ -264,73 +184,82 @@ export function CatturaRitrovamento() {
           )}
           {gpsErrore && <p className={styles.errore}>{gpsErrore}</p>}
 
+          <p className={styles.domanda}>{t("ampiezzaZona")}</p>
+          <div className={styles.scelteProvenienza}>
+            {RAGGI_ZONA.map((r) => (
+              <button
+                key={r}
+                className={raggio === r ? styles.sceltaAttiva : styles.scelta}
+                onClick={() => setRaggio(r)}
+              >
+                {r / 1000} km
+              </button>
+            ))}
+          </div>
+
           <div className={styles.azioni}>
-            <button className={styles.secondario} onClick={() => setFase("categoria")}>
-              {t("azioni.indietro")}
-            </button>
             <button
               className={styles.primario}
-              onClick={() => setFase("dichiarazione")}
-              disabled={!datiOk}
+              onClick={() => setFase("dettagli")}
+              disabled={!puntoPreciso}
             >
-              {t("azioni.pubblica")}
+              {t("azioni.continua")}
             </button>
           </div>
         </div>
       )}
 
-      {/* --- 3. Dichiarazione di responsabilità --- */}
-      {fase === "dichiarazione" && (
+      {/* --- 2. Dettagli (semplicissimo) --- */}
+      {fase === "dettagli" && (
         <div className={styles.blocco}>
-          <p className={styles.domanda}>{t("dichiarazione.domanda")}</p>
-          <div className={styles.scelteProvenienza}>
-            <button
-              className={provenienza === "mio" ? styles.sceltaAttiva : styles.scelta}
-              onClick={() => setProvenienza("mio")}
-            >
-              {t("dichiarazione.eMio")}
-            </button>
-            <button
-              className={provenienza === "altro" ? styles.sceltaAttiva : styles.scelta}
-              onClick={() => setProvenienza("altro")}
-            >
-              {t("dichiarazione.eAltro")}
-            </button>
-          </div>
+          <label className={styles.campo}>
+            <span>{t("campi.descrizione")}</span>
+            <textarea
+              rows={4}
+              value={descrizione}
+              maxLength={2000}
+              onChange={(e) => setDescrizione(e.target.value)}
+              placeholder={t("campi.descrizioneEsempio")}
+              autoFocus
+            />
+          </label>
 
-          {provenienza === "mio" && (
-            <label className={styles.consenso}>
-              <input type="checkbox" checked={confermaMia} onChange={(e) => setConfermaMia(e.target.checked)} />
-              <span>{t("dichiarazione.confermaMia")}</span>
+          <label className={styles.campo}>
+            <span>{t("campi.foto")}</span>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => setFoto(e.target.files?.[0] ?? null)}
+            />
+            {foto && <small className={styles.testo}>📷 {foto.name}</small>}
+          </label>
+
+          <label className={styles.consenso}>
+            <input type="checkbox" checked={anonimo} onChange={(e) => setAnonimo(e.target.checked)} />
+            <span>{t("campi.anonimo")}</span>
+          </label>
+          {!anonimo && (
+            <label className={styles.campo}>
+              <span>{t("campi.nome")}</span>
+              <input
+                type="text"
+                value={nome}
+                onChange={(e) => setNome(e.target.value)}
+                placeholder={t("campi.nomeEsempio")}
+              />
             </label>
           )}
 
-          {provenienza === "altro" && (
-            <>
-              <p className={styles.avvisoPesante}>{t("dichiarazione.avvisoTerzi")}</p>
-              <label className={styles.consenso}>
-                <input type="checkbox" checked={permesso} onChange={(e) => setPermesso(e.target.checked)} />
-                <span>{t("dichiarazione.hoPermesso")}</span>
-              </label>
-              <label className={styles.consenso}>
-                <input type="checkbox" checked={veridicitaAltro} onChange={(e) => setVeridicitaAltro(e.target.checked)} />
-                <span>{t("dichiarazione.veridicita")}</span>
-              </label>
-            </>
-          )}
-
-          {provenienza && <p className={styles.registroPubblico}>{t("registro")}</p>}
-
           <div className={styles.azioni}>
-            <button className={styles.secondario} onClick={() => setFase("dati")}>
+            <button className={styles.secondario} onClick={() => setFase("zona")}>
               {t("azioni.indietro")}
             </button>
             <button
               className={styles.primario}
               onClick={() => void pubblica()}
-              disabled={!dichiarazioneOk || salvataggio}
+              disabled={!descrizioneOk || salvataggio}
             >
-              {salvataggio ? t("azioni.salvataggio") : t("azioni.salva")}
+              {salvataggio ? t("azioni.salvataggio") : t("azioni.pubblica")}
             </button>
           </div>
         </div>

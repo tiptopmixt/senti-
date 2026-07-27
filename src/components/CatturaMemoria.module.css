@@ -249,3 +249,15 @@
   font-weight: 600;
   line-height: 1.5;
 }
+
+/* Riga di aiuto sulla zona: la posizione non è mai precisa. */
+.aiutoZona {
+  margin: 0 0 0.5rem;
+  padding: 0.7rem 0.85rem;
+  border-radius: 0.6rem;
+  background: #efe6cf;
+  border: 1px solid #cbb98f;
+  font-size: 0.9rem;
+  line-height: 1.35;
+  color: #4a3a1e;
+}

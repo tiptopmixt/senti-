@@ -74,9 +74,38 @@
       "veridicita": "Quello che dichiaro è vero per quanto ne so."
     }
   },
+  "memoria": {
+    "titolo": "Aggiungi una memoria",
+    "aiutoZona": "Indica pure dove ti trovi: verrà mostrata solo una zona ampia, mai il punto esatto, per proteggere il luogo e le persone.",
+    "posizionePresa": "Posizione presa. Verrà mostrata come zona ampia, mai il punto esatto.",
+    "ampiezzaZona": "Ampiezza della zona",
+    "campi": {
+      "descrizione": "Racconta in breve",
+      "descrizioneEsempio": "Cosa hai visto o trovato…",
+      "foto": "Aggiungi una foto (scatta o scegli dalla galleria)",
+      "anonimo": "Pubblica in anonimo",
+      "nome": "Il tuo nome",
+      "nomeEsempio": "Come vuoi apparire"
+    },
+    "azioni": {
+      "continua": "Continua",
+      "indietro": "Indietro",
+      "pubblica": "Pubblica",
+      "salvataggio": "Pubblicazione…",
+      "altra": "Aggiungi un'altra memoria"
+    },
+    "salvata": {
+      "titolo": "Memoria salvata",
+      "inviata": "È online, mostrata come zona ampia.",
+      "inCoda": "In attesa di rete: partirà da sola appena torna la connessione."
+    },
+    "coda": {
+      "inAttesa": "{n, plural, one {# memoria in attesa di rete} other {# memorie in attesa di rete}}"
+    }
+  },
   "mappa": {
     "titolo": "La mappa",
-    "aggiungi": "Aggiungi ritrovamento",
+    "aggiungi": "Aggiungi memoria",
     "sonoQui": "Sono qui",
     "suggerimentoToccoLungo": "Tieni premuto sulla mappa per segnare un ritrovamento",
     "luogoCreato": "Ritrovamento segnato.",

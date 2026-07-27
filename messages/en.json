@@ -74,9 +74,38 @@
       "veridicita": "What I state is true as far as I know."
     }
   },
+  "memoria": {
+    "titolo": "Add a memory",
+    "aiutoZona": "Feel free to mark where you are: only a wide area will be shown, never the exact spot, to protect the place and people.",
+    "posizionePresa": "Position taken. It will be shown as a wide area, never the exact spot.",
+    "ampiezzaZona": "Area size",
+    "campi": {
+      "descrizione": "Tell it briefly",
+      "descrizioneEsempio": "What you saw or found…",
+      "foto": "Add a photo (take one or pick from gallery)",
+      "anonimo": "Publish anonymously",
+      "nome": "Your name",
+      "nomeEsempio": "How you want to appear"
+    },
+    "azioni": {
+      "continua": "Continue",
+      "indietro": "Back",
+      "pubblica": "Publish",
+      "salvataggio": "Publishing…",
+      "altra": "Add another memory"
+    },
+    "salvata": {
+      "titolo": "Memory saved",
+      "inviata": "It's online, shown as a wide area.",
+      "inCoda": "Waiting for network: it will send on its own when the connection is back."
+    },
+    "coda": {
+      "inAttesa": "{n, plural, one {# memory waiting for network} other {# memories waiting for network}}"
+    }
+  },
   "mappa": {
     "titolo": "The map",
-    "aggiungi": "Add a find",
+    "aggiungi": "Add a memory",
     "sonoQui": "I'm here",
     "suggerimentoToccoLungo": "Press and hold on the map to mark a find",
     "luogoCreato": "Find marked.",

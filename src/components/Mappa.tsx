@@ -24,6 +24,7 @@ import {
   type Segmento,
 } from "@/lib/queries/mappa";
 import { FINDING_EMOJI, type FindingType } from "@/lib/validation";
+import { cerchioGeoJSON } from "@/lib/geo/zona";
 import { useRouter } from "@/i18n/navigation";
 import { ColonnaTempo } from "./ColonnaTempo";
 import styles from "./Mappa.module.css";
@@ -176,30 +177,19 @@ export function Mappa() {
           if (b) setInfoBattaglia(b);
           return;
         }
-        // Tocco su un gruppo (cluster): zooma per aprirlo.
-        const gruppi = mappa.queryRenderedFeatures(e.point, { layers: ["ritrovamenti-cluster"] });
-        if (gruppi.length > 0 && gruppi[0].geometry.type === "Point") {
-          const clusterId = gruppi[0].properties?.cluster_id as number;
-          const src = mappa.getSource("ritrovamenti") as GeoJSONSource;
-          const centro = gruppi[0].geometry.coordinates as [number, number];
-          void src.getClusterExpansionZoom(clusterId).then((z) => {
-            mappa.easeTo({ center: centro, zoom: z, duration: 600 });
-          });
-          return;
-        }
-        const trovati = mappa.queryRenderedFeatures(e.point, { layers: ["ritrovamenti"] });
-        const f = trovati[0];
-        if (f && f.geometry.type === "Point") {
-          const [lon, lat] = f.geometry.coordinates;
+        // Tocco su una zona (memoria): apre "Cosa è successo qui" sul suo centro.
+        const zone = mappa.queryRenderedFeatures(e.point, { layers: ["zone-fill"] });
+        const z = zone[0];
+        if (z) {
           setPuntoTempo({
-            lon,
-            lat,
-            nome: f.properties?.name as string | undefined,
-            poiId: f.properties?.id as string | undefined,
+            lon: z.properties?.lon as number,
+            lat: z.properties?.lat as number,
+            nome: z.properties?.name as string | undefined,
+            poiId: z.properties?.id as string | undefined,
           });
         }
       });
-      for (const layer of ["ritrovamenti", "ritrovamenti-cluster", "campagna-info", "battaglie"]) {
+      for (const layer of ["zone-fill", "campagna-info", "battaglie"]) {
         mappa.on("mouseenter", layer, () => {
           mappa.getCanvas().style.cursor = "pointer";
         });
@@ -695,90 +685,50 @@ async function caricaDati(
     });
   }
 
-  // --- Ritrovamenti: pin con l'icona della categoria ------------------------
-  const datiLuoghi: GeoJSON.FeatureCollection = {
+  // --- Memorie utente: SEMPRE una ZONA/cerchio ampio, mai un pin sul luogo ---
+  // La posizione precisa non esiste nel dato: si disegna un cerchio del raggio
+  // della zona (default 1 km) centrato sul centro già scostato.
+  const datiZone: GeoJSON.FeatureCollection = {
     type: "FeatureCollection",
     features: luoghi.map((l) => ({
       type: "Feature" as const,
-      geometry: { type: "Point" as const, coordinates: [l.lon, l.lat] },
+      geometry: cerchioGeoJSON(l.lon, l.lat, l.zone_radius_m ?? 1000),
       properties: {
         id: l.id,
         name: l.name,
-        emoji: FINDING_EMOJI[l.finding_type as FindingType] ?? "📍",
+        lon: l.lon,
+        lat: l.lat,
+        emoji: FINDING_EMOJI[l.finding_type as FindingType] ?? "📝",
       },
     })),
   };
 
-  const sorgente = mappa.getSource("ritrovamenti");
-  if (sorgente) {
-    (sorgente as GeoJSONSource).setData(datiLuoghi);
+  const sorgZone = mappa.getSource("zone");
+  if (sorgZone) {
+    (sorgZone as GeoJSONSource).setData(datiZone);
   } else {
-    // Clustering: da lontano i ritrovamenti vicini si raggruppano in un gruppo
-    // con il numero, invece di accavallarsi. Ingrandendo si separano.
-    mappa.addSource("ritrovamenti", {
-      type: "geojson",
-      data: datiLuoghi,
-      cluster: true,
-      clusterRadius: 44,
-      clusterMaxZoom: 12,
-    });
-
-    // Gruppo (cluster): cerchio dimensionato sul numero di ritrovamenti.
+    mappa.addSource("zone", { type: "geojson", data: datiZone });
     mappa.addLayer({
-      id: "ritrovamenti-cluster",
-      type: "circle",
-      source: "ritrovamenti",
-      filter: ["has", "point_count"],
-      paint: {
-        "circle-color": "#7a2f22",
-        "circle-opacity": 0.88,
-        "circle-stroke-color": "#f0e5cc",
-        "circle-stroke-width": 2,
-        "circle-radius": ["step", ["get", "point_count"], 13, 5, 17, 20, 22],
-      },
+      id: "zone-fill",
+      type: "fill",
+      source: "zone",
+      paint: { "fill-color": "#7a2f22", "fill-opacity": 0.12 },
     });
     mappa.addLayer({
-      id: "ritrovamenti-cluster-conteggio",
+      id: "zone-bordo",
+      type: "line",
+      source: "zone",
+      paint: { "line-color": "#7a2f22", "line-opacity": 0.55, "line-width": 1.5 },
+    });
+    mappa.addLayer({
+      id: "zone-icona",
       type: "symbol",
-      source: "ritrovamenti",
-      filter: ["has", "point_count"],
-      layout: {
-        "text-field": ["get", "point_count_abbreviated"],
-        "text-font": ["Noto Sans Bold"],
-        "text-size": 13,
-      },
-      paint: { "text-color": "#f0e5cc" },
-    });
-
-    // Ritrovamenti singoli (fuori dai gruppi): l'icona della categoria.
-    mappa.addLayer({
-      id: "ritrovamenti",
-      type: "symbol",
-      source: "ritrovamenti",
-      filter: ["!", ["has", "point_count"]],
-      layout: {
-        "text-field": ["get", "emoji"],
-        "text-size": ["interpolate", ["linear"], ["zoom"], 3, 16, 15, 26],
-        "text-allow-overlap": true,
-      },
-    });
-    mappa.addLayer({
-      id: "ritrovamenti-etichette",
-      type: "symbol",
-      source: "ritrovamenti",
-      filter: ["!", ["has", "point_count"]],
+      source: "zone",
       minzoom: 8,
       layout: {
-        "text-field": ["get", "name"],
-        "text-font": ["Noto Sans Regular"],
-        "text-size": 11,
-        "text-offset": [0, 1.4],
-        "text-anchor": "top",
-      },
-      paint: {
-        "text-color": "#2f2415",
-        "text-halo-color": "#f0e5cc",
-        "text-halo-width": 1.5,
+        "text-field": ["get", "emoji"],
+        "text-size": 20,
+        "text-allow-overlap": true,
       },
     });
   }

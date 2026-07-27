@@ -20,13 +20,14 @@ const luogoSchema = z.object({
   hazard_flag: z.boolean(),
   lat: z.number(),
   lon: z.number(),
+  zone_radius_m: z.number().int().nullable(),
 });
 export type Luogo = z.infer<typeof luogoSchema>;
 
 export async function luoghiPubblici(): Promise<Luogo[]> {
   const { data, error } = await getSupabaseClient()
     .from("v_pois_public")
-    .select("id, name, description, finding_type, certainty, event_year, hazard_flag, lat, lon");
+    .select("id, name, description, finding_type, certainty, event_year, hazard_flag, lat, lon, zone_radius_m");
   if (error) throw new Error(`Lettura dei ritrovamenti fallita: ${error.message}`);
   return luogoSchema.array().parse(data ?? []);
 }
