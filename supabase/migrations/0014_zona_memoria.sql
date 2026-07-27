@@ -64,9 +64,11 @@ security invoker
 set search_path = public
 as $$
 declare
-  v_poi   uuid := p_poi_id;
+  v_poi    uuid := p_poi_id;
   nuovo_id uuid;
   v_testo  integer;
+  v_raggio integer := greatest(coalesce(p_zone_radius_m, 1000), 1000);
+  v_centro geography;
 begin
   if not p_voce_propria and coalesce(p_permesso_terzi, false) is not true then
     raise exception 'Per pubblicare contenuti di un''altra persona serve il suo permesso'
@@ -78,11 +80,21 @@ begin
   end if;
 
   if v_poi is null then
+    -- PRIVACY: il punto (p_lon/p_lat) serve solo a calcolare un centro SCOSTATO a
+    -- caso (fino a ~35% del raggio, direzione casuale) e poi si scarta. Nel
+    -- database NON finisce mai la coordinata precisa: solo la zona (centro
+    -- offuscato + raggio). Anche se il client inviasse il punto esatto, qui non
+    -- viene mai memorizzato.
+    v_centro := st_project(
+      st_setsrid(st_point(p_lon, p_lat), 4326)::geography,
+      random() * v_raggio * 0.35,   -- distanza casuale entro il raggio
+      random() * 2 * pi()           -- direzione casuale
+    );
+
     insert into public.pois (name, finding_type, event_year, geog, hazard_flag, route_id, zone_radius_m)
     values (
       coalesce(nullif(p_name, ''), 'Memoria'), p_finding_type, p_event_year,
-      st_setsrid(st_point(p_lon, p_lat), 4326)::geography, coalesce(p_hazard_flag, false),
-      p_route_id, greatest(coalesce(p_zone_radius_m, 1000), 1000)
+      v_centro, coalesce(p_hazard_flag, false), p_route_id, v_raggio
     )
     returning id into v_poi;
   end if;
@@ -110,3 +122,8 @@ grant execute on function public.pubblica_ritrovamento(
   public.finding_type, text, double precision, double precision, public.contribution_kind,
   text, text, uuid, uuid, integer, boolean, boolean, boolean, boolean, boolean, integer
 ) to authenticated;
+
+-- Ricarica la "schema cache" di PostgREST: senza questo la funzione nuova non
+-- viene vista subito e l'app riceve "Could not find the function ... in the
+-- schema cache". Con questo NOTIFY la vede immediatamente.
+notify pgrst, 'reload schema';
