@@ -111,6 +111,9 @@
     "luogoCreato": "Ritrovamento segnato.",
     "filtri": {
       "condottiero": "Impero / condottiero",
+      "campagne": "Campagne da mostrare",
+      "tutte": "Tutte",
+      "nessuna": "Nessuna",
       "tutti": "Tutti gli imperi",
       "tuttoImpero": "— Tutto: {nome} —",
       "schedaImpero": "Scheda impero",
@@ -156,6 +159,11 @@
     "chiudi": "Chiudi",
     "caricamento": "Un momento…",
     "senzaData": "Senza data",
+    "cancella": {
+      "pulsante": "Cancella",
+      "inCorso": "…",
+      "avviso": "Sarà cancellata fra {giorni, plural, =0 {poco} one {# giorno} other {# giorni}}"
+    },
     "livello": {
       "campagna": "Campagna",
       "ritrovamento": "Ritrovamento"

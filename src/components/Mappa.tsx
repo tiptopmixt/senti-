@@ -86,8 +86,10 @@ export function Mappa() {
   const [listaCondottieri, setListaCondottieri] = useState<Condottiero[]>([]);
   const [listaImperi, setListaImperi] = useState<Impero[]>([]);
   const [listaPercorsi, setListaPercorsi] = useState<Percorso[]>([]);
-  // "" = tutti · "empire:<id>" = intero impero · "<id>" = singolo condottiero
-  const [selezione, setSelezione] = useState<string>("");
+  // Imperi/campagne che l'utente ha SPUNTATO di mostrare. Vuoto = nessuna
+  // campagna sulla mappa (le memorie degli utenti si vedono sempre, a parte).
+  const [imperiVisibili, setImperiVisibili] = useState<Set<string>>(new Set());
+  const [pannelloCampagne, setPannelloCampagne] = useState(false);
   const [puntoNuovo, setPuntoNuovo] = useState<PuntoNuovo | null>(null);
   const [puntoTempo, setPuntoTempo] = useState<{ lon: number; lat: number; nome?: string; poiId?: string } | null>(null);
   const [infoCampagna, setInfoCampagna] = useState<Condottiero | null>(null);
@@ -243,46 +245,17 @@ export function Mappa() {
     void percorsi().then(setListaPercorsi).catch(() => {});
   }, []);
 
-  // Condottieri raggruppati per impero (per il menu a due livelli).
-  const condottieriPerImpero = useMemo(() => {
-    const m = new Map<string, Condottiero[]>();
-    for (const c of listaCondottieri) {
-      const k = c.empire_id ?? "_";
-      if (!m.has(k)) m.set(k, []);
-      m.get(k)!.push(c);
-    }
-    return m;
-  }, [listaCondottieri]);
+  // I commander_id degli imperi spuntati (vuoto = nessuno).
+  const commanderIdsVisibili = useMemo(
+    () => listaCondottieri.filter((c) => c.empire_id && imperiVisibili.has(c.empire_id)).map((c) => c.id),
+    [imperiVisibili, listaCondottieri],
+  );
 
-  // I route_id visibili in base alla selezione (intero impero o singolo condottiero).
+  // I route_id visibili = percorsi dei condottieri degli imperi spuntati.
   const routeIdsVisibili = useMemo(() => {
-    if (!selezione) return null; // tutti
-    let commanderIds: Set<string>;
-    if (selezione.startsWith("empire:")) {
-      const eid = selezione.slice("empire:".length);
-      commanderIds = new Set(listaCondottieri.filter((c) => c.empire_id === eid).map((c) => c.id));
-    } else {
-      commanderIds = new Set([selezione]);
-    }
-    return listaPercorsi.filter((p) => p.commander_id && commanderIds.has(p.commander_id)).map((p) => p.id);
-  }, [selezione, listaPercorsi, listaCondottieri]);
-
-  // I commander_id visibili (per filtrare le battaglie con la stessa logica).
-  const commanderIdsVisibili = useMemo(() => {
-    if (!selezione) return null;
-    if (selezione.startsWith("empire:")) {
-      const eid = selezione.slice("empire:".length);
-      return listaCondottieri.filter((c) => c.empire_id === eid).map((c) => c.id);
-    }
-    return [selezione];
-  }, [selezione, listaCondottieri]);
-
-  // Impero selezionato (per il pulsante "scheda impero").
-  const imperoSel = useMemo(() => {
-    if (!selezione.startsWith("empire:")) return null;
-    const eid = selezione.slice("empire:".length);
-    return listaImperi.find((i) => i.id === eid) ?? null;
-  }, [selezione, listaImperi]);
+    const cmd = new Set(commanderIdsVisibili);
+    return listaPercorsi.filter((p) => p.commander_id && cmd.has(p.commander_id)).map((p) => p.id);
+  }, [commanderIdsVisibili, listaPercorsi]);
 
   // --- Filtro condottiero: mostra solo i percorsi del condottiero scelto e
   //     centra la mappa sulla campagna (Europa → Asia, il mondo si sposta). ---
@@ -290,33 +263,24 @@ export function Mappa() {
     const mappa = mappaRef.current;
     if (!mappa || !pronta) return;
 
-    // Filtro dei livelli percorso (linee e frecce).
+    // Mostra SOLO i percorsi (e le frecce) degli imperi spuntati. Nessuno spuntato
+    // = array vuoto = nessun percorso disegnato.
     for (const c of CERTEZZE) {
       for (const id of [`percorsi-${c}`, `percorsi-${c}-frecce`]) {
         if (!mappa.getLayer(id)) continue;
-        mappa.setFilter(
-          id,
-          routeIdsVisibili === null
-            ? null
-            : ["in", ["get", "route_id"], ["literal", routeIdsVisibili]],
-        );
+        mappa.setFilter(id, ["in", ["get", "route_id"], ["literal", routeIdsVisibili]]);
       }
     }
 
-    // Filtro delle battaglie ⚔️ per condottiero (stessa logica dei percorsi).
+    // Battaglie ⚔️: solo dei condottieri degli imperi spuntati.
     if (mappa.getLayer("battaglie")) {
-      mappa.setFilter(
-        "battaglie",
-        commanderIdsVisibili === null
-          ? null
-          : ["in", ["get", "commander_id"], ["literal", commanderIdsVisibili]],
-      );
+      mappa.setFilter("battaglie", ["in", ["get", "commander_id"], ["literal", commanderIdsVisibili]]);
     }
 
     const infoSrc = mappa.getSource("campagna-info") as GeoJSONSource | undefined;
 
-    // Nessuna selezione: vista mondiale e nessuna icona info.
-    if (routeIdsVisibili === null) {
+    // Nessuna campagna spuntata: vista mondiale e nessuna icona info.
+    if (routeIdsVisibili.length === 0) {
       infoSrc?.setData({ type: "FeatureCollection", features: [] });
       mappa.flyTo({ center: CENTRO, zoom: ZOOM, duration: 1200 });
       return;
@@ -400,29 +364,74 @@ export function Mappa() {
 
       {/* Filtro a due livelli: impero → condottieri. */}
       <div className={styles.filtri}>
-        <select
+        <button
           className={styles.filtroAttivo}
-          value={selezione}
-          onChange={(e) => setSelezione(e.target.value)}
-          aria-label={t("filtri.condottiero")}
+          onClick={() => setPannelloCampagne((v) => !v)}
+          aria-expanded={pannelloCampagne}
         >
-          <option value="">{t("filtri.tutti")}</option>
-          {listaImperi.map((imp) => (
-            <optgroup key={imp.id} label={imp.name}>
-              <option value={`empire:${imp.id}`}>{t("filtri.tuttoImpero", { nome: imp.name })}</option>
-              {(condottieriPerImpero.get(imp.id) ?? []).map((c) => (
-                <option key={c.id} value={c.id}>
-                  {"  "}
-                  {c.name}
-                </option>
-              ))}
-            </optgroup>
-          ))}
-        </select>
-        {imperoSel && (
-          <button className={styles.filtro} onClick={() => setInfoImpero(imperoSel)}>
-            ℹ️ {t("filtri.schedaImpero")}
-          </button>
+          🗺️ {t("filtri.campagne")} ({imperiVisibili.size})
+        </button>
+
+        {pannelloCampagne && (
+          <div
+            style={{
+              position: "absolute",
+              top: "3.2rem",
+              left: 0,
+              zIndex: 6,
+              maxHeight: "62vh",
+              overflowY: "auto",
+              width: "min(20rem, 88vw)",
+              background: "rgba(240, 229, 204, 0.98)",
+              borderRadius: "0.6rem",
+              border: "2px solid #2f2415",
+              padding: "0.5rem",
+              boxShadow: "0 3px 12px rgba(0,0,0,0.3)",
+              color: "#2f2415",
+            }}
+          >
+            <div style={{ display: "flex", gap: "0.4rem", marginBottom: "0.4rem" }}>
+              <button
+                className={styles.filtro}
+                onClick={() => setImperiVisibili(new Set(listaImperi.map((i) => i.id)))}
+              >
+                {t("filtri.tutte")}
+              </button>
+              <button className={styles.filtro} onClick={() => setImperiVisibili(new Set())}>
+                {t("filtri.nessuna")}
+              </button>
+            </div>
+            {listaImperi.map((imp) => (
+              <div
+                key={imp.id}
+                style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.3rem 0.2rem" }}
+              >
+                <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", flex: 1, cursor: "pointer" }}>
+                  <input
+                    type="checkbox"
+                    checked={imperiVisibili.has(imp.id)}
+                    onChange={() =>
+                      setImperiVisibili((prev) => {
+                        const n = new Set(prev);
+                        if (n.has(imp.id)) n.delete(imp.id);
+                        else n.add(imp.id);
+                        return n;
+                      })
+                    }
+                  />
+                  <span>{imp.name}</span>
+                </label>
+                <button
+                  className={styles.filtro}
+                  style={{ minHeight: "auto", padding: "0.15rem 0.45rem" }}
+                  onClick={() => setInfoImpero(imp)}
+                  aria-label={t("filtri.schedaImpero")}
+                >
+                  ℹ️
+                </button>
+              </div>
+            ))}
+          </div>
         )}
       </div>
 

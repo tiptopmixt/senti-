@@ -6,6 +6,8 @@ import { Link } from "@/i18n/navigation";
 import {
   contestiPerMemorie,
   cosaESuccessoQui,
+  giorniAllaCancellazione,
+  richiediCancellazione,
   type ContestoStorico,
   type VoceTempo,
 } from "@/lib/queries/timeline";
@@ -115,6 +117,22 @@ function VoceRiga({
 }) {
   const t = useTranslations("qui");
   const campagna = voce.tipo === "campagna";
+  const [cancellazioneIl, setCancellazioneIl] = useState<string | null>(voce.cancellazione_il);
+  const [inCanc, setInCanc] = useState(false);
+  const giorni = giorniAllaCancellazione(cancellazioneIl);
+
+  async function cancella() {
+    if (!voce.poi_id || inCanc) return;
+    setInCanc(true);
+    try {
+      await richiediCancellazione(voce.poi_id);
+      setCancellazioneIl(new Date().toISOString());
+    } catch {
+      /* niente: si può riprovare */
+    } finally {
+      setInCanc(false);
+    }
+  }
 
   return (
     <li className={campagna ? styles.rigaCampagna : styles.rigaMemoria}>
@@ -143,10 +161,20 @@ function VoceRiga({
           <FotoRitrovamento mediaPath={voce.media_path} />
         )}
 
-        {/* Segnala: solo sui ritrovamenti degli utenti, non sugli eventi storici. */}
+        {/* Avviso cancellazione: se richiesta, resta visibile per 5 giorni. */}
+        {voce.tipo === "ritrovamento" && giorni !== null && (
+          <p className={styles.avvisoCancellazione}>⏳ {t("cancella.avviso", { giorni })}</p>
+        )}
+
+        {/* Segnala + Cancella: solo sulle memorie degli utenti. */}
         {voce.tipo === "ritrovamento" && (
           <div className={styles.azioniVoce}>
             <Segnala contributionId={voce.id} />
+            {giorni === null && voce.poi_id && (
+              <button className={styles.cancella} onClick={() => void cancella()} disabled={inCanc}>
+                {inCanc ? t("cancella.inCorso") : t("cancella.pulsante")}
+              </button>
+            )}
           </div>
         )}
 

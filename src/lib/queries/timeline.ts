@@ -20,8 +20,29 @@ const voceSchema = z.object({
   media_path: z.string().nullable(),
   distanza_m: z.number(),
   chainage_m: z.number().nullable(),
+  poi_id: z.guid().nullable(),
+  cancellazione_il: z.string().nullable(),
 });
 export type VoceTempo = z.infer<typeof voceSchema>;
+
+/**
+ * Chiede la cancellazione di una memoria: NON la rimuove subito, avvia un conto
+ * alla rovescia di 5 giorni durante il quale resta visibile con l'avviso.
+ */
+export async function richiediCancellazione(poiId: string): Promise<void> {
+  const { error } = await getSupabaseClient().rpc("richiedi_cancellazione", {
+    p_poi_id: poiId,
+  });
+  if (error) throw new Error(`Cancellazione fallita: ${error.message}`);
+}
+
+/** Giorni che mancano alla cancellazione definitiva (5 giorni dalla richiesta). */
+export function giorniAllaCancellazione(cancellazioneIl: string | null): number | null {
+  if (!cancellazioneIl) return null;
+  const scadenza = new Date(cancellazioneIl).getTime() + 5 * 24 * 60 * 60 * 1000;
+  const giorni = Math.ceil((scadenza - Date.now()) / (24 * 60 * 60 * 1000));
+  return Math.max(0, giorni);
+}
 
 // --- Contesto storico (aggiunta della piattaforma, separata dal racconto) ---
 const contestoSchema = z.object({

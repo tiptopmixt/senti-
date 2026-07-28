@@ -111,6 +111,9 @@
     "luogoCreato": "Find marked.",
     "filtri": {
       "condottiero": "Empire / commander",
+      "campagne": "Campaigns to show",
+      "tutte": "All",
+      "nessuna": "None",
       "tutti": "All empires",
       "tuttoImpero": "— All of: {nome} —",
       "schedaImpero": "Empire details",
@@ -156,6 +159,11 @@
     "chiudi": "Close",
     "caricamento": "One moment…",
     "senzaData": "No date",
+    "cancella": {
+      "pulsante": "Delete",
+      "inCorso": "…",
+      "avviso": "Will be deleted in {giorni, plural, =0 {a moment} one {# day} other {# days}}"
+    },
     "livello": {
       "campagna": "Campaign",
       "ritrovamento": "Find"

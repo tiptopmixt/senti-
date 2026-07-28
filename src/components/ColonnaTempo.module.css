@@ -267,3 +267,25 @@
   background: #7a2f22;
   color: #f6f1e4;
 }
+
+/* Avviso di cancellazione (resta 5 giorni) e pulsante Cancella. */
+.avvisoCancellazione {
+  margin: 0.4rem 0;
+  padding: 0.4rem 0.6rem;
+  border-radius: 0.5rem;
+  background: #f6e0c9;
+  border: 1px solid #d99a6c;
+  color: #7a3b12;
+  font-size: 0.85rem;
+}
+
+.cancella {
+  font: inherit;
+  font-size: 0.85rem;
+  padding: 0.3rem 0.7rem;
+  border-radius: 1.4rem;
+  border: 1px solid #a01818;
+  background: transparent;
+  color: #a01818;
+  cursor: pointer;
+}
