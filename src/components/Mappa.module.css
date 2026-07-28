@@ -119,7 +119,8 @@
 
 /* --- Azioni: pillole compatte in basso a destra, poco invasive --- */
 .aggiungi,
-.sonoQui {
+.sonoQui,
+.eventi {
   position: fixed;
   right: 0.75rem;
   display: inline-flex;
@@ -264,4 +265,10 @@
 .secondario {
   background: transparent;
   color: inherit;
+}
+
+/* Pulsante "Eventi vicini": pillola sopra "Aggiungi". */
+.eventi {
+  bottom: 7.6rem;
+  background: #5c3a1e;
 }

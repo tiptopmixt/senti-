@@ -107,6 +107,13 @@
     "titolo": "La mappa",
     "aggiungi": "Aggiungi memoria",
     "sonoQui": "Sono qui",
+    "eventi": {
+      "pulsante": "Eventi vicini",
+      "titolo": "Eventi storici vicini a te",
+      "caricamento": "Cerco gli eventi vicini…",
+      "vuoto": "Nessuna battaglia registrata nelle vicinanze.",
+      "esplora": "Esplora la mappa"
+    },
     "suggerimentoToccoLungo": "Tieni premuto sulla mappa per segnare un ritrovamento",
     "luogoCreato": "Ritrovamento segnato.",
     "filtri": {

@@ -32,6 +32,35 @@ export async function luoghiPubblici(): Promise<Luogo[]> {
   return luogoSchema.array().parse(data ?? []);
 }
 
+// --- Eventi storici vicini (battaglie + tappe delle campagne) ----------------
+const eventoVicinoSchema = z.object({
+  tipo: z.enum(["battaglia", "tappa"]),
+  id: uuidSchema,
+  commander_id: uuidSchema.nullable(),
+  titolo: z.string().nullable(),
+  schieramento: z.string().nullable(),
+  anno: z.number().int().nullable(),
+  importanza: z.number().int().nullable(),
+  distanza_m: z.number(),
+  lat: z.number(),
+  lon: z.number(),
+});
+export type EventoVicino = z.infer<typeof eventoVicinoSchema>;
+
+export async function eventiVicini(
+  lon: number,
+  lat: number,
+  raggioBase = 50000,
+): Promise<EventoVicino[]> {
+  const { data, error } = await getSupabaseClient().rpc("eventi_vicini", {
+    p_lon: lon,
+    p_lat: lat,
+    p_raggio_base: raggioBase,
+  });
+  if (error) throw new Error(`Lettura degli eventi vicini fallita: ${error.message}`);
+  return eventoVicinoSchema.array().parse(data ?? []);
+}
+
 // --- Foto pubbliche (per le miniature sulla mappa) ---------------------------
 const fotoSchema = z.object({ poi_id: uuidSchema.nullable(), media_path: z.string() });
 export interface FotoLuogo {

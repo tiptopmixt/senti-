@@ -11,6 +11,7 @@ import {
 import {
   battaglie,
   condottieri,
+  eventiVicini,
   fotoPubbliche,
   imperi,
   luoghiPubblici,
@@ -19,6 +20,7 @@ import {
   segmentiPercorsi,
   urlFotoPubblica,
   type Battaglia,
+  type EventoVicino,
   type Condottiero,
   type Impero,
   type LuogoVicino,
@@ -97,6 +99,9 @@ export function Mappa() {
   const [infoCampagna, setInfoCampagna] = useState<Condottiero | null>(null);
   const [infoImpero, setInfoImpero] = useState<Impero | null>(null);
   const [infoBattaglia, setInfoBattaglia] = useState<Battaglia | null>(null);
+  const [pannelloEventi, setPannelloEventi] = useState(false);
+  const [eventi, setEventi] = useState<EventoVicino[] | null>(null);
+  const [eventiInCorso, setEventiInCorso] = useState(false);
   const [messaggio, setMessaggio] = useState<string | null>(null);
 
   /** Apre il pannello "nuovo ritrovamento", ma prima controlla i doppioni vicini. */
@@ -369,6 +374,50 @@ export function Mappa() {
     );
   }
 
+  // --- Eventi storici vicini: usa il GPS o, se spento, il centro della mappa ---
+  function apriEventi() {
+    setPannelloEventi(true);
+    setEventi(null);
+    setEventiInCorso(true);
+    const carica = (lon: number, lat: number) => {
+      void eventiVicini(lon, lat)
+        .then(setEventi)
+        .catch(() => setEventi([]))
+        .finally(() => setEventiInCorso(false));
+    };
+    const centroMappa = () => {
+      const c = mappaRef.current?.getCenter();
+      carica(c?.lng ?? CENTRO[0], c?.lat ?? CENTRO[1]);
+    };
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => carica(pos.coords.longitude, pos.coords.latitude),
+        centroMappa, // GPS negato/assente: uso il centro della mappa
+        { enableHighAccuracy: true, timeout: 8000 },
+      );
+    } else {
+      centroMappa();
+    }
+  }
+
+  /** Vai a un evento: centra la mappa e aprine la scheda. */
+  function vaiAEvento(ev: EventoVicino) {
+    setPannelloEventi(false);
+    mappaRef.current?.flyTo({ center: [ev.lon, ev.lat], zoom: 8, duration: 1200 });
+    if (ev.tipo === "battaglia") {
+      const b = battaglieMapRef.current.get(ev.id);
+      if (b) setInfoBattaglia(b);
+    } else if (ev.commander_id) {
+      const c = condottieriMapRef.current.get(ev.commander_id);
+      if (c) setInfoCampagna(c);
+    }
+  }
+
+  /** Distanza leggibile: "a 4 km" oppure "a 300 m". */
+  function distanzaLeggibile(m: number): string {
+    return m >= 1000 ? `a ${Math.round(m / 1000)} km` : `a ${Math.round(m)} m`;
+  }
+
   /** Va al form "aggiungi ritrovamento" con le coordinate scelte. */
   function aggiungiQui() {
     if (!puntoNuovo) return;
@@ -525,6 +574,10 @@ export function Mappa() {
         📍 {t("sonoQui")}
       </button>
 
+      <button className={styles.eventi} onClick={apriEventi}>
+        📜 {t("eventi.pulsante")}
+      </button>
+
       <p className={styles.suggerimento}>{t("suggerimentoToccoLungo")}</p>
 
       {messaggio && <p className={styles.messaggio}>{messaggio}</p>}
@@ -537,6 +590,63 @@ export function Mappa() {
           poiId={puntoTempo.poiId}
           onChiudi={() => setPuntoTempo(null)}
         />
+      )}
+
+      {/* --- Eventi storici vicini --- */}
+      {pannelloEventi && (
+        <div className={styles.pannello} role="dialog" aria-modal="true">
+          <h2 className={styles.titoloPannello}>📜 {t("eventi.titolo")}</h2>
+          {eventiInCorso && <p className={styles.testoPannello}>{t("eventi.caricamento")}</p>}
+
+          {!eventiInCorso && eventi && eventi.length === 0 && (
+            <>
+              <p className={styles.testoPannello}>{t("eventi.vuoto")}</p>
+              <div className={styles.azioni}>
+                <button className={styles.secondario} onClick={() => setPannelloEventi(false)}>
+                  {t("eventi.esplora")}
+                </button>
+                <button className={styles.primario} onClick={() => router.push("/racconta")}>
+                  {t("aggiungi")}
+                </button>
+              </div>
+            </>
+          )}
+
+          {!eventiInCorso && eventi && eventi.length > 0 && (
+            <>
+              <ul className={styles.listaVicini}>
+                {eventi.map((ev) => (
+                  <li
+                    key={ev.tipo + ev.id}
+                    style={{ cursor: "pointer", padding: "0.5rem 0.2rem", borderBottom: "1px solid rgba(0,0,0,0.08)" }}
+                    onClick={() => vaiAEvento(ev)}
+                  >
+                    <div style={{ fontWeight: 600 }}>
+                      {ev.tipo === "battaglia" ? "⚔️ " : "📍 "}
+                      {ev.titolo}
+                    </div>
+                    <div style={{ fontSize: "0.85rem", opacity: 0.85 }}>
+                      {[
+                        ev.schieramento,
+                        ev.anno != null ? (ev.anno < 0 ? `${-ev.anno} a.C.` : `${ev.anno}`) : null,
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </div>
+                    <div style={{ fontSize: "0.85rem", color: "#7a2f22", fontWeight: 600 }}>
+                      {distanzaLeggibile(ev.distanza_m)}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+              <div className={styles.azioni}>
+                <button className={styles.primario} onClick={() => setPannelloEventi(false)}>
+                  {t("info.chiudi")}
+                </button>
+              </div>
+            </>
+          )}
+        </div>
       )}
 
       {/* --- Scheda "info" della campagna --- */}

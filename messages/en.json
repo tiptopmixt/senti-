@@ -107,6 +107,13 @@
     "titolo": "The map",
     "aggiungi": "Add a memory",
     "sonoQui": "I'm here",
+    "eventi": {
+      "pulsante": "Nearby events",
+      "titolo": "Historical events near you",
+      "caricamento": "Looking for nearby events…",
+      "vuoto": "No battle recorded nearby.",
+      "esplora": "Explore the map"
+    },
     "suggerimentoToccoLungo": "Press and hold on the map to mark a find",
     "luogoCreato": "Find marked.",
     "filtri": {
