@@ -86,9 +86,11 @@ export function Mappa() {
   const [listaCondottieri, setListaCondottieri] = useState<Condottiero[]>([]);
   const [listaImperi, setListaImperi] = useState<Impero[]>([]);
   const [listaPercorsi, setListaPercorsi] = useState<Percorso[]>([]);
-  // Imperi/campagne che l'utente ha SPUNTATO di mostrare. Vuoto = nessuna
-  // campagna sulla mappa (le memorie degli utenti si vedono sempre, a parte).
+  // Imperi/campagne spuntati (un impero = tutti i suoi condottieri). Più i
+  // singoli condottieri (re) spuntati a parte. Vuoto = nessuna campagna.
   const [imperiVisibili, setImperiVisibili] = useState<Set<string>>(new Set());
+  const [condottieriVisibili, setCondottieriVisibili] = useState<Set<string>>(new Set());
+  const [imperiEspansi, setImperiEspansi] = useState<Set<string>>(new Set());
   const [pannelloCampagne, setPannelloCampagne] = useState(false);
   const [puntoNuovo, setPuntoNuovo] = useState<PuntoNuovo | null>(null);
   const [puntoTempo, setPuntoTempo] = useState<{ lon: number; lat: number; nome?: string; poiId?: string } | null>(null);
@@ -245,11 +247,26 @@ export function Mappa() {
     void percorsi().then(setListaPercorsi).catch(() => {});
   }, []);
 
-  // I commander_id degli imperi spuntati (vuoto = nessuno).
-  const commanderIdsVisibili = useMemo(
-    () => listaCondottieri.filter((c) => c.empire_id && imperiVisibili.has(c.empire_id)).map((c) => c.id),
-    [imperiVisibili, listaCondottieri],
-  );
+  // Condottieri raggruppati per impero (per la lista espandibile).
+  const condottieriPerImpero = useMemo(() => {
+    const m = new Map<string, Condottiero[]>();
+    for (const c of listaCondottieri) {
+      const k = c.empire_id ?? "_";
+      if (!m.has(k)) m.set(k, []);
+      m.get(k)!.push(c);
+    }
+    return m;
+  }, [listaCondottieri]);
+
+  // I commander_id visibili = condottieri degli imperi spuntati + singoli
+  // condottieri (re) spuntati a parte.
+  const commanderIdsVisibili = useMemo(() => {
+    const ids = new Set<string>(condottieriVisibili);
+    for (const c of listaCondottieri) {
+      if (c.empire_id && imperiVisibili.has(c.empire_id)) ids.add(c.id);
+    }
+    return Array.from(ids);
+  }, [imperiVisibili, condottieriVisibili, listaCondottieri]);
 
   // I route_id visibili = percorsi dei condottieri degli imperi spuntati.
   const routeIdsVisibili = useMemo(() => {
@@ -369,7 +386,7 @@ export function Mappa() {
           onClick={() => setPannelloCampagne((v) => !v)}
           aria-expanded={pannelloCampagne}
         >
-          🗺️ {t("filtri.campagne")} ({imperiVisibili.size})
+          🗺️ {t("filtri.campagne")} ({imperiVisibili.size + condottieriVisibili.size})
         </button>
 
         {pannelloCampagne && (
@@ -393,44 +410,96 @@ export function Mappa() {
             <div style={{ display: "flex", gap: "0.4rem", marginBottom: "0.4rem" }}>
               <button
                 className={styles.filtro}
-                onClick={() => setImperiVisibili(new Set(listaImperi.map((i) => i.id)))}
+                onClick={() => {
+                  setImperiVisibili(new Set(listaImperi.map((i) => i.id)));
+                  setCondottieriVisibili(new Set());
+                }}
               >
                 {t("filtri.tutte")}
               </button>
-              <button className={styles.filtro} onClick={() => setImperiVisibili(new Set())}>
+              <button
+                className={styles.filtro}
+                onClick={() => {
+                  setImperiVisibili(new Set());
+                  setCondottieriVisibili(new Set());
+                }}
+              >
                 {t("filtri.nessuna")}
               </button>
             </div>
-            {listaImperi.map((imp) => (
-              <div
-                key={imp.id}
-                style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.3rem 0.2rem" }}
-              >
-                <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", flex: 1, cursor: "pointer" }}>
-                  <input
-                    type="checkbox"
-                    checked={imperiVisibili.has(imp.id)}
-                    onChange={() =>
-                      setImperiVisibili((prev) => {
-                        const n = new Set(prev);
-                        if (n.has(imp.id)) n.delete(imp.id);
-                        else n.add(imp.id);
-                        return n;
-                      })
-                    }
-                  />
-                  <span>{imp.name}</span>
-                </label>
-                <button
-                  className={styles.filtro}
-                  style={{ minHeight: "auto", padding: "0.15rem 0.45rem" }}
-                  onClick={() => setInfoImpero(imp)}
-                  aria-label={t("filtri.schedaImpero")}
-                >
-                  ℹ️
-                </button>
-              </div>
-            ))}
+            {listaImperi.map((imp) => {
+              const espanso = imperiEspansi.has(imp.id);
+              const imperoAttivo = imperiVisibili.has(imp.id);
+              return (
+                <div key={imp.id} style={{ padding: "0.15rem 0" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                    <button
+                      className={styles.filtro}
+                      style={{ minHeight: "auto", padding: "0.1rem 0.4rem" }}
+                      onClick={() =>
+                        setImperiEspansi((prev) => {
+                          const n = new Set(prev);
+                          if (n.has(imp.id)) n.delete(imp.id);
+                          else n.add(imp.id);
+                          return n;
+                        })
+                      }
+                      aria-label="espandi"
+                    >
+                      {espanso ? "▾" : "▸"}
+                    </button>
+                    <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", flex: 1, cursor: "pointer" }}>
+                      <input
+                        type="checkbox"
+                        checked={imperoAttivo}
+                        onChange={() =>
+                          setImperiVisibili((prev) => {
+                            const n = new Set(prev);
+                            if (n.has(imp.id)) n.delete(imp.id);
+                            else n.add(imp.id);
+                            return n;
+                          })
+                        }
+                      />
+                      <span>{imp.name}</span>
+                    </label>
+                    <button
+                      className={styles.filtro}
+                      style={{ minHeight: "auto", padding: "0.15rem 0.45rem" }}
+                      onClick={() => setInfoImpero(imp)}
+                      aria-label={t("filtri.schedaImpero")}
+                    >
+                      ℹ️
+                    </button>
+                  </div>
+                  {espanso && (
+                    <div style={{ paddingLeft: "1.7rem" }}>
+                      {(condottieriPerImpero.get(imp.id) ?? []).map((c) => (
+                        <label
+                          key={c.id}
+                          style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.15rem 0", cursor: "pointer", fontSize: "0.9rem" }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={imperoAttivo || condottieriVisibili.has(c.id)}
+                            disabled={imperoAttivo}
+                            onChange={() =>
+                              setCondottieriVisibili((prev) => {
+                                const n = new Set(prev);
+                                if (n.has(c.id)) n.delete(c.id);
+                                else n.add(c.id);
+                                return n;
+                              })
+                            }
+                          />
+                          <span>{c.name}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
