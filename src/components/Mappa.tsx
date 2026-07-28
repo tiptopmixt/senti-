@@ -11,11 +11,13 @@ import {
 import {
   battaglie,
   condottieri,
+  fotoPubbliche,
   imperi,
   luoghiPubblici,
   luoghiVicini,
   percorsi,
   segmentiPercorsi,
+  urlFotoPubblica,
   type Battaglia,
   type Condottiero,
   type Impero,
@@ -177,6 +179,28 @@ export function Mappa() {
           if (b) setInfoBattaglia(b);
           return;
         }
+        // Tocco su un gruppo di foto: zooma per aprirlo.
+        const gruppiFoto = mappa.queryRenderedFeatures(e.point, { layers: ["foto-cluster"] });
+        if (gruppiFoto.length > 0 && gruppiFoto[0].geometry.type === "Point") {
+          const cid = gruppiFoto[0].properties?.cluster_id as number;
+          const src = mappa.getSource("foto") as GeoJSONSource;
+          const c = gruppiFoto[0].geometry.coordinates as [number, number];
+          void src.getClusterExpansionZoom(cid).then((zm) =>
+            mappa.easeTo({ center: c, zoom: zm, duration: 600 }),
+          );
+          return;
+        }
+        // Tocco su una miniatura: apre i dettagli (foto grande) sul centro zona.
+        const thumb = mappa.queryRenderedFeatures(e.point, { layers: ["foto-thumb"] });
+        if (thumb.length > 0) {
+          setPuntoTempo({
+            lon: thumb[0].properties?.lon as number,
+            lat: thumb[0].properties?.lat as number,
+            nome: thumb[0].properties?.name as string | undefined,
+            poiId: thumb[0].properties?.id as string | undefined,
+          });
+          return;
+        }
         // Tocco su una zona (memoria): apre "Cosa è successo qui" sul suo centro.
         const zone = mappa.queryRenderedFeatures(e.point, { layers: ["zone-fill"] });
         const z = zone[0];
@@ -189,7 +213,7 @@ export function Mappa() {
           });
         }
       });
-      for (const layer of ["zone-fill", "campagna-info", "battaglie"]) {
+      for (const layer of ["zone-fill", "foto-thumb", "foto-cluster", "campagna-info", "battaglie"]) {
         mappa.on("mouseenter", layer, () => {
           mappa.getCanvas().style.cursor = "pointer";
         });
@@ -601,21 +625,48 @@ export function Mappa() {
   );
 }
 
+/** Scarica una foto e la ritaglia in una miniatura quadrata (per la mappa). */
+async function caricaMiniatura(url: string, lato = 96): Promise<ImageData> {
+  const blob = await (await fetch(url)).blob();
+  const bmp = await createImageBitmap(blob);
+  try {
+    const canvas = document.createElement("canvas");
+    canvas.width = lato;
+    canvas.height = lato;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("no ctx");
+    const scala = Math.max(lato / bmp.width, lato / bmp.height);
+    const w = bmp.width * scala;
+    const h = bmp.height * scala;
+    ctx.drawImage(bmp, (lato - w) / 2, (lato - h) / 2, w, h);
+    return ctx.getImageData(0, 0, lato, lato);
+  } finally {
+    bmp.close?.();
+  }
+}
+
 /** Carica ritrovamenti e percorsi e li disegna. `store` riceve i segmenti
  *  caricati, così il componente può calcolare i limiti per il centraggio. */
 async function caricaDati(
   mappa: MapLibreMap,
   store?: (s: Segmento[], b: Battaglia[]) => void,
 ) {
-  const [luoghi, segmenti, cmds, routes, imps, batts] = await Promise.all([
+  const [luoghiRaw, segmenti, cmds, routes, imps, batts, foto] = await Promise.all([
     luoghiPubblici().catch(() => []),
     segmentiPercorsi().catch(() => []),
     condottieri().catch(() => []),
     percorsi().catch(() => []),
     imperi().catch(() => []),
     battaglie().catch(() => []),
+    fotoPubbliche().catch(() => []),
   ]);
   store?.(segmenti, batts);
+
+  // Deduplica difensiva: un record si disegna UNA sola volta (mai doppioni).
+  const luoghi = Array.from(new Map(luoghiRaw.map((l) => [l.id, l])).values());
+  // poi_id → percorso della prima foto (per le miniature).
+  const fotoDiPoi = new Map<string, string>();
+  for (const f of foto) if (!fotoDiPoi.has(f.poi_id)) fotoDiPoi.set(f.poi_id, f.media_path);
 
   // route_id → colore dell'impero (per colorare linee e frecce per fazione).
   const empColor = new Map(imps.map((e) => [e.id, COLORE_IMPERO[e.slug] ?? COLORE_DEFAULT]));
@@ -729,6 +780,83 @@ async function caricaDati(
         "text-field": ["get", "emoji"],
         "text-size": 20,
         "text-allow-overlap": true,
+      },
+    });
+  }
+
+  // --- Miniature foto: sul CENTRO della zona (offuscato), mai sul punto esatto.
+  //     Foto vicine si raggruppano in un unico segnaposto col numero.
+  const luoghiConFoto = luoghi.filter((l) => fotoDiPoi.has(l.id));
+  const datiFoto: GeoJSON.FeatureCollection = {
+    type: "FeatureCollection",
+    features: luoghiConFoto.map((l) => ({
+      type: "Feature" as const,
+      geometry: { type: "Point" as const, coordinates: [l.lon, l.lat] },
+      properties: { id: l.id, name: l.name, lon: l.lon, lat: l.lat, icon: `foto-${l.id}` },
+    })),
+  };
+
+  // Carica ogni miniatura come immagine della mappa (una per poi con foto).
+  await Promise.all(
+    luoghiConFoto.map(async (l) => {
+      const nome = `foto-${l.id}`;
+      if (mappa.hasImage(nome)) return;
+      try {
+        const img = await caricaMiniatura(urlFotoPubblica(fotoDiPoi.get(l.id)!), 96);
+        if (!mappa.hasImage(nome)) mappa.addImage(nome, img, { pixelRatio: 2 });
+      } catch {
+        /* foto non caricabile: resta comunque la zona */
+      }
+    }),
+  );
+
+  const sorgFoto = mappa.getSource("foto");
+  if (sorgFoto) {
+    (sorgFoto as GeoJSONSource).setData(datiFoto);
+  } else {
+    mappa.addSource("foto", {
+      type: "geojson",
+      data: datiFoto,
+      cluster: true,
+      clusterRadius: 50,
+      clusterMaxZoom: 14,
+    });
+    // Gruppo di foto vicine: un cerchio col numero.
+    mappa.addLayer({
+      id: "foto-cluster",
+      type: "circle",
+      source: "foto",
+      filter: ["has", "point_count"],
+      paint: {
+        "circle-color": "#2f2415",
+        "circle-opacity": 0.9,
+        "circle-stroke-color": "#f0e5cc",
+        "circle-stroke-width": 2,
+        "circle-radius": ["step", ["get", "point_count"], 16, 5, 20, 20, 26],
+      },
+    });
+    mappa.addLayer({
+      id: "foto-cluster-conteggio",
+      type: "symbol",
+      source: "foto",
+      filter: ["has", "point_count"],
+      layout: {
+        "text-field": ["get", "point_count_abbreviated"],
+        "text-font": ["Noto Sans Bold"],
+        "text-size": 14,
+      },
+      paint: { "text-color": "#f0e5cc" },
+    });
+    // Miniatura singola.
+    mappa.addLayer({
+      id: "foto-thumb",
+      type: "symbol",
+      source: "foto",
+      filter: ["!", ["has", "point_count"]],
+      layout: {
+        "icon-image": ["get", "icon"],
+        "icon-size": ["interpolate", ["linear"], ["zoom"], 6, 0.45, 14, 0.95],
+        "icon-allow-overlap": true,
       },
     });
   }

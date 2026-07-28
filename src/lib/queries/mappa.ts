@@ -32,6 +32,32 @@ export async function luoghiPubblici(): Promise<Luogo[]> {
   return luogoSchema.array().parse(data ?? []);
 }
 
+// --- Foto pubbliche (per le miniature sulla mappa) ---------------------------
+const fotoSchema = z.object({ poi_id: uuidSchema.nullable(), media_path: z.string() });
+export interface FotoLuogo {
+  poi_id: string;
+  media_path: string;
+}
+
+export async function fotoPubbliche(): Promise<FotoLuogo[]> {
+  const { data, error } = await getSupabaseClient()
+    .from("v_contributions_public")
+    .select("poi_id, media_path")
+    .eq("kind", "foto")
+    .not("media_path", "is", null);
+  if (error) return [];
+  const righe = fotoSchema.array().safeParse(data ?? []);
+  if (!righe.success) return [];
+  return righe.data
+    .filter((r): r is { poi_id: string; media_path: string } => !!r.poi_id)
+    .map((r) => ({ poi_id: r.poi_id, media_path: r.media_path }));
+}
+
+/** URL pubblico della foto (il bucket "foto" è pubblico in lettura). */
+export function urlFotoPubblica(mediaPath: string): string {
+  return getSupabaseClient().storage.from("foto").getPublicUrl(mediaPath).data.publicUrl;
+}
+
 // --- Condottieri e percorsi --------------------------------------------------
 const condottieroSchema = z.object({
   id: uuidSchema,

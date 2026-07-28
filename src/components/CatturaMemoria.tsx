@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { ensureSession } from "@/lib/supabase/auth";
 import { getSupabaseClient } from "@/lib/supabase/client";
@@ -38,6 +38,9 @@ export function CatturaRitrovamento() {
   const [esito, setEsito] = useState<"inviata" | "in_coda" | null>(null);
   const [errore, setErrore] = useState<string | null>(null);
   const [coda, setCoda] = useState<StatoCoda | null>(null);
+  // Guardia SINCRONA contro il doppio invio: lo stato React si aggiorna dopo il
+  // re-render, il ref subito. Così due tocchi rapidi non pubblicano due volte.
+  const inCorsoRef = useRef(false);
 
   useEffect(() => {
     void (async () => {
@@ -75,6 +78,8 @@ export function CatturaRitrovamento() {
 
   async function pubblica() {
     if (!puntoPreciso || !descrizioneOk) return;
+    if (inCorsoRef.current) return; // già in corso: niente doppio invio
+    inCorsoRef.current = true;
     setSalvataggio(true);
     setErrore(null);
     try {
@@ -127,6 +132,7 @@ export function CatturaRitrovamento() {
       setErrore(e instanceof Error ? e.message : String(e));
     } finally {
       setSalvataggio(false);
+      inCorsoRef.current = false;
     }
   }
 

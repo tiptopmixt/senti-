@@ -123,17 +123,27 @@ export async function salvaMemoria(
   }
 }
 
+// Evita che due esecuzioni concorrenti (mount + evento "online") ripubblichino
+// lo stesso elemento prima che venga rimosso → doppioni.
+let elaborazioneInCorso = false;
+
 /** Riprova a inviare tutte le memorie in coda. */
 export async function elaboraCoda(): Promise<void> {
   if (typeof navigator !== "undefined" && !navigator.onLine) return;
-  for (const m of await tutte()) {
-    try {
-      await pubblicaUna(m);
-      await rimuovi(m.id);
-    } catch (e) {
-      if (!eDiRete(e)) await rimuovi(m.id); // errore non recuperabile: non insistere
-      // errore di rete: resta in coda per il prossimo giro
+  if (elaborazioneInCorso) return;
+  elaborazioneInCorso = true;
+  try {
+    for (const m of await tutte()) {
+      try {
+        await pubblicaUna(m);
+        await rimuovi(m.id);
+      } catch (e) {
+        if (!eDiRete(e)) await rimuovi(m.id); // errore non recuperabile: non insistere
+        // errore di rete: resta in coda per il prossimo giro
+      }
     }
+  } finally {
+    elaborazioneInCorso = false;
   }
 }
 
