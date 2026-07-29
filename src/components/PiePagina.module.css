@@ -29,3 +29,12 @@
   text-decoration: underline;
   color: inherit;
 }
+
+/* Riga azioni del footer: condividi app + selettore lingua. */
+.azioniPie {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}

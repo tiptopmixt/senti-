@@ -193,11 +193,15 @@
   "condividi": {
     "apri": "Condividi",
     "chiudi": "Chiudi",
+    "condividiNativo": "Condividi…",
+    "condividiApp": "Condividi l'app",
     "whatsapp": "Invia su WhatsApp",
     "copiaLink": "Copia il link",
     "copiato": "Copiato!",
     "qr": "Mostra QR code",
     "qrIstruzione": "Inquadra il codice per aprire Senti",
+    "ingrandisci": "Ingrandisci",
+    "salva": "Salva immagine",
     "indietro": "Indietro"
   },
   "demo": {

@@ -193,11 +193,15 @@
   "condividi": {
     "apri": "Share",
     "chiudi": "Close",
+    "condividiNativo": "Share…",
+    "condividiApp": "Share the app",
     "whatsapp": "Send on WhatsApp",
     "copiaLink": "Copy the link",
     "copiato": "Copied!",
     "qr": "Show QR code",
     "qrIstruzione": "Scan the code to open Senti",
+    "ingrandisci": "Enlarge",
+    "salva": "Save image",
     "indietro": "Back"
   },
   "demo": {
