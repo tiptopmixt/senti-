@@ -41,7 +41,7 @@ as $$
     coalesce(b.side_a || ' ⚔ ' || b.side_b, cm.name),
     b.year,
     5::smallint,
-    st_distance(b.geog, punto.g),
+    st_distance(b.geog, punto.g) as distanza_m,
     st_y(b.geog::geometry),
     st_x(b.geog::geometry)
   from public.battles b
