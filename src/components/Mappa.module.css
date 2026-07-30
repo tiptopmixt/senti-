@@ -14,45 +14,6 @@
   inset: 0;
 }
 
-/* --- Filtri: sempre in vista, in alto (fixed = non spariscono scorrendo) --- */
-.filtri {
-  position: fixed;
-  top: 2.5rem; /* sotto la striscia dell'avviso IA */
-  left: 0.75rem;
-  right: 4rem; /* lascia spazio ai comandi di zoom */
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  z-index: 5;
-}
-
-.filtro,
-.filtroAttivo {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  min-height: 2.75rem;
-  padding: 0 0.85rem;
-  font: inherit;
-  font-size: 0.9rem;
-  border-radius: 2rem;
-  border: 2px solid #2f2415;
-  cursor: pointer;
-  background: rgba(240, 229, 204, 0.92);
-  color: #2f2415;
-  backdrop-filter: blur(2px);
-}
-
-/* Il filtro spento resta leggibile ma chiaramente inattivo. */
-.filtro {
-  opacity: 0.55;
-}
-
-.filtroAttivo {
-  background: #2f2415;
-  color: #f0e5cc;
-}
-
 .pallinoRaccontato,
 .pallinoDaRaccontare {
   width: 0.7rem;
@@ -69,22 +30,6 @@
 .pallinoDaRaccontare {
   background: transparent;
   border: 2px solid currentColor;
-}
-
-/* --- Legenda della certezza --- */
-.legenda {
-  position: fixed;
-  left: 0.75rem;
-  bottom: 11.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-  padding: 0.6rem 0.75rem;
-  border-radius: 0.6rem;
-  background: rgba(240, 229, 204, 0.92);
-  color: #2f2415;
-  font-size: 0.8rem;
-  z-index: 2;
 }
 
 .vociLegenda {
@@ -115,52 +60,6 @@
 .lineaIpotetico {
   border-top-style: dotted;
   border-top-color: #a98a63;
-}
-
-/* --- Azioni: pillole compatte in basso a destra, poco invasive --- */
-.aggiungi,
-.sonoQui,
-.eventi {
-  position: fixed;
-  right: 0.75rem;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  min-height: 2.5rem;
-  padding: 0 0.9rem;
-  font: inherit;
-  font-size: 0.9rem;
-  font-weight: 700;
-  border: none;
-  border-radius: 2rem;
-  cursor: pointer;
-  color: #f6f1e4;
-  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.3);
-  z-index: 4;
-}
-
-.aggiungi {
-  bottom: 4.6rem;
-  background: #2f2415;
-}
-
-.sonoQui {
-  bottom: 1.6rem;
-  font-weight: 600;
-  background: #7a2f22;
-}
-
-.suggerimento {
-  position: fixed;
-  left: 0.75rem;
-  right: 9.5rem; /* lascia spazio alle pillole a destra */
-  bottom: 1.1rem;
-  margin: 0;
-  text-align: center;
-  font-size: 0.8rem;
-  color: #2f2415;
-  opacity: 0.75;
-  z-index: 2;
 }
 
 .messaggio {
@@ -267,8 +166,20 @@
   color: inherit;
 }
 
-/* Pulsante "Eventi vicini": pillola sopra "Aggiungi". */
-.eventi {
-  bottom: 7.6rem;
-  background: #5c3a1e;
+/* --- Pannello impostazioni --- */
+.linkImpostazioni {
+  display: inline-block;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.9rem;
+  border-radius: 1rem;
+  border: 1.5px solid #2f2415;
+  color: #2f2415;
+  text-decoration: none;
+}
+
+.legendaImpostazioni {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.85rem;
 }

@@ -1,0 +1,220 @@
+/* --- BarraPulsanti: pulsanti unificati, spostabili su 4 bordi ---
+   Il contenitore-bordo è trasparente ai click; i singoli pulsanti no.
+   Lo sfondo dei pulsanti usa --btn-opacita (regolabile dall'utente). */
+
+.bordo {
+  position: fixed;
+  display: flex;
+  gap: 0.4rem;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.bordo > * {
+  pointer-events: auto;
+}
+
+/* Bordi orizzontali: riga, centrata */
+.bordo_top,
+.bordo_bottom {
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  left: 0.5rem;
+  right: 0.5rem;
+}
+
+.bordo_top {
+  top: 2.4rem;
+}
+
+.bordo_bottom {
+  bottom: 1.2rem;
+}
+
+/* Bordi verticali: colonna */
+.bordo_left,
+.bordo_right {
+  flex-direction: column;
+  align-items: center;
+  top: 3.5rem;
+  bottom: 3.5rem;
+  justify-content: center;
+}
+
+.bordo_left {
+  left: 0.5rem;
+}
+
+.bordo_right {
+  right: 0.5rem;
+}
+
+/* Su bordi verticali, nascondi il testo (solo icona) per risparmiare spazio */
+.bordo_left .etichettaBtn,
+.bordo_right .etichettaBtn {
+  display: none;
+}
+
+/* --- Pulsante unificato --- */
+.pulsante {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-height: 2.5rem;
+  padding: 0 0.75rem;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+  border: none;
+  border-radius: 2rem;
+  cursor: pointer;
+  background: rgba(47, 36, 21, var(--btn-opacita, 0.85));
+  color: #f6f1e4;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.3);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+  transition: opacity 0.15s;
+}
+
+.pulsante:active {
+  opacity: 0.8;
+}
+
+.nascosto {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.iconaBtn {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.etichettaBtn {
+  line-height: 1;
+}
+
+/* --- Zone di rilascio (visibili durante il trascinamento) --- */
+.zona {
+  position: fixed;
+  z-index: 100;
+  background: rgba(59, 130, 246, 0.12);
+  border: 2px dashed rgba(59, 130, 246, 0.35);
+  pointer-events: none;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.zonaAttiva {
+  background: rgba(59, 130, 246, 0.32);
+  border-color: rgba(59, 130, 246, 0.75);
+}
+
+.zona_top {
+  top: 1.9rem;
+  left: 0;
+  right: 0;
+  height: 4rem;
+  border-radius: 0 0 0.75rem 0.75rem;
+}
+
+.zona_bottom {
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 4rem;
+  border-radius: 0.75rem 0.75rem 0 0;
+}
+
+.zona_left {
+  top: 1.9rem;
+  left: 0;
+  bottom: 0;
+  width: 4rem;
+  border-radius: 0 0.75rem 0.75rem 0;
+}
+
+.zona_right {
+  top: 1.9rem;
+  right: 0;
+  bottom: 0;
+  width: 4rem;
+  border-radius: 0.75rem 0 0 0.75rem;
+}
+
+/* --- Fantasma (pulsante che segue il dito) --- */
+.ghost {
+  position: fixed;
+  z-index: 101;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  background: rgba(47, 36, 21, 0.92);
+  color: #f6f1e4;
+  font-size: 1.3rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+/* --- Slider trasparenza --- */
+.sliderPopup {
+  position: fixed;
+  bottom: 5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 1rem;
+  border-radius: 2rem;
+  background: rgba(240, 229, 204, 0.96);
+  color: #2f2415;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(4px);
+}
+
+.sliderLabel {
+  font-size: 0.82rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.slider {
+  width: 8rem;
+  accent-color: #2f2415;
+}
+
+.resetBtn {
+  font: inherit;
+  font-size: 0.78rem;
+  padding: 0.25rem 0.6rem;
+  border: 1px solid #2f2415;
+  border-radius: 1rem;
+  background: transparent;
+  color: #2f2415;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.chiudiSlider {
+  font: inherit;
+  font-size: 0.9rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: #2f2415;
+  cursor: pointer;
+}

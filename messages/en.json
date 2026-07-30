@@ -158,6 +158,24 @@
     "errori": {
       "gpsNonDisponibile": "This device does not provide location.",
       "gpsNegato": "I can't read the location. Check permissions."
+    },
+    "barra": {
+      "aggiungi": "Add",
+      "sonoQui": "I'm here",
+      "campagne": "Campaigns",
+      "eventi": "Events",
+      "condividi": "Share",
+      "trasparenza": "Transparency",
+      "predefinito": "Default"
+    },
+    "pannelloImpostazioni": {
+      "titolo": "Settings",
+      "privacy": "Privacy",
+      "termini": "Terms",
+      "cookie": "Cookies",
+      "lingua": "Language",
+      "legenda": "Line legend",
+      "linkUtili": "Info pages"
     }
   },
   "qui": {

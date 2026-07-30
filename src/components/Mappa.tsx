@@ -30,7 +30,10 @@ import {
 import { FINDING_EMOJI, type FindingType } from "@/lib/validation";
 import { cerchioGeoJSON } from "@/lib/geo/zona";
 import { useRouter } from "@/i18n/navigation";
+import { Link } from "@/i18n/navigation";
+import { SelettoreLingua } from "./SelettoreLingua";
 import { ColonnaTempo } from "./ColonnaTempo";
+import { BarraPulsanti } from "./BarraPulsanti";
 import styles from "./Mappa.module.css";
 
 // Vista mondiale: le campagne sono sparse in tutto il mondo.
@@ -102,6 +105,7 @@ export function Mappa() {
   const [pannelloEventi, setPannelloEventi] = useState(false);
   const [eventi, setEventi] = useState<EventoVicino[] | null>(null);
   const [eventiInCorso, setEventiInCorso] = useState(false);
+  const [pannelloImpostazioni, setPannelloImpostazioni] = useState(false);
   const [messaggio, setMessaggio] = useState<string | null>(null);
 
   /** Apre il pannello "nuovo ritrovamento", ma prima controlla i doppioni vicini. */
@@ -428,157 +432,15 @@ export function Mappa() {
     <div className={styles.contenitore}>
       <div ref={contenitoreRef} className={styles.mappa} />
 
-      {/* Filtro a due livelli: impero → condottieri. */}
-      <div className={styles.filtri}>
-        <button
-          className={styles.filtroAttivo}
-          onClick={() => setPannelloCampagne((v) => !v)}
-          aria-expanded={pannelloCampagne}
-        >
-          🗺️ {t("filtri.campagne")} ({imperiVisibili.size + condottieriVisibili.size})
-        </button>
-
-        {pannelloCampagne && (
-          <div
-            style={{
-              position: "absolute",
-              top: "3.2rem",
-              left: 0,
-              zIndex: 6,
-              maxHeight: "62vh",
-              overflowY: "auto",
-              width: "min(20rem, 88vw)",
-              background: "rgba(240, 229, 204, 0.98)",
-              borderRadius: "0.6rem",
-              border: "2px solid #2f2415",
-              padding: "0.5rem",
-              boxShadow: "0 3px 12px rgba(0,0,0,0.3)",
-              color: "#2f2415",
-            }}
-          >
-            <div style={{ display: "flex", gap: "0.4rem", marginBottom: "0.4rem" }}>
-              <button
-                className={styles.filtro}
-                onClick={() => {
-                  setImperiVisibili(new Set(listaImperi.map((i) => i.id)));
-                  setCondottieriVisibili(new Set());
-                }}
-              >
-                {t("filtri.tutte")}
-              </button>
-              <button
-                className={styles.filtro}
-                onClick={() => {
-                  setImperiVisibili(new Set());
-                  setCondottieriVisibili(new Set());
-                }}
-              >
-                {t("filtri.nessuna")}
-              </button>
-            </div>
-            {listaImperi.map((imp) => {
-              const espanso = imperiEspansi.has(imp.id);
-              const imperoAttivo = imperiVisibili.has(imp.id);
-              return (
-                <div key={imp.id} style={{ padding: "0.15rem 0" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
-                    <button
-                      className={styles.filtro}
-                      style={{ minHeight: "auto", padding: "0.1rem 0.4rem" }}
-                      onClick={() =>
-                        setImperiEspansi((prev) => {
-                          const n = new Set(prev);
-                          if (n.has(imp.id)) n.delete(imp.id);
-                          else n.add(imp.id);
-                          return n;
-                        })
-                      }
-                      aria-label="espandi"
-                    >
-                      {espanso ? "▾" : "▸"}
-                    </button>
-                    <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", flex: 1, cursor: "pointer" }}>
-                      <input
-                        type="checkbox"
-                        checked={imperoAttivo}
-                        onChange={() =>
-                          setImperiVisibili((prev) => {
-                            const n = new Set(prev);
-                            if (n.has(imp.id)) n.delete(imp.id);
-                            else n.add(imp.id);
-                            return n;
-                          })
-                        }
-                      />
-                      <span>{imp.name}</span>
-                    </label>
-                    <button
-                      className={styles.filtro}
-                      style={{ minHeight: "auto", padding: "0.15rem 0.45rem" }}
-                      onClick={() => setInfoImpero(imp)}
-                      aria-label={t("filtri.schedaImpero")}
-                    >
-                      ℹ️
-                    </button>
-                  </div>
-                  {espanso && (
-                    <div style={{ paddingLeft: "1.7rem" }}>
-                      {(condottieriPerImpero.get(imp.id) ?? []).map((c) => (
-                        <label
-                          key={c.id}
-                          style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.15rem 0", cursor: "pointer", fontSize: "0.9rem" }}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={imperoAttivo || condottieriVisibili.has(c.id)}
-                            disabled={imperoAttivo}
-                            onChange={() =>
-                              setCondottieriVisibili((prev) => {
-                                const n = new Set(prev);
-                                if (n.has(c.id)) n.delete(c.id);
-                                else n.add(c.id);
-                                return n;
-                              })
-                            }
-                          />
-                          <span>{c.name}</span>
-                        </label>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      {/* Legenda della certezza. */}
-      <div className={styles.legenda}>
-        <span className={styles.vociLegenda}>
-          <i className={styles.lineaAttestato} /> {t("certezza.attestato")}
-        </span>
-        <span className={styles.vociLegenda}>
-          <i className={styles.lineaProbabile} /> {t("certezza.probabile")}
-        </span>
-        <span className={styles.vociLegenda}>
-          <i className={styles.lineaIpotetico} /> {t("certezza.ipotetico")}
-        </span>
-      </div>
-
-      <button className={styles.aggiungi} onClick={() => router.push("/racconta")}>
-        ➕ {t("aggiungi")}
-      </button>
-
-      <button className={styles.sonoQui} onClick={sonoQui}>
-        📍 {t("sonoQui")}
-      </button>
-
-      <button className={styles.eventi} onClick={apriEventi}>
-        📜 {t("eventi.pulsante")}
-      </button>
-
-      <p className={styles.suggerimento}>{t("suggerimentoToccoLungo")}</p>
+      {/* Barra pulsanti unificata: spostabili su 4 bordi */}
+      <BarraPulsanti
+        onAggiungi={() => router.push("/racconta")}
+        onSonoQui={sonoQui}
+        onCampagne={() => setPannelloCampagne((v) => !v)}
+        onEventi={apriEventi}
+        onImpostazioni={() => setPannelloImpostazioni((v) => !v)}
+        campagneAttive={imperiVisibili.size + condottieriVisibili.size}
+      />
 
       {messaggio && <p className={styles.messaggio}>{messaggio}</p>}
 
@@ -773,6 +635,161 @@ export function Mappa() {
           <p className={styles.testoPannello} style={{ opacity: 0.7 }}>{t("info.nota")}</p>
           <div className={styles.azioni}>
             <button className={styles.primario} onClick={() => setInfoBattaglia(null)}>
+              {t("info.chiudi")}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* --- Pannello campagne (filtro a due livelli: impero → condottieri) --- */}
+      {pannelloCampagne && (
+        <div className={styles.pannello} role="dialog" aria-modal="true">
+          <h2 className={styles.titoloPannello}>🗺️ {t("filtri.campagne")}</h2>
+          <div style={{ display: "flex", gap: "0.4rem", marginBottom: "0.4rem" }}>
+            <button
+              className={styles.secondario}
+              style={{ flex: "none", minHeight: "2.5rem", fontSize: "0.9rem" }}
+              onClick={() => {
+                setImperiVisibili(new Set(listaImperi.map((i) => i.id)));
+                setCondottieriVisibili(new Set());
+              }}
+            >
+              {t("filtri.tutte")}
+            </button>
+            <button
+              className={styles.secondario}
+              style={{ flex: "none", minHeight: "2.5rem", fontSize: "0.9rem" }}
+              onClick={() => {
+                setImperiVisibili(new Set());
+                setCondottieriVisibili(new Set());
+              }}
+            >
+              {t("filtri.nessuna")}
+            </button>
+          </div>
+          {listaImperi.map((imp) => {
+            const espanso = imperiEspansi.has(imp.id);
+            const imperoAttivo = imperiVisibili.has(imp.id);
+            return (
+              <div key={imp.id} style={{ padding: "0.15rem 0" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                  <button
+                    className={styles.secondario}
+                    style={{ flex: "none", minHeight: "auto", padding: "0.1rem 0.5rem", fontSize: "0.85rem" }}
+                    onClick={() =>
+                      setImperiEspansi((prev) => {
+                        const n = new Set(prev);
+                        if (n.has(imp.id)) n.delete(imp.id);
+                        else n.add(imp.id);
+                        return n;
+                      })
+                    }
+                    aria-label="espandi"
+                  >
+                    {espanso ? "▾" : "▸"}
+                  </button>
+                  <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", flex: 1, cursor: "pointer" }}>
+                    <input
+                      type="checkbox"
+                      checked={imperoAttivo}
+                      onChange={() =>
+                        setImperiVisibili((prev) => {
+                          const n = new Set(prev);
+                          if (n.has(imp.id)) n.delete(imp.id);
+                          else n.add(imp.id);
+                          return n;
+                        })
+                      }
+                    />
+                    <span>{imp.name}</span>
+                  </label>
+                  <button
+                    className={styles.secondario}
+                    style={{ flex: "none", minHeight: "auto", padding: "0.15rem 0.5rem", fontSize: "0.85rem" }}
+                    onClick={() => setInfoImpero(imp)}
+                    aria-label={t("filtri.schedaImpero")}
+                  >
+                    ℹ️
+                  </button>
+                </div>
+                {espanso && (
+                  <div style={{ paddingLeft: "1.7rem" }}>
+                    {(condottieriPerImpero.get(imp.id) ?? []).map((c) => (
+                      <label
+                        key={c.id}
+                        style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.15rem 0", cursor: "pointer", fontSize: "0.9rem" }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={imperoAttivo || condottieriVisibili.has(c.id)}
+                          disabled={imperoAttivo}
+                          onChange={() =>
+                            setCondottieriVisibili((prev) => {
+                              const n = new Set(prev);
+                              if (n.has(c.id)) n.delete(c.id);
+                              else n.add(c.id);
+                              return n;
+                            })
+                          }
+                        />
+                        <span>{c.name}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+          <div className={styles.azioni}>
+            <button className={styles.primario} onClick={() => setPannelloCampagne(false)}>
+              {t("info.chiudi")}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* --- Pannello Impostazioni: legale + lingua + legenda --- */}
+      {pannelloImpostazioni && (
+        <div className={styles.pannello} role="dialog" aria-modal="true">
+          <h2 className={styles.titoloPannello}>⚙️ {t("pannelloImpostazioni.titolo")}</h2>
+
+          <p className={styles.testoPannello} style={{ fontWeight: 600 }}>
+            {t("pannelloImpostazioni.linkUtili")}
+          </p>
+          <nav style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
+            <Link href="/privacy" className={styles.linkImpostazioni} onClick={() => setPannelloImpostazioni(false)}>
+              {t("pannelloImpostazioni.privacy")}
+            </Link>
+            <Link href="/termini" className={styles.linkImpostazioni} onClick={() => setPannelloImpostazioni(false)}>
+              {t("pannelloImpostazioni.termini")}
+            </Link>
+            <Link href="/cookie" className={styles.linkImpostazioni} onClick={() => setPannelloImpostazioni(false)}>
+              {t("pannelloImpostazioni.cookie")}
+            </Link>
+          </nav>
+
+          <p className={styles.testoPannello} style={{ fontWeight: 600, marginTop: "0.5rem" }}>
+            {t("pannelloImpostazioni.lingua")}
+          </p>
+          <SelettoreLingua />
+
+          <p className={styles.testoPannello} style={{ fontWeight: 600, marginTop: "0.5rem" }}>
+            {t("pannelloImpostazioni.legenda")}
+          </p>
+          <div className={styles.legendaImpostazioni}>
+            <span className={styles.vociLegenda}>
+              <i className={styles.lineaAttestato} /> {t("certezza.attestato")}
+            </span>
+            <span className={styles.vociLegenda}>
+              <i className={styles.lineaProbabile} /> {t("certezza.probabile")}
+            </span>
+            <span className={styles.vociLegenda}>
+              <i className={styles.lineaIpotetico} /> {t("certezza.ipotetico")}
+            </span>
+          </div>
+
+          <div className={styles.azioni}>
+            <button className={styles.primario} onClick={() => setPannelloImpostazioni(false)}>
               {t("info.chiudi")}
             </button>
           </div>
