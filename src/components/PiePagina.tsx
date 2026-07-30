@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Link } from "@/i18n/navigation";
+import { Link, usePathname } from "@/i18n/navigation";
 import { SelettoreLingua } from "./SelettoreLingua";
 import { Condividi } from "./Condividi";
 import styles from "./PiePagina.module.css";
@@ -14,6 +14,9 @@ import styles from "./PiePagina.module.css";
 export function PiePagina() {
   const t = useTranslations();
   const locale = useLocale();
+  const pathname = usePathname();
+
+  if (pathname.startsWith("/mappa")) return null;
 
   // Link alla home dell'app nella lingua corrente (con il base path del sito).
   const [homeUrl, setHomeUrl] = useState<string | undefined>();
