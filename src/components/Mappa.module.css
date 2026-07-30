@@ -95,9 +95,32 @@
   overflow-y: auto;
 }
 
+.testaPannello {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
 .titoloPannello {
   margin: 0;
   font-size: 1.25rem;
+}
+
+.chiudiPannello {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  font: inherit;
+  font-size: 1.1rem;
+  border: 2px solid #2f2415;
+  border-radius: 50%;
+  background: transparent;
+  color: #2f2415;
+  cursor: pointer;
 }
 
 .testoPannello {

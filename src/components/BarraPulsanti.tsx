@@ -69,6 +69,7 @@ interface Props {
   onEventi: () => void;
   onImpostazioni: () => void;
   campagneAttive: number;
+  visibile?: boolean;
 }
 
 export function BarraPulsanti({
@@ -78,6 +79,7 @@ export function BarraPulsanti({
   onEventi,
   onImpostazioni,
   campagneAttive,
+  visibile = true,
 }: Props) {
   const t = useTranslations("mappa");
   const locale = useLocale();
@@ -261,6 +263,8 @@ export function BarraPulsanti({
   } as React.CSSProperties;
 
   const bordi: Bordo[] = ["top", "bottom", "left", "right"];
+
+  if (!visibile) return null;
 
   return (
     <>

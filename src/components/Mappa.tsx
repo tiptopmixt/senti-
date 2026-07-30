@@ -432,7 +432,8 @@ export function Mappa() {
     <div className={styles.contenitore}>
       <div ref={contenitoreRef} className={styles.mappa} />
 
-      {/* Barra pulsanti unificata: spostabili su 4 bordi */}
+      {/* Barra pulsanti unificata: spostabili su 4 bordi.
+         Nascosta quando un pannello è aperto per non coprire i comandi. */}
       <BarraPulsanti
         onAggiungi={() => router.push("/racconta")}
         onSonoQui={sonoQui}
@@ -440,6 +441,7 @@ export function Mappa() {
         onEventi={apriEventi}
         onImpostazioni={() => setPannelloImpostazioni((v) => !v)}
         campagneAttive={imperiVisibili.size + condottieriVisibili.size}
+        visibile={!pannelloEventi && !infoCampagna && !infoImpero && !infoBattaglia && !pannelloCampagne && !pannelloImpostazioni && !puntoNuovo && !puntoTempo}
       />
 
       {messaggio && <p className={styles.messaggio}>{messaggio}</p>}
@@ -457,7 +459,10 @@ export function Mappa() {
       {/* --- Eventi storici vicini --- */}
       {pannelloEventi && (
         <div className={styles.pannello} role="dialog" aria-modal="true">
-          <h2 className={styles.titoloPannello}>📜 {t("eventi.titolo")}</h2>
+          <div className={styles.testaPannello}>
+            <h2 className={styles.titoloPannello}>📜 {t("eventi.titolo")}</h2>
+            <button className={styles.chiudiPannello} onClick={() => setPannelloEventi(false)} aria-label={t("info.chiudi")}>✕</button>
+          </div>
           {eventiInCorso && <p className={styles.testoPannello}>{t("eventi.caricamento")}</p>}
 
           {!eventiInCorso && eventi && eventi.length === 0 && (
@@ -514,7 +519,10 @@ export function Mappa() {
       {/* --- Scheda "info" della campagna --- */}
       {infoCampagna && (
         <div className={styles.pannello} role="dialog" aria-modal="true">
-          <h2 className={styles.titoloPannello}>ℹ️ {infoCampagna.name}</h2>
+          <div className={styles.testaPannello}>
+            <h2 className={styles.titoloPannello}>ℹ️ {infoCampagna.name}</h2>
+            <button className={styles.chiudiPannello} onClick={() => setInfoCampagna(null)} aria-label={t("info.chiudi")}>✕</button>
+          </div>
           {(infoCampagna.epoch || infoCampagna.region) && (
             <p className={styles.testoPannello}>
               {[infoCampagna.epoch, infoCampagna.region].filter(Boolean).join(" · ")}
@@ -573,7 +581,10 @@ export function Mappa() {
       {/* --- Scheda dell'impero --- */}
       {infoImpero && (
         <div className={styles.pannello} role="dialog" aria-modal="true">
-          <h2 className={styles.titoloPannello}>🏛️ {infoImpero.name}</h2>
+          <div className={styles.testaPannello}>
+            <h2 className={styles.titoloPannello}>🏛️ {infoImpero.name}</h2>
+            <button className={styles.chiudiPannello} onClick={() => setInfoImpero(null)} aria-label={t("info.chiudi")}>✕</button>
+          </div>
           {(infoImpero.continent || infoImpero.epoch) && (
             <p className={styles.testoPannello}>
               {[infoImpero.continent, infoImpero.epoch].filter(Boolean).join(" · ")}
@@ -609,7 +620,10 @@ export function Mappa() {
       {/* --- Scheda della battaglia (chi contro chi) --- */}
       {infoBattaglia && (
         <div className={styles.pannello} role="dialog" aria-modal="true">
-          <h2 className={styles.titoloPannello}>⚔️ {infoBattaglia.name}</h2>
+          <div className={styles.testaPannello}>
+            <h2 className={styles.titoloPannello}>⚔️ {infoBattaglia.name}</h2>
+            <button className={styles.chiudiPannello} onClick={() => setInfoBattaglia(null)} aria-label={t("info.chiudi")}>✕</button>
+          </div>
           {infoBattaglia.year != null && (
             <p className={styles.testoPannello}>
               {infoBattaglia.year < 0
@@ -644,7 +658,10 @@ export function Mappa() {
       {/* --- Pannello campagne (filtro a due livelli: impero → condottieri) --- */}
       {pannelloCampagne && (
         <div className={styles.pannello} role="dialog" aria-modal="true">
-          <h2 className={styles.titoloPannello}>🗺️ {t("filtri.campagne")}</h2>
+          <div className={styles.testaPannello}>
+            <h2 className={styles.titoloPannello}>🗺️ {t("filtri.campagne")}</h2>
+            <button className={styles.chiudiPannello} onClick={() => setPannelloCampagne(false)} aria-label={t("info.chiudi")}>✕</button>
+          </div>
           <div style={{ display: "flex", gap: "0.4rem", marginBottom: "0.4rem" }}>
             <button
               className={styles.secondario}
@@ -751,7 +768,10 @@ export function Mappa() {
       {/* --- Pannello Impostazioni: legale + lingua + legenda --- */}
       {pannelloImpostazioni && (
         <div className={styles.pannello} role="dialog" aria-modal="true">
-          <h2 className={styles.titoloPannello}>⚙️ {t("pannelloImpostazioni.titolo")}</h2>
+          <div className={styles.testaPannello}>
+            <h2 className={styles.titoloPannello}>⚙️ {t("pannelloImpostazioni.titolo")}</h2>
+            <button className={styles.chiudiPannello} onClick={() => setPannelloImpostazioni(false)} aria-label={t("info.chiudi")}>✕</button>
+          </div>
 
           <p className={styles.testoPannello} style={{ fontWeight: 600 }}>
             {t("pannelloImpostazioni.linkUtili")}
@@ -799,9 +819,14 @@ export function Mappa() {
       {/* --- Pannello nuovo ritrovamento --- */}
       {puntoNuovo && (
         <div className={styles.pannello} role="dialog" aria-modal="true">
+          <div className={styles.testaPannello}>
+            <h2 className={styles.titoloPannello}>
+              {puntoNuovo.vicini.length > 0 ? t("vicini.titolo") : t("nuovoLuogo.titolo")}
+            </h2>
+            <button className={styles.chiudiPannello} onClick={() => setPuntoNuovo(null)} aria-label={t("info.chiudi")}>✕</button>
+          </div>
           {puntoNuovo.vicini.length > 0 ? (
             <>
-              <h2 className={styles.titoloPannello}>{t("vicini.titolo")}</h2>
               <p className={styles.testoPannello}>{t("vicini.spiegazione")}</p>
               <ul className={styles.listaVicini}>
                 {puntoNuovo.vicini.map((v) => (
@@ -812,9 +837,7 @@ export function Mappa() {
                 ))}
               </ul>
             </>
-          ) : (
-            <h2 className={styles.titoloPannello}>{t("nuovoLuogo.titolo")}</h2>
-          )}
+          ) : null}
 
           <div className={styles.azioni}>
             <button className={styles.secondario} onClick={() => setPuntoNuovo(null)}>
@@ -912,6 +935,7 @@ async function caricaDati(
       id: idSorgente,
       type: "line",
       source: idSorgente,
+      filter: ["in", ["get", "route_id"], ["literal", []]] as never,
       layout: { "line-cap": tratteggio ? "butt" : "round", "line-join": "round" },
       paint: {
         "line-color": ["get", "color"],
@@ -919,11 +943,11 @@ async function caricaDati(
         ...(tratteggio ? { "line-dasharray": tratteggio } : {}),
       },
     });
-    // Frecce direzionali lungo la linea, dello stesso colore dell'impero.
     mappa.addLayer({
       id: `${idSorgente}-frecce`,
       type: "symbol",
       source: idSorgente,
+      filter: ["in", ["get", "route_id"], ["literal", []]] as never,
       layout: {
         "symbol-placement": "line",
         "symbol-spacing": 90,
@@ -1102,6 +1126,7 @@ async function caricaDati(
       id: "battaglie",
       type: "symbol",
       source: "battaglie",
+      filter: ["in", ["get", "commander_id"], ["literal", []]] as never,
       layout: {
         "text-field": "⚔️",
         "text-size": ["interpolate", ["linear"], ["zoom"], 3, 15, 12, 26],
