@@ -7,6 +7,7 @@
  */
 import type { NuovoRitrovamento } from "@/lib/validation";
 import { caricaFoto, pubblicaRitrovamento } from "@/lib/queries/contributions";
+import { getSupabaseClient } from "@/lib/supabase/client";
 
 const DB = "senti-coda";
 const STORE = "memorie";
@@ -78,13 +79,28 @@ function eDiRete(e: unknown): boolean {
   return /failed to fetch|networkerror|network error|load failed/i.test(msg);
 }
 
+/**
+ * Chiede all'assistente IA di commentare la memoria appena pubblicata (Edge
+ * Function `ipotesi`). Fire-and-forget: NON blocca né fa fallire la
+ * pubblicazione. L'analisi avviene UNA sola volta, qui alla pubblicazione; il
+ * commento è salvato nel DB e riletto, mai rigenerato all'apertura.
+ */
+function chiediIpotesiAssistente(contributionId: string): void {
+  void getSupabaseClient()
+    .functions.invoke("ipotesi", { body: { contribution_id: contributionId } })
+    .catch(() => {
+      /* l'analisi IA non è mai bloccante: la memoria è già pubblica */
+    });
+}
+
 /** Prova a pubblicare una memoria: carica la foto (se c'è) e chiama la RPC. */
 async function pubblicaUna(m: MemoriaLocale): Promise<void> {
   let mediaPath = m.params.mediaPath;
   if (m.fotoBlob) {
     mediaPath = await caricaFoto(m.id, m.fotoBlob, m.fotoMime ?? "image/jpeg");
   }
-  await pubblicaRitrovamento({ ...m.params, mediaPath });
+  const { id } = await pubblicaRitrovamento({ ...m.params, mediaPath });
+  chiediIpotesiAssistente(id);
 }
 
 /**

@@ -7,8 +7,10 @@ import {
   contestiPerMemorie,
   cosaESuccessoQui,
   giorniAllaCancellazione,
+  ipotesiPerMemorie,
   richiediCancellazione,
   type ContestoStorico,
+  type IpotesiAssistente,
   type VoceTempo,
 } from "@/lib/queries/timeline";
 import { urlFotoFirmato } from "@/lib/queries/contributions";
@@ -41,20 +43,28 @@ export function ColonnaTempo({ lon, lat, nomeLuogo, poiId, onChiudi }: Props) {
   const t = useTranslations("qui");
   const [voci, setVoci] = useState<VoceTempo[] | null>(null);
   const [contesti, setContesti] = useState<Map<string, ContestoStorico>>(new Map());
+  const [ipotesi, setIpotesi] = useState<Map<string, IpotesiAssistente>>(new Map());
   const [errore, setErrore] = useState<string | null>(null);
 
   useEffect(() => {
     let vivo = true;
     setVoci(null);
     setContesti(new Map());
+    setIpotesi(new Map());
     setErrore(null);
     cosaESuccessoQui(lon, lat)
       .then(async (v) => {
         if (!vivo) return;
         setVoci(v);
         const idRitrovamenti = v.filter((x) => x.tipo === "ritrovamento").map((x) => x.id);
-        const c = await contestiPerMemorie(idRitrovamenti);
-        if (vivo) setContesti(c);
+        const [c, i] = await Promise.all([
+          contestiPerMemorie(idRitrovamenti),
+          ipotesiPerMemorie(idRitrovamenti),
+        ]);
+        if (vivo) {
+          setContesti(c);
+          setIpotesi(i);
+        }
       })
       .catch((e) => vivo && setErrore(e instanceof Error ? e.message : String(e)));
     // Registra la visita al luogo (fire-and-forget, dedup lato server).
@@ -100,6 +110,7 @@ export function ColonnaTempo({ lon, lat, nomeLuogo, poiId, onChiudi }: Props) {
               key={`${v.tipo}-${v.id}`}
               voce={v}
               contesto={v.tipo === "ritrovamento" ? contesti.get(v.id) : undefined}
+              ipotesi={v.tipo === "ritrovamento" ? ipotesi.get(v.id) : undefined}
             />
           ))}
         </ol>
@@ -111,9 +122,11 @@ export function ColonnaTempo({ lon, lat, nomeLuogo, poiId, onChiudi }: Props) {
 function VoceRiga({
   voce,
   contesto,
+  ipotesi,
 }: {
   voce: VoceTempo;
   contesto?: ContestoStorico;
+  ipotesi?: IpotesiAssistente;
 }) {
   const t = useTranslations("qui");
   const campagna = voce.tipo === "campagna";
@@ -193,6 +206,19 @@ function VoceRiga({
               </p>
             )}
             <p className={styles.contestoNota}>{t("contesto.nota")}</p>
+          </aside>
+        )}
+
+        {/* Ipotesi dell'assistente IA: riquadro SEPARATO e distinto dalla
+            memoria. È un commento automatico al condizionale, mai una prova, e
+            non giudica se la memoria è vera. L'avviso di sicurezza (residuato
+            bellico → 112) ha la priorità ed è mostrato in cima, in evidenza. */}
+        {voce.tipo === "ritrovamento" && ipotesi && (
+          <aside className={styles.ipotesi}>
+            <p className={styles.ipotesiTitolo}>🤖 {ipotesi.titolo}</p>
+            {ipotesi.avviso && <p className={styles.ipotesiAvviso}>{ipotesi.avviso}</p>}
+            <p className={styles.ipotesiTesto}>{ipotesi.corpo}</p>
+            <p className={styles.ipotesiNota}>{t("ipotesi.nota")}</p>
           </aside>
         )}
       </div>

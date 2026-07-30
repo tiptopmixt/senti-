@@ -106,3 +106,92 @@ Se trovato è false, gli altri campi possono essere vuoti.`;
     return null;
   }
 }
+
+/** Foto passata al modello: byte grezzi + tipo MIME (jpeg/png/webp/gif). */
+export interface FotoInput {
+  base64: string;
+  mimeType: "image/jpeg" | "image/png" | "image/webp" | "image/gif";
+}
+
+/**
+ * "Ipotesi dell'assistente": UN commento breve al condizionale su cosa POTREBBE
+ * essere un ritrovamento (foto + testo). Riquadro SEPARATO dalla memoria: non è
+ * una prova, non giudica se la memoria è vera.
+ *
+ * Regole di sicurezza dure (nel prompt): se sembra un residuato bellico/ordigno
+ * il modello lo segnala con `residuato: true` e NON scrive mai come maneggiarlo;
+ * l'avviso "chiama il 112" lo aggiunge il server, sempre uguale. Mai incoraggia
+ * a raccogliere o scavare.
+ *
+ * Restituisce null se non c'è nulla di utile o se il modello rifiuta: in quel
+ * caso la memoria resta pubblicata lo stesso, senza riquadro.
+ */
+export async function ipotesiAssistente(input: {
+  testo: string;
+  foto?: FotoInput;
+}): Promise<{ commento: string; residuato: boolean } | null> {
+  const testo = (input.testo ?? "").trim();
+  if (!testo && !input.foto) return null;
+
+  const system = `Sei l'assistente IA di "Senti", un'app che mappa ritrovamenti sul campo (reperti storici, militari, minerali, fossili) sulle rotte dei grandi condottieri. Guardi la foto e/o il testo di un ritrovamento pubblicato da una persona e scrivi una breve IPOTESI su cosa POTREBBE essere. È un riquadro separato "Ipotesi dell'assistente", non fa parte della memoria della persona.
+
+Regole assolute:
+- Scrivi SEMPRE al condizionale ("potrebbe essere", "sembrerebbe", "potrebbe trattarsi di"). MAI certezze.
+- 2-4 frasi, in italiano semplice e diretto.
+- NON giudicare se la memoria è vera o falsa. Non dire "confermo", "è autentico", "è un falso". Offri solo un possibile inquadramento.
+- Se dall'immagine/testo NON si capisce cosa sia, dillo con onestà ("non è identificabile con sicurezza da una foto") e non inventare.
+- Se citi un fatto storico databile, presentalo come contesto POSSIBILE, sempre al condizionale.
+- NON incoraggiare MAI a raccogliere, scavare, spostare o portare via il reperto. Se è pertinente, ricorda con calma che raccogliere reperti può essere vietato dalla legge.
+
+SICUREZZA (prioritaria su tutto): se il ritrovamento potrebbe essere un RESIDUATO BELLICO, una munizione, una granata, una bomba o un ordigno (anche solo un dubbio):
+- imposta "residuato": true;
+- NON dare MAI istruzioni per maneggiarlo, disinnescarlo, aprirlo o spostarlo;
+- nel commento invita a non toccarlo. (L'avviso ufficiale con il numero da chiamare lo aggiunge l'app.)
+In tutti gli altri casi "residuato": false.
+
+Rispondi SOLO con un oggetto JSON, senza altro testo:
+{"commento": "2-4 frasi al condizionale", "residuato": true|false}`;
+
+  const contenutoUtente: Anthropic.ContentBlockParam[] = [];
+  if (input.foto) {
+    contenutoUtente.push({
+      type: "image",
+      source: {
+        type: "base64",
+        media_type: input.foto.mimeType,
+        data: input.foto.base64,
+      },
+    });
+  }
+  contenutoUtente.push({
+    type: "text",
+    text: testo
+      ? `Descrizione data da chi ha pubblicato:\n"${testo}"\n\nCosa potrebbe essere? Rispondi solo col JSON.`
+      : `Non c'è una descrizione, solo la foto. Cosa potrebbe essere? Rispondi solo col JSON.`,
+  });
+
+  const response = await client().messages.create({
+    model: MODEL,
+    max_tokens: 1024,
+    system,
+    messages: [{ role: "user", content: contenutoUtente }],
+  });
+
+  if (response.stop_reason === "refusal") return null;
+
+  const testoRisposta = response.content
+    .filter((b): b is Anthropic.TextBlock => b.type === "text")
+    .map((b) => b.text)
+    .join("\n");
+
+  const match = testoRisposta.match(/\{[\s\S]*\}/);
+  if (!match) return null;
+  try {
+    const j = JSON.parse(match[0]);
+    const commento = j.commento ? String(j.commento).trim() : "";
+    if (!commento) return null;
+    return { commento, residuato: j.residuato === true };
+  } catch {
+    return null;
+  }
+}

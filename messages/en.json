@@ -188,6 +188,9 @@
     "contesto": {
       "fonte": "Source",
       "nota": "Historical context added by the platform, not part of the find."
+    },
+    "ipotesi": {
+      "nota": "Automatic comment from the AI assistant: it is only a hypothesis to verify, it can be wrong and it is not proof."
     }
   },
   "condividi": {

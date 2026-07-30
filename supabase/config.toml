@@ -408,6 +408,11 @@ verify_jwt = true
 [functions.context]
 verify_jwt = true
 
+# `ipotesi` fa commentare all'assistente IA la memoria appena pubblicata:
+# la chiama l'utente loggato alla pubblicazione, quindi richiede sessione.
+[functions.ipotesi]
+verify_jwt = true
+
 [analytics]
 enabled = true
 port = 54327

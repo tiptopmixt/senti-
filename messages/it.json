@@ -188,6 +188,9 @@
     "contesto": {
       "fonte": "Fonte",
       "nota": "Contesto storico aggiunto dalla piattaforma, non fa parte del ritrovamento."
+    },
+    "ipotesi": {
+      "nota": "Commento automatico dell'assistente IA: è solo un'ipotesi da verificare, può sbagliare e non è una prova."
     }
   },
   "condividi": {

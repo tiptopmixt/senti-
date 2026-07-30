@@ -61,11 +61,12 @@ Deno.serve(async (req) => {
     .upsert(
       {
         contribution_id: body.contribution_id,
+        tipo: "contesto_storico",
         corpo: contesto.corpo,
         fonte_nome: contesto.fonte_nome,
         fonte_url: contesto.fonte_url,
       },
-      { onConflict: "contribution_id" },
+      { onConflict: "contribution_id,tipo" },
     )
     .select("titolo, corpo, fonte_nome, fonte_url")
     .single();

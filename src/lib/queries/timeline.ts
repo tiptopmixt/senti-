@@ -62,11 +62,37 @@ export async function contestiPerMemorie(
   const { data, error } = await getSupabaseClient()
     .from("contribution_context")
     .select("contribution_id, titolo, corpo, fonte_nome, fonte_url")
+    .eq("tipo", "contesto_storico")
     .in("contribution_id", ids);
   if (error) return new Map();
   const righe = contestoSchema.array().safeParse(data ?? []);
   if (!righe.success) return new Map();
   return new Map(righe.data.map((c) => [c.contribution_id, c]));
+}
+
+// --- Ipotesi dell'assistente IA (riquadro separato, mai una prova) ---
+const ipotesiSchema = z.object({
+  contribution_id: z.guid(),
+  titolo: z.string(),
+  corpo: z.string(),
+  avviso: z.string().nullable(),
+});
+export type IpotesiAssistente = z.infer<typeof ipotesiSchema>;
+
+/** Ipotesi dell'assistente per un insieme di memorie (batch unico). */
+export async function ipotesiPerMemorie(
+  ids: string[],
+): Promise<Map<string, IpotesiAssistente>> {
+  if (ids.length === 0) return new Map();
+  const { data, error } = await getSupabaseClient()
+    .from("contribution_context")
+    .select("contribution_id, titolo, corpo, avviso")
+    .eq("tipo", "ipotesi_assistente")
+    .in("contribution_id", ids);
+  if (error) return new Map();
+  const righe = ipotesiSchema.array().safeParse(data ?? []);
+  if (!righe.success) return new Map();
+  return new Map(righe.data.map((i) => [i.contribution_id, i]));
 }
 
 export async function cosaESuccessoQui(
