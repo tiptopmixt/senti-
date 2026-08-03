@@ -36,9 +36,8 @@ export function CatturaRitrovamento() {
   const [salvataggio, setSalvataggio] = useState(false);
   const [esito, setEsito] = useState<"inviata" | "in_coda" | null>(null);
   const [errore, setErrore] = useState<string | null>(null);
+  const [avvisoFoto, setAvvisoFoto] = useState<string | null>(null);
   const [coda, setCoda] = useState<StatoCoda | null>(null);
-  // Guardia SINCRONA contro il doppio invio: lo stato React si aggiorna dopo il
-  // re-render, il ref subito. Così due tocchi rapidi non pubblicano due volte.
   const inCorsoRef = useRef(false);
 
   useEffect(() => {
@@ -97,9 +96,16 @@ export function CatturaRitrovamento() {
         }
       }
 
-      // Foto facoltativa: ripulita dai metadati (EXIF/GPS) prima dell'invio.
       let fotoBlob: Blob | undefined;
-      if (foto) fotoBlob = await pulisciFoto(foto);
+      if (foto) {
+        try {
+          fotoBlob = await pulisciFoto(foto);
+          setAvvisoFoto(null);
+        } catch (fotoErr) {
+          fotoBlob = undefined;
+          setAvvisoFoto(fotoErr instanceof Error ? fotoErr.message : "Foto non elaborabile");
+        }
+      }
 
       const testo = descrizione.trim();
       const stato = await salvaMemoria(
@@ -232,10 +238,11 @@ export function CatturaRitrovamento() {
             <span>{t("campi.foto")}</span>
             <input
               type="file"
-              accept="image/*"
-              onChange={(e) => setFoto(e.target.files?.[0] ?? null)}
+              accept="image/*,.heic,.heif"
+              onChange={(e) => { setFoto(e.target.files?.[0] ?? null); setAvvisoFoto(null); }}
             />
             {foto && <small className={styles.testo}>📷 {foto.name}</small>}
+            {avvisoFoto && <small className={styles.errore}>{avvisoFoto}</small>}
           </label>
 
           <label className={styles.consenso}>

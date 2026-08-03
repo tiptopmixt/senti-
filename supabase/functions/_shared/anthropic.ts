@@ -129,9 +129,23 @@ export interface FotoInput {
 export async function ipotesiAssistente(input: {
   testo: string;
   foto?: FotoInput;
+  percorsiVicini?: string[];
 }): Promise<{ commento: string; residuato: boolean } | null> {
   const testo = (input.testo ?? "").trim();
   if (!testo && !input.foto) return null;
+
+  const bloccoPercorsi = (input.percorsiVicini ?? []).length > 0
+    ? `\n\nPERCORSI STORICI NELLA ZONA (dai dati dell'app, confermati):
+${input.percorsiVicini!.map((n) => `- ${n}`).join("\n")}
+
+Se la zona è attraversata da un percorso storico, PUOI aggiungere UNA frase di contesto geografico al condizionale, tipo: "Questa zona potrebbe essere attraversata dal percorso storico di [nome]." Serve solo a inquadrare il luogo, NON a indicare dove cercare.
+REGOLE FERREE sui percorsi:
+- NON suggerire MAI che lungo il percorso si possano trovare oggetti o reperti. NON invitare a cercarli, raccoglierli o scavare.
+- NON indicare un punto preciso: parla della zona in generale.
+- Se "residuato" è true (sospetto residuato bellico), NON menzionare NESSUN percorso: prevale SOLO l'avviso di sicurezza.
+- Nomina un percorso SOLO se è nella lista qui sopra. Se la lista è vuota, non scrivere nulla sui percorsi.
+- Frase al condizionale e breve, coerente col resto del commento.`
+    : "";
 
   const system = `Sei l'assistente IA di "Senti", un'app che mappa ritrovamenti sul campo (reperti storici, militari, minerali, fossili) sulle rotte dei grandi condottieri. Guardi la foto e/o il testo di un ritrovamento pubblicato da una persona e scrivi una breve IPOTESI su cosa POTREBBE essere. È un riquadro separato "Ipotesi dell'assistente", non fa parte della memoria della persona.
 
@@ -147,7 +161,8 @@ SICUREZZA (prioritaria su tutto): se il ritrovamento potrebbe essere un RESIDUAT
 - imposta "residuato": true;
 - NON dare MAI istruzioni per maneggiarlo, disinnescarlo, aprirlo o spostarlo;
 - nel commento invita a non toccarlo. (L'avviso ufficiale con il numero da chiamare lo aggiunge l'app.)
-In tutti gli altri casi "residuato": false.
+- NON menzionare percorsi o sentieri: solo l'avviso di sicurezza.
+In tutti gli altri casi "residuato": false.${bloccoPercorsi}
 
 Rispondi SOLO con un oggetto JSON, senza altro testo:
 {"commento": "2-4 frasi al condizionale", "residuato": true|false}`;

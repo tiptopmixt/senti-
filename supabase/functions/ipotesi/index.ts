@@ -98,10 +98,38 @@ Deno.serve(async (req) => {
     return json({ contribution_id: body.contribution_id, ipotesi: null, messaggio: "Niente foto né testo." });
   }
 
-  // Se Claude fallisce o rifiuta, NON blocchiamo: la memoria resta pubblicata.
+  // Cerca percorsi storici che attraversano la zona del POI.
+  let percorsiVicini: string[] = [];
+  try {
+    const { data: poiData } = await db
+      .from("contributions")
+      .select("poi_id")
+      .eq("id", body.contribution_id)
+      .maybeSingle();
+    if (poiData?.poi_id) {
+      const { data: poiGeo } = await db
+        .from("pois")
+        .select("geog, zone_radius_m")
+        .eq("id", poiData.poi_id)
+        .maybeSingle();
+      if (poiGeo?.geog) {
+        const raggio = poiGeo.zone_radius_m ?? 1000;
+        const { data: segmenti } = await db.rpc("percorsi_nella_zona", {
+          p_poi_id: poiData.poi_id,
+          p_raggio: raggio,
+        });
+        if (segmenti && segmenti.length > 0) {
+          percorsiVicini = [...new Set(segmenti.map((s: { nome: string }) => s.nome))];
+        }
+      }
+    }
+  } catch {
+    // Non bloccare per i percorsi
+  }
+
   let esito;
   try {
-    esito = await ipotesiAssistente({ testo, foto });
+    esito = await ipotesiAssistente({ testo, foto, percorsiVicini });
   } catch (e) {
     return json({ contribution_id: body.contribution_id, ipotesi: null, errore: String(e) });
   }
