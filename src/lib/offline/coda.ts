@@ -99,7 +99,7 @@ async function pubblicaUna(m: MemoriaLocale): Promise<void> {
   if (m.fotoBlob) {
     mediaPath = await caricaFoto(m.id, m.fotoBlob, m.fotoMime ?? "image/jpeg");
   }
-  const { id } = await pubblicaRitrovamento({ ...m.params, mediaPath });
+  const { id } = await pubblicaRitrovamento({ ...m.params, mediaPath, clientKey: m.id });
   chiediIpotesiAssistente(id);
 }
 

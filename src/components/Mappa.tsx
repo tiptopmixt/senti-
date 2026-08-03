@@ -385,7 +385,10 @@ export function Mappa() {
     setEventiInCorso(true);
     const carica = (lon: number, lat: number) => {
       void eventiVicini(lon, lat)
-        .then(setEventi)
+        .then((evs) => {
+          setEventi(evs);
+          mostraEventiSullaMappa(evs);
+        })
         .catch(() => setEventi([]))
         .finally(() => setEventiInCorso(false));
     };
@@ -396,7 +399,7 @@ export function Mappa() {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => carica(pos.coords.longitude, pos.coords.latitude),
-        centroMappa, // GPS negato/assente: uso il centro della mappa
+        centroMappa,
         { enableHighAccuracy: true, timeout: 8000 },
       );
     } else {
@@ -404,17 +407,79 @@ export function Mappa() {
     }
   }
 
-  /** Vai a un evento: centra la mappa e aprine la scheda. */
-  function vaiAEvento(ev: EventoVicino) {
-    setPannelloEventi(false);
-    mappaRef.current?.flyTo({ center: [ev.lon, ev.lat], zoom: 8, duration: 1200 });
-    if (ev.tipo === "battaglia") {
-      const b = battaglieMapRef.current.get(ev.id);
-      if (b) setInfoBattaglia(b);
-    } else if (ev.commander_id) {
-      const c = condottieriMapRef.current.get(ev.commander_id);
-      if (c) setInfoCampagna(c);
+  function mostraEventiSullaMappa(evs: EventoVicino[]) {
+    const mappa = mappaRef.current;
+    if (!mappa || evs.length === 0) return;
+    const dati: GeoJSON.FeatureCollection = {
+      type: "FeatureCollection",
+      features: evs.map((ev) => ({
+        type: "Feature" as const,
+        geometry: { type: "Point" as const, coordinates: [ev.lon, ev.lat] },
+        properties: { titolo: ev.titolo, tipo: ev.tipo },
+      })),
+    };
+    const sorg = mappa.getSource("eventi-temp") as GeoJSONSource | undefined;
+    if (sorg) {
+      sorg.setData(dati);
+    } else {
+      mappa.addSource("eventi-temp", { type: "geojson", data: dati });
+      mappa.addLayer({
+        id: "eventi-temp-icone",
+        type: "symbol",
+        source: "eventi-temp",
+        layout: {
+          "text-field": ["case", ["==", ["get", "tipo"], "battaglia"], "⚔️", "📍"],
+          "text-size": 24,
+          "text-allow-overlap": true,
+        },
+      });
+      mappa.addLayer({
+        id: "eventi-temp-label",
+        type: "symbol",
+        source: "eventi-temp",
+        layout: {
+          "text-field": ["get", "titolo"],
+          "text-size": 12,
+          "text-offset": [0, 1.8],
+          "text-max-width": 12,
+        },
+        paint: {
+          "text-color": "#2f2415",
+          "text-halo-color": "#f0e5cc",
+          "text-halo-width": 1.5,
+        },
+      });
     }
+    if (evs.length === 1) {
+      mappa.flyTo({ center: [evs[0].lon, evs[0].lat], zoom: 10, duration: 1200 });
+    } else {
+      let minLon = 180, minLat = 90, maxLon = -180, maxLat = -90;
+      for (const ev of evs) {
+        if (ev.lon < minLon) minLon = ev.lon;
+        if (ev.lat < minLat) minLat = ev.lat;
+        if (ev.lon > maxLon) maxLon = ev.lon;
+        if (ev.lat > maxLat) maxLat = ev.lat;
+      }
+      mappa.fitBounds([[minLon, minLat], [maxLon, maxLat]], { padding: 80, maxZoom: 12, duration: 1200 });
+    }
+  }
+
+  function rimuoviEventiTemp() {
+    const mappa = mappaRef.current;
+    if (!mappa) return;
+    if (mappa.getLayer("eventi-temp-label")) mappa.removeLayer("eventi-temp-label");
+    if (mappa.getLayer("eventi-temp-icone")) mappa.removeLayer("eventi-temp-icone");
+    if (mappa.getSource("eventi-temp")) mappa.removeSource("eventi-temp");
+  }
+
+  function chiudiEventi() {
+    setPannelloEventi(false);
+    rimuoviEventiTemp();
+  }
+
+  /** Vai a un evento: centra la mappa sulla posizione (il pannello resta aperto). */
+  function vaiAEvento(ev: EventoVicino) {
+    mappaRef.current?.flyTo({ center: [ev.lon, ev.lat], zoom: 10, duration: 1200 });
   }
 
   /** Distanza leggibile: "a 4 km" oppure "a 300 m". */
@@ -435,7 +500,6 @@ export function Mappa() {
       {/* Barra pulsanti unificata: spostabili su 4 bordi.
          Nascosta quando un pannello è aperto per non coprire i comandi. */}
       <BarraPulsanti
-        onAggiungi={() => router.push("/racconta")}
         onSonoQui={sonoQui}
         onCampagne={() => setPannelloCampagne((v) => !v)}
         onEventi={apriEventi}
@@ -461,7 +525,7 @@ export function Mappa() {
         <div className={styles.pannello} role="dialog" aria-modal="true">
           <div className={styles.testaPannello}>
             <h2 className={styles.titoloPannello}>📜 {t("eventi.titolo")}</h2>
-            <button className={styles.chiudiPannello} onClick={() => setPannelloEventi(false)} aria-label={t("info.chiudi")}>✕</button>
+            <button className={styles.chiudiPannello} onClick={() => chiudiEventi()} aria-label={t("info.chiudi")}>✕</button>
           </div>
           {eventiInCorso && <p className={styles.testoPannello}>{t("eventi.caricamento")}</p>}
 
@@ -469,7 +533,7 @@ export function Mappa() {
             <>
               <p className={styles.testoPannello}>{t("eventi.vuoto")}</p>
               <div className={styles.azioni}>
-                <button className={styles.secondario} onClick={() => setPannelloEventi(false)}>
+                <button className={styles.secondario} onClick={() => chiudiEventi()}>
                   {t("eventi.esplora")}
                 </button>
                 <button className={styles.primario} onClick={() => router.push("/racconta")}>
@@ -507,7 +571,7 @@ export function Mappa() {
                 ))}
               </ul>
               <div className={styles.azioni}>
-                <button className={styles.primario} onClick={() => setPannelloEventi(false)}>
+                <button className={styles.primario} onClick={() => chiudiEventi()}>
                   {t("info.chiudi")}
                 </button>
               </div>

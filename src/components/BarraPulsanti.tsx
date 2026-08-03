@@ -22,13 +22,12 @@ const PRESS_LUNGO_MS = 450;
 
 const LAYOUT_DEFAULT: Layout = {
   posizioni: {
-    aggiungi: { bordo: "bottom", ordine: 0 },
-    sonoQui: { bordo: "bottom", ordine: 1 },
-    campagne: { bordo: "bottom", ordine: 2 },
-    eventi: { bordo: "bottom", ordine: 3 },
-    condividi: { bordo: "bottom", ordine: 4 },
-    impostazioni: { bordo: "bottom", ordine: 5 },
-    trasparenza: { bordo: "bottom", ordine: 6 },
+    sonoQui: { bordo: "bottom", ordine: 0 },
+    campagne: { bordo: "bottom", ordine: 1 },
+    eventi: { bordo: "bottom", ordine: 2 },
+    condividi: { bordo: "bottom", ordine: 3 },
+    impostazioni: { bordo: "bottom", ordine: 4 },
+    trasparenza: { bordo: "bottom", ordine: 5 },
   },
   opacita: OPACITA_DEFAULT,
 };
@@ -63,7 +62,6 @@ interface DefPulsante {
 }
 
 interface Props {
-  onAggiungi: () => void;
   onSonoQui: () => void;
   onCampagne: () => void;
   onEventi: () => void;
@@ -73,7 +71,6 @@ interface Props {
 }
 
 export function BarraPulsanti({
-  onAggiungi,
   onSonoQui,
   onCampagne,
   onEventi,
@@ -127,7 +124,6 @@ export function BarraPulsanti({
   }, [locale]);
 
   const azioni: Record<string, () => void> = {
-    aggiungi: onAggiungi,
     sonoQui: onSonoQui,
     campagne: onCampagne,
     eventi: onEventi,
@@ -137,7 +133,6 @@ export function BarraPulsanti({
   };
 
   const pulsanti: DefPulsante[] = [
-    { id: "aggiungi", icona: "➕", etichetta: t("barra.aggiungi") },
     { id: "sonoQui", icona: "📍", etichetta: t("barra.sonoQui") },
     {
       id: "campagne",

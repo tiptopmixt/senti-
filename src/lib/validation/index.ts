@@ -62,7 +62,6 @@ export const RAGGI_ZONA = [1000, 3000, 5000] as const;
 export const nuovoRitrovamentoSchema = z.object({
   findingType: findingTypeSchema,
   name: z.string().trim().min(1).max(200),
-  // Centro GIÀ scostato dal client: mai il punto esatto.
   lon: z.number().min(-180).max(180),
   lat: z.number().min(-90).max(90),
   zoneRadiusM: z.number().int().min(1000).max(5000),
@@ -77,6 +76,7 @@ export const nuovoRitrovamentoSchema = z.object({
   vocePropria: z.boolean(),
   permessoTerzi: z.boolean().nullable(),
   veridicita: z.boolean(),
+  clientKey: uuidSchema.nullable().optional(),
 });
 export type NuovoRitrovamento = z.infer<typeof nuovoRitrovamentoSchema>;
 

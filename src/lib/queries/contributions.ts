@@ -75,6 +75,7 @@ export async function pubblicaRitrovamento(
     p_voce_propria: dati.vocePropria,
     p_permesso_terzi: dati.permessoTerzi,
     p_veridicita: dati.veridicita,
+    p_client_key: dati.clientKey ?? null,
   });
   if (error) throw new Error(`Pubblicazione fallita: ${error.message}`);
   return { id: String(data) };

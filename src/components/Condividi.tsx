@@ -36,13 +36,32 @@ export function Condividi({ url, titolo, testo, etichetta }: Props) {
 
   const testoCondivisione = [titolo, testo, indirizzo].filter(Boolean).join(" — ");
 
-  // QR come SVG: nitido a ogni dimensione, generato in locale.
   const qrSvg = useMemo(() => {
     if (!(mostraQr || qrPieno) || !indirizzo) return null;
     const qr = qrcode(0, "M");
     qr.addData(indirizzo);
     qr.make();
-    return qr.createSvgTag({ cellSize: 6, margin: 2, scalable: true });
+    const count = qr.getModuleCount();
+    const cell = 6;
+    const margin = 2;
+    const dim = (count + margin * 2) * cell;
+    let rects = "";
+    for (let r = 0; r < count; r++) {
+      for (let c = 0; c < count; c++) {
+        if (qr.isDark(r, c)) {
+          rects += `<rect x="${(c + margin) * cell}" y="${(r + margin) * cell}" width="${cell}" height="${cell}" fill="#000"/>`;
+        }
+      }
+    }
+    const cx = dim / 2;
+    const cy = dim / 2;
+    const logoR = dim * 0.11;
+    return `<svg viewBox="0 0 ${dim} ${dim}" xmlns="http://www.w3.org/2000/svg">` +
+      `<rect width="${dim}" height="${dim}" fill="#fff"/>` +
+      rects +
+      `<circle cx="${cx}" cy="${cy}" r="${logoR}" fill="#fff"/>` +
+      `<text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="central" font-size="${logoR * 1.3}">⚔️</text>` +
+      `</svg>`;
   }, [mostraQr, qrPieno, indirizzo]);
 
   function chiudi() {
@@ -108,6 +127,17 @@ export function Condividi({ url, titolo, testo, etichetta }: Props) {
         if (qr.isDark(r, c)) ctx.fillRect((c + margine) * cella, (r + margine) * cella, cella, cella);
       }
     }
+    const cx = dim / 2;
+    const cy = dim / 2;
+    const logoR = dim * 0.11;
+    ctx.fillStyle = "#ffffff";
+    ctx.beginPath();
+    ctx.arc(cx, cy, logoR, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.font = `${Math.round(logoR * 1.3)}px serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("⚔️", cx, cy);
     const a = document.createElement("a");
     a.href = canvas.toDataURL("image/png");
     a.download = "senti-qr.png";

@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { ensureSession } from "@/lib/supabase/auth";
 import { getSupabaseClient } from "@/lib/supabase/client";
-import { centroOffuscato } from "@/lib/geo/zona";
 import { pulisciFoto } from "@/lib/foto/pulisci";
 import { avviaCoda, salvaMemoria, type StatoCoda } from "@/lib/offline/coda";
 import { RAGGI_ZONA, type FindingType } from "@/lib/validation";
@@ -83,8 +82,7 @@ export function CatturaRitrovamento() {
     setSalvataggio(true);
     setErrore(null);
     try {
-      // Centro scostato: da qui in poi il punto preciso non serve più e si scarta.
-      const [lon, lat] = centroOffuscato(puntoPreciso.lon, puntoPreciso.lat, raggio);
+      const { lon, lat } = puntoPreciso;
 
       // Nome facoltativo: se scelto, aggiorna il nome pubblico del profilo.
       if (!anonimo && nome.trim() !== "") {
