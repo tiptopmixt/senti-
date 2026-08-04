@@ -113,6 +113,7 @@ export function Mappa() {
   // Battaglie storiche (Wikidata) — livello separato
   const [pannelloBattaglie, setPannelloBattaglie] = useState(false);
   const [tutteBattaglieStoriche, setTutteBattaglieStoriche] = useState<BattagliaStorica[]>([]);
+  const [battaglieAttive, setBattaglieAttive] = useState(false);
   const [filtroPaese, setFiltroPaese] = useState<string>("");
   const [filtroPeriodo, setFiltroPeriodo] = useState<string>("");
   const [infoBattagliaStorica, setInfoBattagliaStorica] = useState<BattagliaStorica | null>(null);
@@ -428,6 +429,10 @@ export function Mappa() {
     if (!mappa || !pronta) return;
     const src = mappa.getSource("battaglie-storiche") as GeoJSONSource | undefined;
     if (!src) return;
+    if (!battaglieAttive) {
+      src.setData({ type: "FeatureCollection", features: [] });
+      return;
+    }
     const dati: GeoJSON.FeatureCollection = {
       type: "FeatureCollection",
       features: battaglieFiltrate.map((b) => ({
@@ -437,7 +442,7 @@ export function Mappa() {
       })),
     };
     src.setData(dati);
-  }, [battaglieFiltrate, pronta]);
+  }, [battaglieFiltrate, battaglieAttive, pronta]);
 
   // --- "Sono qui": GPS -------------------------------------------------------
   function sonoQui() {
@@ -566,9 +571,9 @@ export function Mappa() {
     return m >= 1000 ? `a ${Math.round(m / 1000)} km` : `a ${Math.round(m)} m`;
   }
 
-  function toggleBattaglieStoriche() {
-    setPannelloBattaglie((v) => !v);
-    if (!pannelloBattaglie && tutteBattaglieStoriche.length === 0) {
+  function apriBattaglieStoriche() {
+    setPannelloBattaglie(true);
+    if (tutteBattaglieStoriche.length === 0) {
       void battaglieStoriche()
         .then((bs) => {
           setTutteBattaglieStoriche(bs);
@@ -594,10 +599,10 @@ export function Mappa() {
         onSonoQui={sonoQui}
         onCampagne={() => setPannelloCampagne((v) => !v)}
         onEventi={apriEventi}
-        onBattaglie={toggleBattaglieStoriche}
+        onBattaglie={apriBattaglieStoriche}
         onImpostazioni={() => setPannelloImpostazioni((v) => !v)}
         campagneAttive={imperiVisibili.size + condottieriVisibili.size}
-        battaglieAttive={tutteBattaglieStoriche.length > 0}
+        battaglieAttive={battaglieAttive}
         visibile={!pannelloEventi && !infoCampagna && !infoImpero && !infoBattaglia && !infoBattagliaStorica && !pannelloCampagne && !pannelloBattaglie && !pannelloImpostazioni && !puntoNuovo && !puntoTempo}
       />
 
@@ -868,12 +873,37 @@ export function Mappa() {
             <p className={styles.testoPannello}>{t("eventi.caricamento")}</p>
           ) : (
             <>
+              <div style={{ display: "flex", gap: "0.4rem", marginBottom: "0.5rem" }}>
+                <button
+                  className={battaglieAttive && !filtroPaese && !filtroPeriodo ? styles.primario : styles.secondario}
+                  style={{ flex: 1, minHeight: "2.5rem", fontSize: "0.9rem" }}
+                  onClick={() => {
+                    setBattaglieAttive(true);
+                    setFiltroPaese("");
+                    setFiltroPeriodo("");
+                  }}
+                >
+                  {t("filtri.tutte")}
+                </button>
+                <button
+                  className={!battaglieAttive ? styles.primario : styles.secondario}
+                  style={{ flex: 1, minHeight: "2.5rem", fontSize: "0.9rem" }}
+                  onClick={() => {
+                    setBattaglieAttive(false);
+                    setFiltroPaese("");
+                    setFiltroPeriodo("");
+                    setPannelloBattaglie(false);
+                  }}
+                >
+                  {t("filtri.nessuna")}
+                </button>
+              </div>
               <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                 <label style={{ fontSize: "0.9rem", fontWeight: 600 }}>
                   {t("filtri.paese")}
                   <select
                     value={filtroPaese}
-                    onChange={(ev) => setFiltroPaese(ev.target.value)}
+                    onChange={(ev) => { setFiltroPaese(ev.target.value); setBattaglieAttive(true); }}
                     style={{ width: "100%", padding: "0.4rem", marginTop: "0.2rem", borderRadius: "4px", border: "1px solid #ccc", fontSize: "0.9rem" }}
                   >
                     <option value="">{t("filtri.tuttiPaesi")}</option>
@@ -886,7 +916,7 @@ export function Mappa() {
                   {t("filtri.periodo")}
                   <select
                     value={filtroPeriodo}
-                    onChange={(ev) => setFiltroPeriodo(ev.target.value)}
+                    onChange={(ev) => { setFiltroPeriodo(ev.target.value); setBattaglieAttive(true); }}
                     style={{ width: "100%", padding: "0.4rem", marginTop: "0.2rem", borderRadius: "4px", border: "1px solid #ccc", fontSize: "0.9rem" }}
                   >
                     <option value="">{t("filtri.tuttiPeriodi")}</option>
@@ -903,17 +933,6 @@ export function Mappa() {
           )}
 
           <div className={styles.azioni}>
-            <button className={styles.secondario} onClick={() => {
-              setFiltroPaese("");
-              setFiltroPeriodo("");
-              setTutteBattaglieStoriche([]);
-              battaglieStoricheRef.current = [];
-              const src = mappaRef.current?.getSource("battaglie-storiche") as GeoJSONSource | undefined;
-              src?.setData({ type: "FeatureCollection", features: [] });
-              setPannelloBattaglie(false);
-            }}>
-              {t("filtri.nessuna")}
-            </button>
             <button className={styles.primario} onClick={() => setPannelloBattaglie(false)}>
               {t("info.chiudi")}
             </button>
