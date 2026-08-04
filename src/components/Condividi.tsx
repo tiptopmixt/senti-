@@ -55,12 +55,19 @@ export function Condividi({ url, titolo, testo, etichetta }: Props) {
     }
     const cx = dim / 2;
     const cy = dim / 2;
-    const logoR = dim * 0.11;
+    const logoR = dim * 0.12;
+    const s = logoR * 0.7;
+    const swordsPath =
+      `M${cx - s} ${cy - s}L${cx + s} ${cy + s}M${cx + s} ${cy - s}L${cx - s} ${cy + s}` +
+      `M${cx - s} ${cy - s}l${s * 0.35} 0 0 ${s * 0.35}` +
+      `M${cx + s} ${cy - s}l${-s * 0.35} 0 0 ${s * 0.35}` +
+      `M${cx - s} ${cy + s}l${s * 0.35} 0 0 ${-s * 0.35}` +
+      `M${cx + s} ${cy + s}l${-s * 0.35} 0 0 ${-s * 0.35}`;
     return `<svg viewBox="0 0 ${dim} ${dim}" xmlns="http://www.w3.org/2000/svg">` +
       `<rect width="${dim}" height="${dim}" fill="#fff"/>` +
       rects +
       `<circle cx="${cx}" cy="${cy}" r="${logoR}" fill="#fff"/>` +
-      `<text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="central" font-size="${logoR * 1.3}">⚔️</text>` +
+      `<path d="${swordsPath}" stroke="#5c3a1e" stroke-width="${s * 0.22}" stroke-linecap="round" fill="none"/>` +
       `</svg>`;
   }, [mostraQr, qrPieno, indirizzo]);
 
@@ -129,15 +136,26 @@ export function Condividi({ url, titolo, testo, etichetta }: Props) {
     }
     const cx = dim / 2;
     const cy = dim / 2;
-    const logoR = dim * 0.11;
+    const logoR = dim * 0.12;
     ctx.fillStyle = "#ffffff";
     ctx.beginPath();
     ctx.arc(cx, cy, logoR, 0, Math.PI * 2);
     ctx.fill();
-    ctx.font = `${Math.round(logoR * 1.3)}px serif`;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText("⚔️", cx, cy);
+    const s = logoR * 0.7;
+    ctx.strokeStyle = "#5c3a1e";
+    ctx.lineWidth = s * 0.22;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(cx - s, cy - s); ctx.lineTo(cx + s, cy + s);
+    ctx.moveTo(cx + s, cy - s); ctx.lineTo(cx - s, cy + s);
+    ctx.stroke();
+    const g = s * 0.35;
+    ctx.beginPath();
+    ctx.moveTo(cx - s + g, cy - s); ctx.lineTo(cx - s, cy - s); ctx.lineTo(cx - s, cy - s + g);
+    ctx.moveTo(cx + s - g, cy - s); ctx.lineTo(cx + s, cy - s); ctx.lineTo(cx + s, cy - s + g);
+    ctx.moveTo(cx - s + g, cy + s); ctx.lineTo(cx - s, cy + s); ctx.lineTo(cx - s, cy + s - g);
+    ctx.moveTo(cx + s - g, cy + s); ctx.lineTo(cx + s, cy + s); ctx.lineTo(cx + s, cy + s - g);
+    ctx.stroke();
     const a = document.createElement("a");
     a.href = canvas.toDataURL("image/png");
     a.download = "senti-qr.png";
