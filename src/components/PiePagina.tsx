@@ -16,7 +16,7 @@ export function PiePagina() {
   const locale = useLocale();
   const pathname = usePathname();
 
-  if (pathname.startsWith("/mappa")) return null;
+  if (pathname.startsWith("/mappa") || pathname.startsWith("/racconta")) return null;
 
   // Link alla home dell'app nella lingua corrente (con il base path del sito).
   const [homeUrl, setHomeUrl] = useState<string | undefined>();

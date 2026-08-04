@@ -108,6 +108,10 @@ export function BarraPulsanti({
     salvaLayout(layout);
   }, [layout]);
 
+  useEffect(() => {
+    document.documentElement.style.setProperty("--btn-opacita", String(layout.opacita));
+  }, [layout.opacita]);
+
   const condividi = useCallback(async () => {
     const base = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
     const url = `${window.location.origin}${base}/${locale}/`;

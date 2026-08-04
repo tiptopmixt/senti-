@@ -170,7 +170,24 @@ export function CatturaRitrovamento() {
 
   return (
     <section className={styles.contenitore}>
-      <h1 className={styles.titolo}>{t("titolo")}</h1>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <h1 className={styles.titolo} style={{ margin: 0 }}>{t("titolo")}</h1>
+        <button
+          onClick={() => router.push("/mappa")}
+          style={{
+            background: "none",
+            border: "none",
+            fontSize: "1.5rem",
+            cursor: "pointer",
+            padding: "0.3rem 0.6rem",
+            color: "#2f2415",
+            lineHeight: 1,
+          }}
+          aria-label={tm("info.chiudi")}
+        >
+          ✕
+        </button>
+      </div>
 
       {coda && coda.inAttesa > 0 && (
         <p className={coda.online ? styles.avviso : styles.avvisoOffline}>
