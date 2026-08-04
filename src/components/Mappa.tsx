@@ -10,6 +10,7 @@ import {
 } from "@/lib/mappa/stile";
 import {
   battaglie,
+  battaglieStoriche,
   condottieri,
   eventiVicini,
   fotoPubbliche,
@@ -20,6 +21,7 @@ import {
   segmentiPercorsi,
   urlFotoPubblica,
   type Battaglia,
+  type BattagliaStorica,
   type EventoVicino,
   type Condottiero,
   type Impero,
@@ -108,6 +110,14 @@ export function Mappa() {
   const [pannelloImpostazioni, setPannelloImpostazioni] = useState(false);
   const [messaggio, setMessaggio] = useState<string | null>(null);
 
+  // Battaglie storiche (Wikidata) — livello separato
+  const [pannelloBattaglie, setPannelloBattaglie] = useState(false);
+  const [tutteBattaglieStoriche, setTutteBattaglieStoriche] = useState<BattagliaStorica[]>([]);
+  const [filtroPaese, setFiltroPaese] = useState<string>("");
+  const [filtroPeriodo, setFiltroPeriodo] = useState<string>("");
+  const [infoBattagliaStorica, setInfoBattagliaStorica] = useState<BattagliaStorica | null>(null);
+  const battaglieStoricheRef = useRef<BattagliaStorica[]>([]);
+
   /** Apre il pannello "nuovo ritrovamento", ma prima controlla i doppioni vicini. */
   const proponiLuogo = useCallback(async (lon: number, lat: number) => {
     setMessaggio(null);
@@ -184,7 +194,26 @@ export function Mappa() {
           if (c) setInfoCampagna(c);
           return;
         }
-        // Tocco su un'icona ⚔️: apre la scheda della battaglia.
+        // Tocco su un cluster di battaglie storiche: zooma.
+        const bsCluster = mappa.queryRenderedFeatures(e.point, { layers: ["bs-cluster"] });
+        if (bsCluster.length > 0 && bsCluster[0].geometry.type === "Point") {
+          const clusterId = bsCluster[0].properties?.cluster_id as number;
+          const srcBs = mappa.getSource("battaglie-storiche") as GeoJSONSource;
+          const coords = bsCluster[0].geometry.coordinates as [number, number];
+          void srcBs.getClusterExpansionZoom(clusterId).then((zm) =>
+            mappa.easeTo({ center: coords, zoom: zm, duration: 600 }),
+          );
+          return;
+        }
+        // Tocco su una battaglia storica singola: apre la scheda.
+        const bsPunto = mappa.queryRenderedFeatures(e.point, { layers: ["bs-punto"] });
+        if (bsPunto.length > 0) {
+          const bsId = bsPunto[0].properties?.id as string | undefined;
+          const bs = bsId ? battaglieStoricheRef.current.find((x) => x.id === bsId) : null;
+          if (bs) setInfoBattagliaStorica(bs);
+          return;
+        }
+        // Tocco su un'icona ⚔️ (campagna): apre la scheda della battaglia.
         const batt = mappa.queryRenderedFeatures(e.point, { layers: ["battaglie"] });
         if (batt.length > 0) {
           const bid = batt[0].properties?.id as string | undefined;
@@ -226,7 +255,7 @@ export function Mappa() {
           });
         }
       });
-      for (const layer of ["zone-fill", "foto-thumb", "foto-cluster", "campagna-info", "battaglie"]) {
+      for (const layer of ["zone-fill", "foto-thumb", "foto-cluster", "campagna-info", "battaglie", "bs-cluster", "bs-punto"]) {
         mappa.on("mouseenter", layer, () => {
           mappa.getCanvas().style.cursor = "pointer";
         });
@@ -282,6 +311,26 @@ export function Mappa() {
     const cmd = new Set(commanderIdsVisibili);
     return listaPercorsi.filter((p) => p.commander_id && cmd.has(p.commander_id)).map((p) => p.id);
   }, [commanderIdsVisibili, listaPercorsi]);
+
+  // Battaglie storiche filtrate per paese/periodo + liste per i dropdown.
+  const battaglieFiltrate = useMemo(() => {
+    return tutteBattaglieStoriche.filter((b) => {
+      if (filtroPaese && b.country !== filtroPaese) return false;
+      if (filtroPeriodo && b.period !== filtroPeriodo) return false;
+      return true;
+    });
+  }, [tutteBattaglieStoriche, filtroPaese, filtroPeriodo]);
+
+  const paesiBattaglie = useMemo(() => {
+    const s = new Set(tutteBattaglieStoriche.map((b) => b.country));
+    return Array.from(s).sort();
+  }, [tutteBattaglieStoriche]);
+
+  const periodiBattaglie = useMemo(() => {
+    const ordine = ["antichita", "medioevo", "eta_moderna", "napoleonico", "ottocento", "prima_guerra", "seconda_guerra", "contemporaneo"];
+    const s = new Set(tutteBattaglieStoriche.map((b) => b.period));
+    return ordine.filter((p) => s.has(p));
+  }, [tutteBattaglieStoriche]);
 
   // --- Filtro condottiero: mostra solo i percorsi del condottiero scelto e
   //     centra la mappa sulla campagna (Europa → Asia, il mondo si sposta). ---
@@ -359,6 +408,23 @@ export function Mappa() {
       );
     }
   }, [routeIdsVisibili, commanderIdsVisibili, pronta, listaPercorsi]);
+
+  // --- Aggiorna la sorgente GeoJSON delle battaglie storiche quando cambia il filtro ---
+  useEffect(() => {
+    const mappa = mappaRef.current;
+    if (!mappa || !pronta) return;
+    const src = mappa.getSource("battaglie-storiche") as GeoJSONSource | undefined;
+    if (!src) return;
+    const dati: GeoJSON.FeatureCollection = {
+      type: "FeatureCollection",
+      features: battaglieFiltrate.map((b) => ({
+        type: "Feature" as const,
+        geometry: { type: "Point" as const, coordinates: [b.lon, b.lat] },
+        properties: { id: b.id, name: b.name, period: b.period },
+      })),
+    };
+    src.setData(dati);
+  }, [battaglieFiltrate, pronta]);
 
   // --- "Sono qui": GPS -------------------------------------------------------
   function sonoQui() {
@@ -487,6 +553,18 @@ export function Mappa() {
     return m >= 1000 ? `a ${Math.round(m / 1000)} km` : `a ${Math.round(m)} m`;
   }
 
+  function toggleBattaglieStoriche() {
+    setPannelloBattaglie((v) => !v);
+    if (!pannelloBattaglie && tutteBattaglieStoriche.length === 0) {
+      void battaglieStoriche()
+        .then((bs) => {
+          setTutteBattaglieStoriche(bs);
+          battaglieStoricheRef.current = bs;
+        })
+        .catch(() => {});
+    }
+  }
+
   /** Va al form "aggiungi ritrovamento" con le coordinate scelte. */
   function aggiungiQui() {
     if (!puntoNuovo) return;
@@ -503,9 +581,11 @@ export function Mappa() {
         onSonoQui={sonoQui}
         onCampagne={() => setPannelloCampagne((v) => !v)}
         onEventi={apriEventi}
+        onBattaglie={toggleBattaglieStoriche}
         onImpostazioni={() => setPannelloImpostazioni((v) => !v)}
         campagneAttive={imperiVisibili.size + condottieriVisibili.size}
-        visibile={!pannelloEventi && !infoCampagna && !infoImpero && !infoBattaglia && !pannelloCampagne && !pannelloImpostazioni && !puntoNuovo && !puntoTempo}
+        battaglieAttive={tutteBattaglieStoriche.length > 0}
+        visibile={!pannelloEventi && !infoCampagna && !infoImpero && !infoBattaglia && !infoBattagliaStorica && !pannelloCampagne && !pannelloBattaglie && !pannelloImpostazioni && !puntoNuovo && !puntoTempo}
       />
 
       {messaggio && <p className={styles.messaggio}>{messaggio}</p>}
@@ -713,6 +793,115 @@ export function Mappa() {
           <p className={styles.testoPannello} style={{ opacity: 0.7 }}>{t("info.nota")}</p>
           <div className={styles.azioni}>
             <button className={styles.primario} onClick={() => setInfoBattaglia(null)}>
+              {t("info.chiudi")}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* --- Scheda battaglia storica (Wikidata) --- */}
+      {infoBattagliaStorica && (
+        <div className={styles.pannello} role="dialog" aria-modal="true">
+          <div className={styles.testaPannello}>
+            <h2 className={styles.titoloPannello}>⚔️ {infoBattagliaStorica.name}</h2>
+            <button className={styles.chiudiPannello} onClick={() => setInfoBattagliaStorica(null)} aria-label={t("info.chiudi")}>✕</button>
+          </div>
+          {infoBattagliaStorica.event_date && (
+            <p className={styles.testoPannello}>{infoBattagliaStorica.event_date}</p>
+          )}
+          {!infoBattagliaStorica.event_date && infoBattagliaStorica.event_year != null && (
+            <p className={styles.testoPannello}>
+              {infoBattagliaStorica.event_year < 0
+                ? `${-infoBattagliaStorica.event_year} a.C.`
+                : `${infoBattagliaStorica.event_year}`}
+            </p>
+          )}
+          <p className={styles.testoPannello}>
+            {t(`filtri.periodi.${infoBattagliaStorica.period}`)} · {infoBattagliaStorica.country}
+          </p>
+          {infoBattagliaStorica.belligerents && infoBattagliaStorica.belligerents.length > 0 && (
+            <p className={styles.testoPannello}>
+              <strong>{t("filtri.schieramenti")}:</strong> {infoBattagliaStorica.belligerents.join(", ")}
+            </p>
+          )}
+          <p className={styles.testoPannello} style={{ opacity: 0.7, fontStyle: "italic" }}>
+            {t("filtri.daVerificare")}
+          </p>
+          <div className={styles.azioni} style={{ flexDirection: "column", gap: "0.3rem" }}>
+            {infoBattagliaStorica.wikipedia_url && (
+              <a href={infoBattagliaStorica.wikipedia_url} target="_blank" rel="noopener noreferrer" className={styles.primario} style={{ textAlign: "center", textDecoration: "none" }}>
+                {t("filtri.vediWikipedia")}
+              </a>
+            )}
+            <a href={`https://www.wikidata.org/wiki/${infoBattagliaStorica.wikidata_id}`} target="_blank" rel="noopener noreferrer" className={styles.secondario} style={{ textAlign: "center", textDecoration: "none" }}>
+              {t("filtri.vediWikidata")}
+            </a>
+            <button className={styles.primario} onClick={() => setInfoBattagliaStorica(null)}>
+              {t("info.chiudi")}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* --- Pannello filtri battaglie storiche --- */}
+      {pannelloBattaglie && (
+        <div className={styles.pannello} role="dialog" aria-modal="true">
+          <div className={styles.testaPannello}>
+            <h2 className={styles.titoloPannello}>⚔️ {t("filtri.battaglieStoriche")}</h2>
+            <button className={styles.chiudiPannello} onClick={() => setPannelloBattaglie(false)} aria-label={t("info.chiudi")}>✕</button>
+          </div>
+
+          {tutteBattaglieStoriche.length === 0 ? (
+            <p className={styles.testoPannello}>{t("eventi.caricamento")}</p>
+          ) : (
+            <>
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                <label style={{ fontSize: "0.9rem", fontWeight: 600 }}>
+                  {t("filtri.paese")}
+                  <select
+                    value={filtroPaese}
+                    onChange={(ev) => setFiltroPaese(ev.target.value)}
+                    style={{ width: "100%", padding: "0.4rem", marginTop: "0.2rem", borderRadius: "4px", border: "1px solid #ccc", fontSize: "0.9rem" }}
+                  >
+                    <option value="">{t("filtri.tuttiPaesi")}</option>
+                    {paesiBattaglie.map((p) => (
+                      <option key={p} value={p}>{p}</option>
+                    ))}
+                  </select>
+                </label>
+                <label style={{ fontSize: "0.9rem", fontWeight: 600 }}>
+                  {t("filtri.periodo")}
+                  <select
+                    value={filtroPeriodo}
+                    onChange={(ev) => setFiltroPeriodo(ev.target.value)}
+                    style={{ width: "100%", padding: "0.4rem", marginTop: "0.2rem", borderRadius: "4px", border: "1px solid #ccc", fontSize: "0.9rem" }}
+                  >
+                    <option value="">{t("filtri.tuttiPeriodi")}</option>
+                    {periodiBattaglie.map((p) => (
+                      <option key={p} value={p}>{t(`filtri.periodi.${p}`)}</option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+              <p className={styles.testoPannello} style={{ fontWeight: 600 }}>
+                {t("filtri.battaglieTrovate", { n: battaglieFiltrate.length })}
+              </p>
+            </>
+          )}
+
+          <div className={styles.azioni}>
+            <button className={styles.secondario} onClick={() => {
+              setFiltroPaese("");
+              setFiltroPeriodo("");
+              setTutteBattaglieStoriche([]);
+              battaglieStoricheRef.current = [];
+              const src = mappaRef.current?.getSource("battaglie-storiche") as GeoJSONSource | undefined;
+              src?.setData({ type: "FeatureCollection", features: [] });
+              setPannelloBattaglie(false);
+            }}>
+              {t("filtri.nessuna")}
+            </button>
+            <button className={styles.primario} onClick={() => setPannelloBattaglie(false)}>
               {t("info.chiudi")}
             </button>
           </div>
@@ -1064,10 +1253,34 @@ async function caricaDati(
       source: "zone",
       paint: { "line-color": "#7a2f22", "line-opacity": 0.55, "line-width": 1.5 },
     });
+  }
+
+  // --- Icone dei ritrovamenti: un Point per ogni zona, così il simbolo non
+  //     si duplica ai confini dei tile (succede con le icone sui poligoni). ---
+  const datiZoneCentri: GeoJSON.FeatureCollection = {
+    type: "FeatureCollection",
+    features: luoghi.map((l) => ({
+      type: "Feature" as const,
+      geometry: { type: "Point" as const, coordinates: [l.lon, l.lat] },
+      properties: {
+        id: l.id,
+        name: l.name,
+        lon: l.lon,
+        lat: l.lat,
+        emoji: FINDING_EMOJI[l.finding_type as FindingType] ?? "📝",
+      },
+    })),
+  };
+
+  const sorgCentri = mappa.getSource("zone-centri");
+  if (sorgCentri) {
+    (sorgCentri as GeoJSONSource).setData(datiZoneCentri);
+  } else {
+    mappa.addSource("zone-centri", { type: "geojson", data: datiZoneCentri });
     mappa.addLayer({
       id: "zone-icona",
       type: "symbol",
-      source: "zone",
+      source: "zone-centri",
       minzoom: 8,
       layout: {
         "text-field": ["get", "emoji"],
@@ -1194,6 +1407,53 @@ async function caricaDati(
       layout: {
         "text-field": "⚔️",
         "text-size": ["interpolate", ["linear"], ["zoom"], 3, 15, 12, 26],
+        "text-allow-overlap": true,
+      },
+    });
+  }
+
+  // --- Battaglie storiche (Wikidata): cluster + singoli punti ⚔️ ----------
+  if (!mappa.getSource("battaglie-storiche")) {
+    mappa.addSource("battaglie-storiche", {
+      type: "geojson",
+      data: { type: "FeatureCollection", features: [] },
+      cluster: true,
+      clusterRadius: 50,
+      clusterMaxZoom: 14,
+    });
+    mappa.addLayer({
+      id: "bs-cluster",
+      type: "circle",
+      source: "battaglie-storiche",
+      filter: ["has", "point_count"],
+      paint: {
+        "circle-color": "#6b3fa0",
+        "circle-opacity": 0.85,
+        "circle-stroke-color": "#f0e5cc",
+        "circle-stroke-width": 2,
+        "circle-radius": ["step", ["get", "point_count"], 18, 10, 24, 50, 32],
+      },
+    });
+    mappa.addLayer({
+      id: "bs-cluster-count",
+      type: "symbol",
+      source: "battaglie-storiche",
+      filter: ["has", "point_count"],
+      layout: {
+        "text-field": ["get", "point_count_abbreviated"],
+        "text-font": ["Noto Sans Bold"],
+        "text-size": 13,
+      },
+      paint: { "text-color": "#f0e5cc" },
+    });
+    mappa.addLayer({
+      id: "bs-punto",
+      type: "symbol",
+      source: "battaglie-storiche",
+      filter: ["!", ["has", "point_count"]],
+      layout: {
+        "text-field": "⚔️",
+        "text-size": ["interpolate", ["linear"], ["zoom"], 3, 14, 12, 24],
         "text-allow-overlap": true,
       },
     });

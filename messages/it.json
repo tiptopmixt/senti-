@@ -124,7 +124,27 @@
       "tutti": "Tutti gli imperi",
       "tuttoImpero": "— Tutto: {nome} —",
       "schedaImpero": "Scheda impero",
-      "categoria": "Tipo di ritrovamento"
+      "categoria": "Tipo di ritrovamento",
+      "battaglieStoriche": "Battaglie storiche",
+      "paese": "Paese",
+      "periodo": "Periodo",
+      "tuttiPaesi": "Tutti i paesi",
+      "tuttiPeriodi": "Tutti i periodi",
+      "battaglieTrovate": "{n} battaglie",
+      "daVerificare": "Da verificare (fonte Wikidata)",
+      "vediWikipedia": "Vedi su Wikipedia",
+      "vediWikidata": "Vedi su Wikidata",
+      "schieramenti": "Schieramenti",
+      "periodi": {
+        "antichita": "Antichità",
+        "medioevo": "Medioevo",
+        "eta_moderna": "Età moderna",
+        "napoleonico": "Napoleonico",
+        "ottocento": "Ottocento",
+        "prima_guerra": "Prima guerra mondiale",
+        "seconda_guerra": "Seconda guerra mondiale",
+        "contemporaneo": "Contemporaneo"
+      }
     },
     "info": {
       "impero": "Impero",
@@ -163,6 +183,7 @@
       "sonoQui": "Sono qui",
       "campagne": "Campagne",
       "eventi": "Eventi",
+      "battaglie": "Battaglie",
       "condividi": "Condividi",
       "trasparenza": "Trasparenza",
       "predefinito": "Predefinito"

@@ -203,6 +203,33 @@ export async function percorsi(): Promise<Percorso[]> {
   return percorsoSchema.array().parse(data ?? []);
 }
 
+// --- Battaglie storiche (Wikidata) -------------------------------------------
+const battagliaStoricaSchema = z.object({
+  id: uuidSchema,
+  name: z.string(),
+  event_date: z.string().nullable(),
+  event_year: z.number().int().nullable(),
+  period: z.string(),
+  country: z.string(),
+  lat: z.number(),
+  lon: z.number(),
+  belligerents: z.array(z.string()).nullable(),
+  sitelinks: z.number().int(),
+  wikidata_id: z.string(),
+  wikipedia_url: z.string().nullable(),
+  status: z.string(),
+});
+export type BattagliaStorica = z.infer<typeof battagliaStoricaSchema>;
+
+export async function battaglieStoriche(): Promise<BattagliaStorica[]> {
+  const { data, error } = await getSupabaseClient()
+    .from("v_historical_battles_public")
+    .select("id, name, event_date, event_year, period, country, lat, lon, belligerents, sitelinks, wikidata_id, wikipedia_url, status")
+    .order("sitelinks", { ascending: false });
+  if (error) throw new Error(`Lettura delle battaglie storiche fallita: ${error.message}`);
+  return battagliaStoricaSchema.array().parse(data ?? []);
+}
+
 // --- Controllo dei doppioni --------------------------------------------------
 const luogoVicinoSchema = z.object({
   id: uuidSchema,

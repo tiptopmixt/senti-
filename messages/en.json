@@ -124,7 +124,27 @@
       "tutti": "All empires",
       "tuttoImpero": "— All of: {nome} —",
       "schedaImpero": "Empire details",
-      "categoria": "Type of find"
+      "categoria": "Type of find",
+      "battaglieStoriche": "Historical battles",
+      "paese": "Country",
+      "periodo": "Period",
+      "tuttiPaesi": "All countries",
+      "tuttiPeriodi": "All periods",
+      "battaglieTrovate": "{n} battles",
+      "daVerificare": "To be verified (Wikidata source)",
+      "vediWikipedia": "View on Wikipedia",
+      "vediWikidata": "View on Wikidata",
+      "schieramenti": "Belligerents",
+      "periodi": {
+        "antichita": "Antiquity",
+        "medioevo": "Middle Ages",
+        "eta_moderna": "Early modern",
+        "napoleonico": "Napoleonic",
+        "ottocento": "19th century",
+        "prima_guerra": "World War I",
+        "seconda_guerra": "World War II",
+        "contemporaneo": "Contemporary"
+      }
     },
     "info": {
       "impero": "Empire",
@@ -163,6 +183,7 @@
       "sonoQui": "I'm here",
       "campagne": "Campaigns",
       "eventi": "Events",
+      "battaglie": "Battles",
       "condividi": "Share",
       "trasparenza": "Transparency",
       "predefinito": "Default"

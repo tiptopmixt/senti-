@@ -25,9 +25,10 @@ const LAYOUT_DEFAULT: Layout = {
     sonoQui: { bordo: "bottom", ordine: 0 },
     campagne: { bordo: "bottom", ordine: 1 },
     eventi: { bordo: "bottom", ordine: 2 },
-    condividi: { bordo: "bottom", ordine: 3 },
-    impostazioni: { bordo: "bottom", ordine: 4 },
-    trasparenza: { bordo: "bottom", ordine: 5 },
+    battaglie: { bordo: "bottom", ordine: 3 },
+    condividi: { bordo: "bottom", ordine: 4 },
+    impostazioni: { bordo: "bottom", ordine: 5 },
+    trasparenza: { bordo: "bottom", ordine: 6 },
   },
   opacita: OPACITA_DEFAULT,
 };
@@ -65,8 +66,10 @@ interface Props {
   onSonoQui: () => void;
   onCampagne: () => void;
   onEventi: () => void;
+  onBattaglie: () => void;
   onImpostazioni: () => void;
   campagneAttive: number;
+  battaglieAttive?: boolean;
   visibile?: boolean;
 }
 
@@ -74,8 +77,10 @@ export function BarraPulsanti({
   onSonoQui,
   onCampagne,
   onEventi,
+  onBattaglie,
   onImpostazioni,
   campagneAttive,
+  battaglieAttive = false,
   visibile = true,
 }: Props) {
   const t = useTranslations("mappa");
@@ -127,6 +132,7 @@ export function BarraPulsanti({
     sonoQui: onSonoQui,
     campagne: onCampagne,
     eventi: onEventi,
+    battaglie: onBattaglie,
     condividi: () => void condividi(),
     impostazioni: onImpostazioni,
     trasparenza: () => setSliderAperto((v) => !v),
@@ -142,6 +148,13 @@ export function BarraPulsanti({
         : t("barra.campagne"),
     },
     { id: "eventi", icona: "📜", etichetta: t("barra.eventi") },
+    {
+      id: "battaglie",
+      icona: "⚔️",
+      etichetta: battaglieAttive
+        ? `${t("barra.battaglie")} ●`
+        : t("barra.battaglie"),
+    },
     { id: "condividi", icona: "🔗", etichetta: t("barra.condividi") },
     { id: "impostazioni", icona: "⚙️" },
     { id: "trasparenza", icona: "💧" },
