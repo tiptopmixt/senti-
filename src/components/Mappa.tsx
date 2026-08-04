@@ -201,6 +201,14 @@ export function Mappa() {
 
       // Tocco su un pin: apre la sua colonna del tempo.
       mappa.on("click", (e) => {
+        // Tocco su un evento evidenziato sulla mappa: deseleziona.
+        if (mappa.getLayer("eventi-temp-icone")) {
+          const evtHit = mappa.queryRenderedFeatures(e.point, { layers: ["eventi-temp-icone"] });
+          if (evtHit.length > 0) {
+            deselezionaEvento();
+            return;
+          }
+        }
         // Prima l'icona "info" della campagna, se presente sotto il tocco.
         const info = mappa.queryRenderedFeatures(e.point, { layers: ["campagna-info"] });
         if (info.length > 0) {
@@ -580,9 +588,11 @@ export function Mappa() {
     rimuoviEventiTemp();
   }
 
-  /** Vai a un evento: centra la mappa e evidenzialo con un cerchio arancione. */
+  /** Vai a un evento: chiude il pannello, evidenzia sulla mappa con cerchio arancione.
+   *  L'evidenziazione resta finché l'utente non tocca l'evento sulla mappa. */
   function vaiAEvento(ev: EventoVicino) {
     setEventoSelezionato(ev);
+    setPannelloEventi(false);
     mappaRef.current?.flyTo({ center: [ev.lon, ev.lat], zoom: 10, duration: 1200 });
     const src = mappaRef.current?.getSource("evento-highlight") as GeoJSONSource | undefined;
     src?.setData({
@@ -593,6 +603,12 @@ export function Mappa() {
         properties: {},
       }],
     });
+  }
+
+  /** Tocco sull'evento evidenziato sulla mappa: deseleziona e pulisce tutto. */
+  function deselezionaEvento() {
+    setEventoSelezionato(null);
+    rimuoviEventiTemp();
   }
 
   /** Distanza leggibile: "a 4 km" oppure "a 300 m". */

@@ -193,7 +193,7 @@ export function BarraPulsanti({
       if (startRef.current && timerRef.current) {
         const dx = x - startRef.current.x;
         const dy = y - startRef.current.y;
-        if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
+        if (Math.abs(dx) > 25 || Math.abs(dy) > 25) {
           if (timerRef.current) clearTimeout(timerRef.current);
           timerRef.current = null;
           startRef.current = null;
