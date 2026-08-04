@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
+import { useRouter } from "@/i18n/navigation";
 import { ensureSession } from "@/lib/supabase/auth";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { pulisciFoto } from "@/lib/foto/pulisci";
@@ -21,6 +22,7 @@ type Fase = "zona" | "dettagli";
 export function CatturaRitrovamento() {
   const t = useTranslations("memoria");
   const tm = useTranslations("mappa");
+  const router = useRouter();
 
   const [fase, setFase] = useState<Fase>("zona");
   // Punto preciso: serve SOLO a calcolare il centro, poi si scarta. Mai inviato.
@@ -152,18 +154,16 @@ export function CatturaRitrovamento() {
     setErrore(null);
   }
 
-  // --- Esito ----------------------------------------------------------------
+  // --- Esito: torna alla mappa con un messaggio breve ---------------------
+  useEffect(() => {
+    if (!esito) return;
+    router.push("/mappa?ok=1");
+  }, [esito, router]);
+
   if (esito) {
     return (
       <section className={styles.contenitore}>
         <p className={styles.esitoIcona} aria-hidden="true">✓</p>
-        <h2 className={styles.titolo}>{t("salvata.titolo")}</h2>
-        <p className={styles.testo}>
-          {esito === "in_coda" ? t("salvata.inCoda") : t("salvata.inviata")}
-        </p>
-        <button className={styles.primario} onClick={ricomincia}>
-          {t("azioni.altra")}
-        </button>
       </section>
     );
   }

@@ -130,6 +130,19 @@ export function Mappa() {
     setPuntoNuovo({ lon, lat, vicini });
   }, []);
 
+  // --- Toast "ritrovamento aggiunto" se si torna dalla pagina di pubblicazione ---
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("ok") === "1") {
+      params.delete("ok");
+      const nuovaUrl = `${window.location.pathname}${params.size ? `?${params}` : ""}`;
+      window.history.replaceState(null, "", nuovaUrl);
+      setMessaggio(`✓ ${t("ritrovamentoAggiunto")}`);
+      const id = setTimeout(() => setMessaggio(null), 4000);
+      return () => clearTimeout(id);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   // --- Inizializzazione della mappa ------------------------------------------
   useEffect(() => {
     if (!contenitoreRef.current || mappaRef.current) return;
