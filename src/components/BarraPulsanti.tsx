@@ -22,13 +22,13 @@ const PRESS_LUNGO_MS = 450;
 
 const LAYOUT_DEFAULT: Layout = {
   posizioni: {
-    sonoQui: { bordo: "bottom", ordine: 0 },
-    campagne: { bordo: "bottom", ordine: 1 },
-    eventi: { bordo: "bottom", ordine: 2 },
-    battaglie: { bordo: "bottom", ordine: 3 },
+    campagne: { bordo: "bottom", ordine: 0 },
+    eventi: { bordo: "bottom", ordine: 1 },
+    battaglie: { bordo: "bottom", ordine: 2 },
+    sonoQui: { bordo: "bottom", ordine: 3 },
     condividi: { bordo: "bottom", ordine: 4 },
-    impostazioni: { bordo: "bottom", ordine: 5 },
-    trasparenza: { bordo: "bottom", ordine: 6 },
+    trasparenza: { bordo: "bottom", ordine: 5 },
+    impostazioni: { bordo: "bottom", ordine: 6 },
   },
   opacita: OPACITA_DEFAULT,
 };
@@ -139,7 +139,6 @@ export function BarraPulsanti({
   };
 
   const pulsanti: DefPulsante[] = [
-    { id: "sonoQui", icona: "📍", etichetta: t("barra.sonoQui") },
     {
       id: "campagne",
       icona: "🗺️",
@@ -148,16 +147,11 @@ export function BarraPulsanti({
         : t("barra.campagne"),
     },
     { id: "eventi", icona: "📜", etichetta: t("barra.eventi") },
-    {
-      id: "battaglie",
-      icona: "⚔️",
-      etichetta: battaglieAttive
-        ? `${t("barra.battaglie")} ●`
-        : t("barra.battaglie"),
-    },
-    { id: "condividi", icona: "🔗", etichetta: t("barra.condividi") },
-    { id: "impostazioni", icona: "⚙️" },
+    { id: "battaglie", icona: "⚔️", etichetta: t("barra.battaglie") },
+    { id: "sonoQui", icona: "📍" },
+    { id: "condividi", icona: "🔗" },
     { id: "trasparenza", icona: "💧" },
+    { id: "impostazioni", icona: "⚙️" },
   ];
 
   const perBordo = (bordo: Bordo) =>
@@ -279,28 +273,36 @@ export function BarraPulsanti({
       {bordi.map((bordo) => {
         const btns = perBordo(bordo);
         if (btns.length === 0) return null;
+        const conTesto = btns.filter((p) => p.etichetta);
+        const soloIcona = btns.filter((p) => !p.etichetta);
+        const renderBtn = (p: DefPulsante) => (
+          <button
+            key={p.id}
+            className={`${styles.pulsante} ${!p.etichetta ? styles.pulsantePiccolo : ""} ${trascinandoVis === p.id ? styles.nascosto : ""}`}
+            onPointerDown={(e) => onPointerDown(p.id, e)}
+            onPointerMove={onPointerMove}
+            onPointerUp={(e) => onPointerUp(p.id, e)}
+            onPointerCancel={onPointerCancel}
+            style={{ touchAction: "none" }}
+          >
+            <span className={styles.iconaBtn}>{p.icona}</span>
+            {p.etichetta && (
+              <span className={styles.etichettaBtn}>{p.etichetta}</span>
+            )}
+          </button>
+        );
         return (
           <div
             key={bordo}
             className={`${styles.bordo} ${styles[`bordo_${bordo}`]}`}
             style={stileOpacita}
           >
-            {btns.map((p) => (
-              <button
-                key={p.id}
-                className={`${styles.pulsante} ${trascinandoVis === p.id ? styles.nascosto : ""}`}
-                onPointerDown={(e) => onPointerDown(p.id, e)}
-                onPointerMove={onPointerMove}
-                onPointerUp={(e) => onPointerUp(p.id, e)}
-                onPointerCancel={onPointerCancel}
-                style={{ touchAction: "none" }}
-              >
-                <span className={styles.iconaBtn}>{p.icona}</span>
-                {p.etichetta && (
-                  <span className={styles.etichettaBtn}>{p.etichetta}</span>
-                )}
-              </button>
-            ))}
+            {conTesto.length > 0 && (
+              <div className={styles.rigaPulsanti}>{conTesto.map(renderBtn)}</div>
+            )}
+            {soloIcona.length > 0 && (
+              <div className={styles.rigaPulsanti}>{soloIcona.map(renderBtn)}</div>
+            )}
           </div>
         );
       })}

@@ -14,12 +14,12 @@
   pointer-events: auto;
 }
 
-/* Bordi orizzontali: riga, centrata */
+/* Bordi orizzontali: colonna di righe, centrata */
 .bordo_top,
 .bordo_bottom {
-  flex-direction: row;
-  flex-wrap: wrap;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
   left: 0.5rem;
   right: 0.5rem;
 }
@@ -56,13 +56,21 @@
   display: none;
 }
 
+/* Riga di pulsanti (due file: con testo sopra, solo icona sotto) */
+.rigaPulsanti {
+  display: flex;
+  gap: 0.4rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
 /* --- Pulsante unificato --- */
 .pulsante {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
-  min-height: 2.5rem;
-  padding: 0 0.75rem;
+  min-height: 2.8rem;
+  padding: 0.3rem 1rem;
   font: inherit;
   font-size: 0.85rem;
   font-weight: 600;
@@ -82,6 +90,13 @@
 
 .pulsante:active {
   opacity: 0.8;
+}
+
+.pulsantePiccolo {
+  padding: 0.3rem 0.6rem;
+  min-height: 2.4rem;
+  min-width: 2.4rem;
+  justify-content: center;
 }
 
 .nascosto {

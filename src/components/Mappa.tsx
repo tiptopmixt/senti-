@@ -107,6 +107,7 @@ export function Mappa() {
   const [pannelloEventi, setPannelloEventi] = useState(false);
   const [eventi, setEventi] = useState<EventoVicino[] | null>(null);
   const [eventiInCorso, setEventiInCorso] = useState(false);
+  const [eventoSelezionato, setEventoSelezionato] = useState<EventoVicino | null>(null);
   const [pannelloImpostazioni, setPannelloImpostazioni] = useState(false);
   const [messaggio, setMessaggio] = useState<string | null>(null);
 
@@ -533,6 +534,21 @@ export function Mappa() {
           "text-halo-width": 1.5,
         },
       });
+      mappa.addSource("evento-highlight", {
+        type: "geojson",
+        data: { type: "FeatureCollection", features: [] },
+      });
+      mappa.addLayer({
+        id: "evento-highlight-cerchio",
+        type: "circle",
+        source: "evento-highlight",
+        paint: {
+          "circle-radius": 22,
+          "circle-color": "rgba(230, 126, 34, 0.25)",
+          "circle-stroke-color": "#e67e22",
+          "circle-stroke-width": 3,
+        },
+      }, "eventi-temp-icone");
     }
     if (evs.length === 1) {
       mappa.flyTo({ center: [evs[0].lon, evs[0].lat], zoom: 10, duration: 1200 });
@@ -551,6 +567,8 @@ export function Mappa() {
   function rimuoviEventiTemp() {
     const mappa = mappaRef.current;
     if (!mappa) return;
+    if (mappa.getLayer("evento-highlight-cerchio")) mappa.removeLayer("evento-highlight-cerchio");
+    if (mappa.getSource("evento-highlight")) mappa.removeSource("evento-highlight");
     if (mappa.getLayer("eventi-temp-label")) mappa.removeLayer("eventi-temp-label");
     if (mappa.getLayer("eventi-temp-icone")) mappa.removeLayer("eventi-temp-icone");
     if (mappa.getSource("eventi-temp")) mappa.removeSource("eventi-temp");
@@ -558,12 +576,23 @@ export function Mappa() {
 
   function chiudiEventi() {
     setPannelloEventi(false);
+    setEventoSelezionato(null);
     rimuoviEventiTemp();
   }
 
-  /** Vai a un evento: centra la mappa sulla posizione (il pannello resta aperto). */
+  /** Vai a un evento: centra la mappa e evidenzialo con un cerchio arancione. */
   function vaiAEvento(ev: EventoVicino) {
+    setEventoSelezionato(ev);
     mappaRef.current?.flyTo({ center: [ev.lon, ev.lat], zoom: 10, duration: 1200 });
+    const src = mappaRef.current?.getSource("evento-highlight") as GeoJSONSource | undefined;
+    src?.setData({
+      type: "FeatureCollection",
+      features: [{
+        type: "Feature",
+        geometry: { type: "Point", coordinates: [ev.lon, ev.lat] },
+        properties: {},
+      }],
+    });
   }
 
   /** Distanza leggibile: "a 4 km" oppure "a 300 m". */
@@ -644,10 +673,18 @@ export function Mappa() {
           {!eventiInCorso && eventi && eventi.length > 0 && (
             <>
               <ul className={styles.listaVicini}>
-                {eventi.map((ev) => (
-                  <li
+                {eventi.map((ev) => {
+                  const sel = eventoSelezionato?.id === ev.id && eventoSelezionato?.tipo === ev.tipo;
+                  return (<li
                     key={ev.tipo + ev.id}
-                    style={{ cursor: "pointer", padding: "0.5rem 0.2rem", borderBottom: "1px solid rgba(0,0,0,0.08)" }}
+                    style={{
+                      cursor: "pointer",
+                      padding: "0.5rem 0.2rem",
+                      borderBottom: "1px solid rgba(0,0,0,0.08)",
+                      background: sel ? "rgba(230, 126, 34, 0.15)" : undefined,
+                      borderLeft: sel ? "3px solid #e67e22" : "3px solid transparent",
+                      borderRadius: sel ? "4px" : undefined,
+                    }}
                     onClick={() => vaiAEvento(ev)}
                   >
                     <div style={{ fontWeight: 600 }}>
@@ -665,8 +702,8 @@ export function Mappa() {
                     <div style={{ fontSize: "0.85rem", color: "#7a2f22", fontWeight: 600 }}>
                       {distanzaLeggibile(ev.distanza_m)}
                     </div>
-                  </li>
-                ))}
+                  </li>);
+                })}
               </ul>
               <div className={styles.azioni}>
                 <button className={styles.primario} onClick={() => chiudiEventi()}>
